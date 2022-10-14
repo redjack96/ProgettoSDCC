@@ -33,5 +33,5 @@ struct Pantry {
 
 }
 fn main() -> {
-
+    println!("Rust to the rescue!");
 }
