@@ -1,0 +1,22 @@
+// version of protocol buffer used
+syntax = "proto3";
+
+// package name for the buffer will be used later
+package notify;
+
+// service which can be executed
+service Notification {
+  rpc NotifyDeadline(Product) returns (Done);
+  rpc NotifyRunOut(Product) returns (Done);
+}
+
+// argument
+message Product {
+  int64 itemId = 1;
+  int32 firstScadenza = 2;
+  int32 quantity = 3;
+}
+
+message Done {
+  string error = 1;
+}

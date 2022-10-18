@@ -1,0 +1,50 @@
+version: '3.1'
+
+services:
+  # I nostri containers
+  product_storage:
+    build: "src/microservices/product_storage"
+    # todo: rimuovere il bind mount quando si rilascia
+    volumes: #crea un bind-mount per sviluppare facilmente (così modifiche nel codice si ripercuotono anche nel container). Quando si rilascia va eliminato e sostituito con un COPY nel Dockerfile 
+      - "src/microservices/product_storage:/usr/src/product_storage"
+  shopping_list:
+    build: "src/microservices/shopping_list"
+    # todo: rimuovere il bind mount quando si rilascia
+    volumes: 
+      - "src/microservices/shopping_list:/usr/src/shopping_list"
+  recipes:
+    build: "src/microservices/recipes"
+    volumes: 
+      - "src/microservices/recipes:/usr/src/recipes"
+  consumptions:
+    build: "src/microservices/consumptions"
+    volumes:
+      - "src/microservices/consumptions:/usr/src/consumptions"
+  notifications:
+    build: "src/microservices/notifications"
+    volumes:
+      - "src/microservices/notifications:/usr/src/notifications"
+  summary:
+    build: "src/microservices/summary"
+    volumes:
+      - "src/microservices/summary:/usr/src/summary"
+  
+  # database mongodb. 
+  # Todo: aggiungere questo database all'interno del microservizio product_storage
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  # UI per amministrare MongoDB
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/

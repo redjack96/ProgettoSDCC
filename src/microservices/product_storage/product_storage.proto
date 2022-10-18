@@ -1,0 +1,59 @@
+// version of protocol buffer used
+syntax = "proto3";
+
+// package name for the buffer will be used later
+package product_storage;
+
+// service which can be executed
+service ProductStorage {
+  rpc AddProductToPantry(Product) returns (Response);
+  rpc RemoveProductFromPantry(ProductId) returns (Product);
+  rpc UpdateProductInPantry(ProductId) returns (Response);
+  rpc GetPantry() returns (Pantry);
+}
+
+message ProductId {
+    int64 productId = 1;
+}
+
+
+// argument
+message Product {
+  message Date{
+    // [1-9999]
+    int32 year = 1; // messages start from 1
+
+    // [1-12]
+    int32 month = 2;
+    
+    // [1-31]
+    int32 day = 3;
+  }
+  int64 itemId = 1;
+  enum ProductType {
+    Meat = 0;  // enums start from 0
+    Fish = 1;
+    Fruit = 2;
+    Vegetable = 3;
+    Drink = 4;
+    Other = 5;
+  }
+  ProductType type = 2;
+  enum Unit {
+    Bottle = 0;
+    Packet = 1;
+    Kg = 2;
+    Grams = 3;
+  }
+  Unit unit = 3;
+  int32 quantity = 4;
+  Date expiration_date = 5;
+}
+
+message Pantry {
+    repeated Product products = 1; // list of products
+}
+
+message Response {
+  string error; // "ok" se ha successo, altrimenti l'errore e il messaggio di errore.
+}
