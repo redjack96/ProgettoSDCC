@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	props "shopping_list.microservice/main/util"
+)
 
 type ShoppingList struct {
 	name     string
@@ -55,4 +59,6 @@ func main() {
 	}
 
 	fmt.Printf("This is a shopping list.\n%+v\n", shoppingList)
+	val, _ := props.GetProperties()
+	fmt.Printf("Properties %+v\n", val)
 }

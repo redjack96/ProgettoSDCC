@@ -26,13 +26,14 @@ Use docker-build.sh with a number 1-6
 ```console
 $ ./docker-build.sh [1-6]
 ```
-
-## Development Run
-
-Use docker-run.sh with a number 1-6
+## Build and Run single container (compose service)
 
 ```console
-$ ./docker-run.sh [1-6]
+$ docker compose up <service> --build
+```
+for example:
+```console
+$ docker compose up shopping_list --build
 ```
 
 ## TODO: Release Run
