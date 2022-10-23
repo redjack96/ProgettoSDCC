@@ -1,6 +1,12 @@
 version: '3.1'
 
 services:
+  frontend:
+    image: "web_ui"
+    container_name: "SDCCShoppingList"
+    build: "src/frontend"
+    ports:
+      - "3000:3000"
   # I nostri containers
   shopping_list:
     image: "shopping_list"

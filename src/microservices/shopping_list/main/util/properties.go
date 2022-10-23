@@ -35,25 +35,6 @@ type Properties struct {
 
 func GetProperties() (*Properties, error) {
 	properties := Properties{}
-	/* 		ShoppingListPort:      0,
-	   		ShoppingListAddress:   "1",
-	   		ProductStoragePort:    0,
-	   		ProductStorageAddress: "0",
-	   		RecipesPort:           0,
-	   		RecipesAddress:        "0",
-	   		ConsumptionsPort:      0,
-	   		ConsumptionsAddress:   "0",
-	   		NotificationsPort:     0,
-	   		NotificationsAddress:  "0",
-	   		SummaryPort:           0,
-	   		SummaryAddress:        "0",
-	   		ApiGatewayPort:        0,
-	   		ApiGatewayAddress:     "0",
-	   		FrontendPort:          0,
-	   		FrontendAddress:       "0",
-	   		MongoDBPort:           0,
-	   		MongoDBAddress:        "0",
-	   	} */
 	config := make(map[string]string)
 
 	filename := propertyFile
@@ -78,7 +59,6 @@ func GetProperties() (*Properties, error) {
 					value = strings.TrimSpace(line[equal+1:])
 				}
 				config[key] = value
-				fmt.Println("key: " + key + " value = " + value)
 			}
 		}
 	}

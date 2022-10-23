@@ -5,37 +5,41 @@ syntax = "proto3";
 package product_storage;
 
 // service which can be executed
+// Important: each method can have only one input and one output!!!
 service ProductStorage {
-  rpc AddProductToList(Product, ListId) returns (Response);
+  rpc AddProductToList(Product) returns (Response);
   rpc RemoveProductFromList(ProductId) returns (Product);
-  rpc UpdateProductInList(Product, ListId) returns (Response);
-  rpc BuyProduct(ProductId, ListId) return (Response);
-  rpc UnBuyProduct(ProductId, ListId) return (Response);
+  rpc UpdateProductInList(Product) returns (Response);
+  rpc BuyProduct(ProductId) returns (Response);
+  rpc UnBuyProduct(ProductId) returns (Response);
   rpc GetList(ListId) returns (ShoppingList);
+}
+
+enum ProductType {
+  Meat = 0;
+  Fish = 1;
+  Fruit = 2;
+  Vegetable = 3;
+  Drink = 4;
+  Other = 5;
+}
+
+enum Unit {
+  Bottle = 0;
+  Packet = 1;
+  Kg = 2;
+  Grams = 3;
 }
 
 message ProductId {
     int64 productId = 1;
+    int64 listId = 2;
 }
 
 // argument
 message Product {
-  int64 itemId = 1;
-  enum ProductType {
-    Meat = 0;
-    Fish = 1;
-    Fruit = 2;
-    Vegetable = 3;
-    Drink = 4;
-    Other = 5;
-  }
+  ProductId itemId = 1;
   ProductType type = 2;
-  enum Unit {
-    Bottle = 0;
-    Packet = 1;
-    Kg = 2;
-    Grams = 3;
-  }
   Unit unit = 3;
   int32 quantity = 4;
   bool bought = 5;
@@ -43,15 +47,14 @@ message Product {
 
 message ListId {
     int64 listId = 1;
-    
 }
 // shopping List
 message ShoppingList {
     ListId id = 1;
-    stirng name = 2;
+    string name = 2;
     repeated Product products = 3; // list of products
 }
 
 message Response {
-  string error; // "ok" se ha successo, altrimenti l'errore e il messaggio di errore.
+  string error = 1; // "ok" se ha successo, altrimenti l'errore e il messaggio di errore.
 }

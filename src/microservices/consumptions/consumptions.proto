@@ -17,7 +17,7 @@ message BoughtProduct {
   string type = 3;
   int32 buyDate = 4; // Date when this item was last bought
   int32 useDate = 5; // Date of last use of the product
-  int32 firstScadenza = 6;
+  int32 firstExpiration = 6; // First expiration of product
   bool usedInRecipy = 7; // true if used in a recipy (MS3)
 }
 
