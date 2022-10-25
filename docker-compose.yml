@@ -1,13 +1,31 @@
 version: '3.1'
-
+# TODO: per evitare che le porte siano hardcoded, possiamo usare il parametro env_file
+#  env_file:
+#    - my-env-file
+# poi possiamo inserire nel file una variabile d'ambiente PORT e possiamo accedere alla porta in questo modo:
+#  ports:
+#    - ${PORT}:${PORT}
 services:
+  # I nostri containers
   frontend:
     image: "web_ui"
     container_name: "SDCCShoppingList"
     build: "src/frontend"
     ports:
       - "3000:3000"
-  # I nostri containers
+  api_gateway:
+    image: "api_gateway"
+    container_name: "API Gateway"
+    build: "src/api_gateway"
+    ports:
+      - "8007:8007"
+    depends_on:
+      - shopping_list
+#      - product_storage
+#      - recipes
+#      - consumptions
+#      - notifications
+#      - summary
   shopping_list:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo

@@ -1,14 +1,12 @@
 // version of protocol buffer used
 syntax = "proto3";
 
-option go_package = "shopping_list.microservice/proto_generated";
-
 // package name for the buffer will be used later
-package shopping_list;
+package api_gateway;
 
 // service which can be executed
 // Important: each method can have only one input and one output!!!
-service ShoppingList {
+service ShoppingListAPI {
   rpc AddProductToList(Product) returns (Response);
   rpc RemoveProductFromList(ProductId) returns (Product);
   rpc UpdateProductInList(Product) returns (Response);
@@ -35,8 +33,8 @@ enum Unit {
 }
 
 message ProductId {
-    int64 productId = 1;
-    // int64 listId = 2; // TODO: decidere se serve
+  int64 productId = 1;
+  // int64 listId = 2; // TODO: decidere se serve
 }
 
 // argument
@@ -51,13 +49,13 @@ message Product {
 }
 
 message ListId {
-    int64 listId = 1;
+  int64 listId = 1;
 }
 // shopping List
 message ProductList {
-    ListId id = 1;
-    string name = 2;
-    repeated Product products = 3; // list of products
+  ListId id = 1;
+  string name = 2;
+  repeated Product products = 3; // list of products
 }
 
 message Response {
