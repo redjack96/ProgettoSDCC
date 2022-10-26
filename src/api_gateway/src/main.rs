@@ -6,13 +6,13 @@ use std::env::args;
 use tonic::transport::Uri;
 // Vedi il server.rs per più spiegazioni sulla sintassi di Rust
 // sintassi per gli use grpc
-// nome_progetto::nome_file_proto::nome_servizio+"_client"::NomeServizioClient
-use api_gateway::api_gateway::shopping_list_api_client::ShoppingListApiClient;
-// nome_progetto::nome_file_proto::NomeMessage
-use api_gateway::api_gateway::Product;
-use api_gateway::api_gateway::ProductId;
-use api_gateway::api_gateway::ProductType;
-use api_gateway::api_gateway::Unit;
+// nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
+use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
+// nome_progetto::package_file_proto::NomeMessage
+use api_gateway::shopping_list::Product;
+use api_gateway::shopping_list::ProductId;
+use api_gateway::shopping_list::ProductType;
+use api_gateway::shopping_list::Unit;
 // use api_gateway::api_gateway::Response;
 
 // enum Unit {
@@ -56,11 +56,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     _ => (),
     // }
 
+    println!("Waiting for response");
     // Crea un canale per la connessione al server
     let channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect()
         .await?;
     // Creo un gRPC client
-    let mut client = ShoppingListApiClient::new(channel);
+    let mut client = ShoppingListClient::new(channel);
     // Creo una Request del crate tonic
     let request = tonic::Request::new(
         Product {
