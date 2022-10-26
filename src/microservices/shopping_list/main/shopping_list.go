@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -47,13 +51,26 @@ type Product struct {
 	// expireDate string // Todo: usare una data
 }
 
-// func (p Product) ToString() string {
-//     return fmt.Sprintf("Product(%d, %s, %d, %s, %s)\n", p.id, p.name, p.prodType, p.expire_date, p.expire_date)
-// }
+type OpType int64
 
-// func (s ShoppingList) ToString() string{
-//     return fmt.Sprintf("ShoppingList: %s\n%v", s.name, s.products) // %v stampa la struct senza i nomi. %+v stampa anche i nomi
-// }
+const (
+	Insert OpType = iota
+	Remove
+	Modify
+)
+
+type DBOperation struct {
+	opType     OpType
+	elemsToAdd []Product
+}
+
+//func (p Product) ToString() string {
+//    return fmt.Sprintf("Product(%d, %s, %d, %s, %s)\n", p.id, p.name, p.prodType, p.expire_date, p.expire_date)
+//}
+//
+//func (s ShoppingList) ToString() string{
+//    return fmt.Sprintf("ShoppingList: %s\n%v", s.name, s.products) // %v stampa la struct senza i nomi. %+v stampa anche i nomi
+//}
 
 // this struct implements ShoppingListServer interface
 type serverShoppingList struct {
@@ -66,6 +83,11 @@ type serverShoppingList struct {
 func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.Product) (*pb.Response, error) {
 	log.Printf("Received: %+v", product)
 	// TODO: aggiungi prodotto a un database (es. mongodb)
+	operation := new(DBOperation)
+	operation.opType = Insert
+	// TODO: necessario unmarshalling per estrarre dati da product
+	//operation.elemsToAdd = append(operation.elemsToAdd, product)
+	queryDB(*operation)
 	return &pb.Response{Msg: "Ok - Product added"}, nil
 }
 
@@ -120,6 +142,56 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, listId *p
 
 func removeProduct() Product {
 	return Product{}
+}
+
+/* Function to query the MongoDB database */
+func queryDB(operation DBOperation) {
+	// connect mongo database
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://root:example@mongo:27017"))
+	if err != nil {
+		panic(err)
+	}
+	// ping the database to check if there is a connected database
+	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
+		panic(err)
+	}
+	// TODO: create database appdb if not existing
+	// add products collection to database
+	prodCollection := client.Database("appdb").Collection("products")
+
+	if operation.opType == Insert {
+		var products []interface{}
+		// add the elements to an interface of bson elements
+		for i := 0; i < len(operation.elemsToAdd); i++ {
+			prod := operation.elemsToAdd[i]
+			prodType := prod.prodType
+			prodUnit := prod.unit
+			prodId := prod.itemId
+			prodQuantity := prod.quantity
+			prodName := prod.productName
+			prodIsBought := prod.bought
+
+			currentProd := []interface{}{bson.D{
+				{"prodType", prodType},
+				{"prodUnit", prodUnit},
+				{"prodId", prodId},
+				{"prodQuantity", prodQuantity},
+				{"prodName", prodName},
+				{"bought", prodIsBought},
+			}}
+			products = append(products, currentProd)
+		}
+		// insert the bson object slice using InsertMany()
+		results, err := prodCollection.InsertMany(context.TODO(), products)
+		// check for errors in the insertion
+		if err != nil {
+			panic(err)
+		}
+		// display the ids of the newly inserted objects
+		fmt.Println(results.InsertedIDs)
+	} else if operation.opType == Remove {
+		// remove specified elements from the collection
+	}
 }
 
 // Run in the server/ directory
