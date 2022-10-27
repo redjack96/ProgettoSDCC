@@ -60,8 +60,8 @@ const (
 )
 
 type DBOperation struct {
-	opType     OpType
-	elemsToAdd []*pb.Product
+	opType  OpType
+	product *pb.Product
 }
 
 //func (p Product) ToString() string {
@@ -85,7 +85,7 @@ func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.P
 	// FIXME: (controlla se corretto) aggiungi prodotto a un database (es. mongodb)
 	operation := new(DBOperation)
 	operation.opType = Insert
-	operation.elemsToAdd = append(operation.elemsToAdd, product)
+	operation.product = product
 	qResult, err := queryDB(*operation)
 	if err != nil {
 		log.Fatalln("Error querying DB", err)
@@ -163,42 +163,38 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 	prodCollection := client.Database("appdb").Collection("products")
 
 	// add all products to a single interface
-	var products []interface{}
+	prod := operation.product
+	prodType := prod.Type
+	prodUnit := prod.Unit
+	prodId := prod.ItemId
+	prodQuantity := prod.Quantity
+	prodName := prod.ProductName
+	prodIsBought := prod.AddedToCart
 	// add the elements to an interface of bson elements
-	for i := 0; i < len(operation.elemsToAdd); i++ {
-		prod := operation.elemsToAdd[i]
-		prodType := prod.Type
-		prodUnit := prod.Unit
-		prodId := prod.ItemId
-		prodQuantity := prod.Quantity
-		prodName := prod.ProductName
-		prodIsBought := prod.AddedToCart
-
-		currentProd := []interface{}{bson.D{
-			{"prodType", prodType},
-			{"prodUnit", prodUnit},
-			{"prodId", prodId},
-			{"prodQuantity", prodQuantity},
-			{"prodName", prodName},
-			{"bought", prodIsBought},
-		}}
-		products = append(products, currentProd)
+	doc := bson.D{
+		{"prodType", prodType},
+		{"prodUnit", prodUnit},
+		{"prodId", prodId},
+		{"prodQuantity", prodQuantity},
+		{"prodName", prodName},
+		{"bought", prodIsBought},
 	}
+	fmt.Println(doc)
 
 	// complete operations
 	var res []interface{}
 	if operation.opType == Insert {
 		// insert the bson object slice using InsertMany()
-		results, err := prodCollection.InsertMany(context.TODO(), products)
+		results, err := prodCollection.InsertOne(context.TODO(), doc)
 		// check for errors in the insertion
 		if err != nil {
 			panic(err)
 		}
-		res := append(res, results.InsertedIDs)
+		res := append(res, results.InsertedID)
 		return res, nil
 	} else if operation.opType == Remove {
 		// remove specified elements from the collection
-		result, err := prodCollection.DeleteMany(context.TODO(), products)
+		result, err := prodCollection.DeleteMany(context.TODO(), doc)
 		if err != nil {
 			panic(err)
 		}

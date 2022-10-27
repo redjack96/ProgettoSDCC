@@ -13,6 +13,7 @@ use api_gateway::shopping_list::Product;
 use api_gateway::shopping_list::ProductId;
 use api_gateway::shopping_list::ProductType;
 use api_gateway::shopping_list::Unit;
+use std::{thread, time::Duration};
 // use api_gateway::api_gateway::Response;
 
 // enum Unit {
@@ -48,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or("1".to_owned())// to_owned trasforma &str (stack) in String (heap)
         .parse::<i32>()
         .unwrap_or(1);
-    // unwrap_or e' SEMPRE da preferire ad unwrap perché non va in "panic".fleet
+    // unwrap_or e' SEMPRE da preferire ad unwrap perché non va in "panic".
     // unwrap_or Restituisce T se Option è Some(T) altrimenti restituisce il valore T di default specificato
 
     // match user_input {
@@ -58,10 +59,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Waiting for response");
     // Crea un canale per la connessione al server
-    let channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect()
-        .await?;
+    let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
+    while let Err(err) = channel {
+        thread::sleep(Duration::from_millis(4000));
+        println!("Waiting for shopping_list!");
+        channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
+    }
+    println!("Channel created");
     // Creo un gRPC client
-    let mut client = ShoppingListClient::new(channel);
+    let mut client = ShoppingListClient::new(channel.unwrap());
+    println!("gRPC client created");
     // Creo una Request del crate tonic
     let request = tonic::Request::new(
         Product {
@@ -73,6 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             added_to_cart: false
         },
     );
+    println!("Request created");
     // Invio la richiesta e attendo la risposta:
     let response = client.add_product_to_list(request)
         .await?

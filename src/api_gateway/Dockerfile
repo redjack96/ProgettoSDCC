@@ -13,4 +13,5 @@ COPY shopping_list.proto .
 COPY build.rs .
 # now we run the app
 # TODO: aggiungi --release  !!!
+RUN cargo build
 CMD ["cargo", "run"]

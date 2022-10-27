@@ -30,9 +30,11 @@ services:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
     build: "src/microservices/shopping_list"
-#    volumes:
+    volumes:
 #      - "./src/microservices/shopping_list:/usr/src/shopping_list"
-#      - "./config.properties:/usr/src/shopping_list/config.properties"
+      - "./config.properties:/usr/src/shopping_list/config.properties"
+    depends_on:
+      - mongo
   product_storage:
     image: "product_storage"
     container_name: "ProductStorageService"
@@ -80,7 +82,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    command: mongod
+    # command: mongod
 
   # # UI per amministrare MongoDB
   mongo-express:
@@ -88,7 +90,7 @@ services:
     container_name: mongo-site
     restart: always
     ports:
-      - 8081:8081
+      - "8081:8081"
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
