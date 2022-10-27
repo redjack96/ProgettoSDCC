@@ -30,9 +30,9 @@ services:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
     build: "src/microservices/shopping_list"
-    volumes: 
-      - "./src/microservices/shopping_list:/usr/src/shopping_list"
-      - "./config.properties:/usr/src/shopping_list/config.properties"
+#    volumes:
+#      - "./src/microservices/shopping_list:/usr/src/shopping_list"
+#      - "./config.properties:/usr/src/shopping_list/config.properties"
   product_storage:
     image: "product_storage"
     container_name: "ProductStorageService"
