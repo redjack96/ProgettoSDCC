@@ -1,5 +1,5 @@
 fn main() {
-    let proto_file = "api_gateway.proto";
+    let proto_file = "shopping_list.proto";
 
     tonic_build::configure()
         .build_server(true)
