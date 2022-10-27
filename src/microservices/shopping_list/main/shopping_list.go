@@ -61,7 +61,7 @@ const (
 
 type DBOperation struct {
 	opType     OpType
-	elemsToAdd []Product
+	elemsToAdd []*pb.Product
 }
 
 //func (p Product) ToString() string {
@@ -82,12 +82,15 @@ type serverShoppingList struct {
 // AddProductToList is the function to be called remotely. It is a method of the server struct (class)
 func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.Product) (*pb.Response, error) {
 	log.Printf("Received: %+v", product)
-	// TODO: aggiungi prodotto a un database (es. mongodb)
+	// FIXME: (controlla se corretto) aggiungi prodotto a un database (es. mongodb)
 	operation := new(DBOperation)
 	operation.opType = Insert
-	// TODO: necessario unmarshalling per estrarre dati da product
-	//operation.elemsToAdd = append(operation.elemsToAdd, product)
-	queryDB(*operation)
+	operation.elemsToAdd = append(operation.elemsToAdd, product)
+	qResult, err := queryDB(*operation)
+	if err != nil {
+		log.Fatalln("Error querying DB", err)
+	}
+	fmt.Println(qResult)
 	return &pb.Response{Msg: "Ok - Product added"}, nil
 }
 
@@ -145,7 +148,7 @@ func removeProduct() Product {
 }
 
 /* Function to query the MongoDB database */
-func queryDB(operation DBOperation) {
+func queryDB(operation DBOperation) ([]interface{}, error) {
 	// connect mongo database
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://root:example@mongo:27017"))
 	if err != nil {
@@ -156,42 +159,53 @@ func queryDB(operation DBOperation) {
 		panic(err)
 	}
 	// TODO: create database appdb if not existing
-	// add products collection to database
+	// Select products collection
 	prodCollection := client.Database("appdb").Collection("products")
 
-	if operation.opType == Insert {
-		var products []interface{}
-		// add the elements to an interface of bson elements
-		for i := 0; i < len(operation.elemsToAdd); i++ {
-			prod := operation.elemsToAdd[i]
-			prodType := prod.prodType
-			prodUnit := prod.unit
-			prodId := prod.itemId
-			prodQuantity := prod.quantity
-			prodName := prod.productName
-			prodIsBought := prod.bought
+	// add all products to a single interface
+	var products []interface{}
+	// add the elements to an interface of bson elements
+	for i := 0; i < len(operation.elemsToAdd); i++ {
+		prod := operation.elemsToAdd[i]
+		prodType := prod.Type
+		prodUnit := prod.Unit
+		prodId := prod.ItemId
+		prodQuantity := prod.Quantity
+		prodName := prod.ProductName
+		prodIsBought := prod.AddedToCart
 
-			currentProd := []interface{}{bson.D{
-				{"prodType", prodType},
-				{"prodUnit", prodUnit},
-				{"prodId", prodId},
-				{"prodQuantity", prodQuantity},
-				{"prodName", prodName},
-				{"bought", prodIsBought},
-			}}
-			products = append(products, currentProd)
-		}
+		currentProd := []interface{}{bson.D{
+			{"prodType", prodType},
+			{"prodUnit", prodUnit},
+			{"prodId", prodId},
+			{"prodQuantity", prodQuantity},
+			{"prodName", prodName},
+			{"bought", prodIsBought},
+		}}
+		products = append(products, currentProd)
+	}
+
+	// complete operations
+	var res []interface{}
+	if operation.opType == Insert {
 		// insert the bson object slice using InsertMany()
 		results, err := prodCollection.InsertMany(context.TODO(), products)
 		// check for errors in the insertion
 		if err != nil {
 			panic(err)
 		}
-		// display the ids of the newly inserted objects
-		fmt.Println(results.InsertedIDs)
+		res := append(res, results.InsertedIDs)
+		return res, nil
 	} else if operation.opType == Remove {
 		// remove specified elements from the collection
+		result, err := prodCollection.DeleteMany(context.TODO(), products)
+		if err != nil {
+			panic(err)
+		}
+		res := append(res, result.DeletedCount)
+		return res, nil
 	}
+	return res, nil
 }
 
 // Run in the server/ directory
