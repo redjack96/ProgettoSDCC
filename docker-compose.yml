@@ -19,8 +19,8 @@ services:
     build: "src/api_gateway"
     ports:
       - "8007:8007"
-    depends_on:
-      - shopping_list
+#    depends_on:
+#      - shopping_list
 #      - product_storage
 #      - recipes
 #      - consumptions

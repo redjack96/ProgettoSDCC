@@ -26,6 +26,7 @@ pub fn get_properties() -> Properties {
 
     let mut x = Properties::default();
     x.api_gateway_port = 8007;
+    x.api_gateway_address = "api_gateway".to_string();
     x.shopping_list_port = 8001;
     x
 }
