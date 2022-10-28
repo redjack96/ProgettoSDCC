@@ -3,24 +3,19 @@ mod properties;
 use properties::get_properties;
 
 // use std::env::args;
-use tonic::transport::Uri;
+use tonic::transport::{Channel, Uri};
 // Vedi il server.rs per più spiegazioni sulla sintassi di Rust
 // sintassi per gli use grpc
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
 use api_gateway::shopping_list::Product;
-use api_gateway::shopping_list::ProductId;
 use api_gateway::shopping_list::ProductRemove;
 use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
 use api_gateway::shopping_list::Unit;
-use api_gateway::shopping_list::Response;
 use std::{thread, time::Duration};
-use std::any::Any;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
-use actix_web::web::Path;
-use async_trait::async_trait;
 use prost_types::Timestamp;
 
 fn unit_from_str(input: &str) -> Unit {
@@ -89,15 +84,10 @@ async fn add_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition requested.");
     // Crea un canale per la connessione al server
-    let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-    while let Err(_) = channel {
-        thread::sleep(Duration::from_millis(4000));
-        println!("Waiting for shopping_list service!");
-        channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-    }
+    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
     println!("Channel created");
     // Creo un gRPC client
-    let mut client = ShoppingListClient::new(channel.unwrap());
+    let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
     let prod_name = req.match_info().get("name").unwrap().to_string();
@@ -140,15 +130,10 @@ async fn remove_product(product_name: web::Path<String>) -> impl Responder {
     let configs = get_properties();
     println!("Product removal requested.");
     // Crea un canale per la connessione al server
-    let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-    while let Err(_) = channel {
-        thread::sleep(Duration::from_millis(4000));
-        println!("Waiting for shopping_list service!");
-        channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-    }
+    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
     println!("Channel created");
     // Creo un gRPC client
-    let mut client = ShoppingListClient::new(channel.unwrap());
+    let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
     let string_name = product_name.into_inner().to_string();
@@ -173,15 +158,10 @@ async fn update_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product update requested.");
     // Crea un canale per la connessione al server
-    let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-    while let Err(_) = channel {
-        thread::sleep(Duration::from_millis(4000));
-        println!("Waiting for shopping_list service!");
-        channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-    }
+    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
     println!("Channel created");
     // Creo un gRPC client
-    let mut client = ShoppingListClient::new(channel.unwrap());
+    let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
     let id = req.match_info().get("product_id").unwrap().to_string();
@@ -205,6 +185,18 @@ async fn update_product(req: HttpRequest) -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
+async fn try_get_channel(address: &str, port: i32) -> Channel {
+    let mut channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap())
+        .connect()
+        .await;
+    while channel.is_err() {
+        println!("Waiting for shopping_list service!");
+        thread::sleep(Duration::from_millis(4000));
+        channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
+    }
+    channel.unwrap()
+}
+
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -225,57 +217,3 @@ async fn main() -> std::io::Result<()> {
         .run()
         .await
 }
-
-
-// per passare parametri usa:
-// #[allow(dead_code)]
-// async fn add_product() -> Result<api_gateway::shopping_list::Response, Box<dyn std::error::Error>> {
-//     let configs = get_properties();
-//
-//     // Prendo il primo elemento dalla linea di comando. Per default uso "Giacomo"
-//     let _user_input = args().nth(1)// Option<String>
-//         // Option è come Optional in Java. In Rust è una Enum con 2 varianti: Some(T) e None
-//         // Se il metodo restituisce qualcosa, si ottiene Some(T). In questo caso T = String
-//         // se non restituisce nulla, si usa None (che è l'altra variante di Option e ha dei metodi definiti).
-//         .unwrap_or("1".to_owned())// to_owned trasforma &str (stack) in String (heap)
-//         .parse::<i32>()
-//         .unwrap_or(1);
-//     // unwrap_or e' SEMPRE da preferire ad unwrap perché non va in "panic".
-//     // unwrap_or Restituisce T se Option è Some(T) altrimenti restituisce il valore T di default specificato
-//
-//     match user_input {
-//         1 => addProduct(),
-//         _ => (),
-//     }
-//
-//     println!("Waiting for response");
-//     // Crea un canale per la connessione al server
-//     let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-//     while let Err(_) = channel {
-//         thread::sleep(Duration::from_millis(4000));
-//         println!("Waiting for shopping_list!");
-//         channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
-//     }
-//     println!("Channel created");
-//     // Creo un gRPC client
-//     let mut client = ShoppingListClient::new(channel.unwrap());
-//     println!("gRPC client created");
-//     // Creo una Request del crate tonic
-//     let request = tonic::Request::new(
-//         Product {
-//             item_id: Some(ProductId { product_id: 0 }),
-//             product_name: "Prosciutto".to_string(),
-//             r#type: ProductType::Meat.into(),
-//             unit: Unit::Grams.into(),
-//             quantity: 200,
-//             added_to_cart: false,
-//         },
-//     );
-//     println!("Request created");
-//     // Invio la richiesta e attendo la risposta:
-//     let response = client.add_product_to_list(request)
-//         .await?
-//         .into_inner();
-//     println!("Response received: {:?}", response);
-//     Ok(response)
-// }
