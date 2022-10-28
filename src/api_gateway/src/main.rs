@@ -15,15 +15,38 @@ use api_gateway::shopping_list::ProductType;
 use api_gateway::shopping_list::Unit;
 use api_gateway::shopping_list::Response;
 use std::{thread, time::Duration};
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use std::any::Any;
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
+use actix_web::web::Path;
 use async_trait::async_trait;
+use prost_types::Timestamp;
 
+fn unit_from_str(input: &str) -> Unit {
+    match input {
+        "Grams"  => Unit::Grams,
+        "Kg"  => Unit::Kg,
+        "Bottle"  => Unit::Bottle,
+        "Packet" => Unit::Packet,
+        _      => Unit::Packet
+    }
+}
 
+fn type_from_str(input: &str) -> ProductType {
+    match input {
+        "Meat" => ProductType::Meat,
+        "Fish" => ProductType::Fish,
+        "Fruit" => ProductType::Fruit,
+        "Vegetable" => ProductType::Vegetable,
+        "Drink" => ProductType::Drink,
+        _   => ProductType::Other
+    }
+}
+// #[derive(Debug, PartialEq)]
 // enum Unit {
-//     Bottle,
-//     Packet,
-//     Kg,
-//     Grams,
+//     Bottle = 0,
+//     Packet = 1,
+//     Kg = 2,
+//     Grams = 3
 // }
 
 // struct Product {
@@ -59,8 +82,8 @@ async fn greet(name: web::Path<String>) -> impl Responder {
     format!("Hello {name}!")
 }
 
-#[post("/addProduct/{product}")]
-async fn add_product(product: web::Path<String>) -> impl Responder {
+#[post("/addProduct/{name}/{quantity}/{unit}/{type}/{expiry}")]
+async fn add_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition requested.");
     // Crea un canale per la connessione al server
@@ -75,14 +98,28 @@ async fn add_product(product: web::Path<String>) -> impl Responder {
     let mut client = ShoppingListClient::new(channel.unwrap());
     println!("gRPC client created");
     // Creo una Request del crate tonic
+    let prod_name = req.match_info().get("name").unwrap().to_string();
+    let quantity = req.match_info().get("quantity").unwrap().to_string().parse::<i32>().unwrap();
+    let unit_str = req.match_info().get("unit").unwrap();
+    let ptype_str = req.match_info().get("type").unwrap();
+    let expiry = req.match_info().get("expiry").unwrap();
+
+    // transform data collected from url
+    let mut expiry_str = expiry.split("-");
+    let year = expiry_str.next().unwrap().parse::<i64>().unwrap();
+    let month = expiry_str.next().unwrap().parse::<u8>().unwrap();
+    let day = expiry_str.next().unwrap().parse::<u8>().unwrap();
+    let expiry_date = Timestamp::date(year, month, day).unwrap();
+    let unit = unit_from_str(unit_str).into();
+    let ptype = type_from_str(ptype_str).into();
     let request = tonic::Request::new(
         Product {
-            item_id: Some(ProductId { product_id: 0 }),
-            product_name: product.into_inner().to_string(),
-            r#type: ProductType::Meat.into(),
-            unit: Unit::Grams.into(),
-            quantity: 200,
+            product_name: prod_name,
+            r#type: ptype,
+            unit,
+            quantity,
             added_to_cart: false,
+            expiration: Some(expiry_date)
         },
     );
     println!("Request created");
@@ -96,8 +133,8 @@ async fn add_product(product: web::Path<String>) -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
-#[post("/removeProduct/{productId}")]
-async fn remove_product(productId: web::Path<String>) -> impl Responder {
+#[post("/removeProduct/{productName}")]
+async fn remove_product(productName: web::Path<String>) -> impl Responder {
     let configs = get_properties();
     println!("Product removal requested.");
     // Crea un canale per la connessione al server
@@ -112,11 +149,10 @@ async fn remove_product(productId: web::Path<String>) -> impl Responder {
     let mut client = ShoppingListClient::new(channel.unwrap());
     println!("gRPC client created");
     // Creo una Request del crate tonic
-    let string_id = productId.into_inner().to_string();
-    let id = string_id.parse::<i64>().unwrap();
+    let string_name = productName.into_inner().to_string();
     let request = tonic::Request::new(
         ProductId {
-            product_id: id
+            product_name: string_name
         },
     );
     println!("Request created");

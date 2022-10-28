@@ -12,6 +12,7 @@ import (
 	"net"
 	pb "shopping_list.microservice/generated/shopping_list.microservice/proto_generated"
 	props "shopping_list.microservice/main/util"
+	"time"
 )
 
 type ShoppingList struct {
@@ -96,7 +97,7 @@ func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.P
 }
 
 func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productId *pb.ProductId) (*pb.Response, error) {
-	log.Printf("Removing product: %d", productId.ProductId)
+	log.Printf("Removing product: %s", productId.ProductName)
 	// FIXME: (controlla se corretto) rimuovi prodotto dal database (es. mongodb)
 	operation := new(DBOperation)
 	operation.opType = Remove
@@ -155,7 +156,6 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
 		panic(err)
 	}
-	// TODO: create database appdb if not existing
 	// Select products collection
 	prodCollection := client.Database("appdb").Collection("products")
 
@@ -166,21 +166,22 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		prod := operation.product
 		prodType := prod.Type
 		prodUnit := prod.Unit
-		prodId := prod.ItemId
 		prodQuantity := prod.Quantity
 		prodName := prod.ProductName
 		prodIsBought := prod.AddedToCart
+		tmExpiry := prod.Expiration
+		prodExpiry := time.Unix(tmExpiry.Seconds, 0)
 		// add the elements to an interface of bson elements
 		doc := bson.D{
 			{"prodType", prodType},
 			{"prodUnit", prodUnit},
-			{"prodId", prodId},
+			{"prodExpiry", prodExpiry},
 			{"prodQuantity", prodQuantity},
 			{"prodName", prodName},
 			{"bought", prodIsBought},
 		}
 		fmt.Println(doc)
-		// insert the bson object slice using InsertMany()
+		// insert the document in the collection
 		results, err := prodCollection.InsertOne(context.TODO(), doc)
 		// check for errors in the insertion
 		if err != nil {
@@ -189,9 +190,9 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		res := append(res, results.InsertedID)
 		return res, nil
 	} else if operation.opType == Remove {
-		prodId := operation.productId.ProductId
+		prodName := operation.productId.ProductName
 		// remove specified elements from the collection
-		doc := bson.D{{"prodId", bson.D{{"productid", prodId}}}}
+		doc := bson.D{{"prodName", prodName}}
 		result, err := prodCollection.DeleteOne(context.TODO(), doc)
 		if err != nil {
 			panic(err)

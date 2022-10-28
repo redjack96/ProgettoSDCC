@@ -2,6 +2,7 @@
 syntax = "proto3";
 
 option go_package = "shopping_list.microservice/proto_generated";
+import "google/protobuf/timestamp.proto";
 
 // package name for the buffer will be used later
 package shopping_list;
@@ -35,19 +36,18 @@ enum Unit {
 }
 
 message ProductId {
-    int64 productId = 1;
+    string productName = 1;
     // int64 listId = 2; // TODO: decidere se serve
 }
 
 // argument
 message Product {
-  ProductId itemId = 1;
-  string productName = 2;
-  ProductType type = 3;
-  Unit unit = 4;
-  int32 quantity = 5;
-  bool addedToCart = 6;
-  // TODO: mettere la data di scadenza
+  string productName = 1;
+  ProductType type = 2;
+  Unit unit = 3;
+  int32 quantity = 4;
+  bool addedToCart = 5;
+  google.protobuf.Timestamp expiration = 6;
 }
 
 message ListId {
