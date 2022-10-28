@@ -60,8 +60,9 @@ const (
 )
 
 type DBOperation struct {
-	opType  OpType
-	product *pb.Product
+	opType    OpType
+	product   *pb.Product
+	productId *pb.ProductId
 }
 
 //func (p Product) ToString() string {
@@ -94,22 +95,18 @@ func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.P
 	return &pb.Response{Msg: "Ok - Product added"}, nil
 }
 
-func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productId *pb.ProductId) (*pb.Product, error) {
+func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productId *pb.ProductId) (*pb.Response, error) {
 	log.Printf("Removing product: %d", productId.ProductId)
-	// TODO: rimuovi prodotto dal database (es. mongodb)
-
-	removedProduct := removeProduct()
-	prod := pb.Product{
-		ItemId: &pb.ProductId{
-			ProductId: removedProduct.itemId,
-		},
-		ProductName: removedProduct.productName,
-		Type:        pb.ProductType(removedProduct.prodType),
-		Unit:        pb.Unit(removedProduct.unit),
-		Quantity:    removedProduct.quantity, // we show the removed quantity
-		AddedToCart: false,
+	// FIXME: (controlla se corretto) rimuovi prodotto dal database (es. mongodb)
+	operation := new(DBOperation)
+	operation.opType = Remove
+	operation.productId = productId
+	qResult, err := queryDB(*operation)
+	if err != nil {
+		log.Fatalln("Error querying DB", err)
 	}
-	return &prod, nil
+	fmt.Println(qResult)
+	return &pb.Response{Msg: "OK - Product removed"}, nil
 }
 
 func (s *serverShoppingList) UpdateProductInList(ctx context.Context, product *pb.Product) (*pb.Response, error) {
@@ -162,28 +159,27 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 	// Select products collection
 	prodCollection := client.Database("appdb").Collection("products")
 
-	// add all products to a single interface
-	prod := operation.product
-	prodType := prod.Type
-	prodUnit := prod.Unit
-	prodId := prod.ItemId
-	prodQuantity := prod.Quantity
-	prodName := prod.ProductName
-	prodIsBought := prod.AddedToCart
-	// add the elements to an interface of bson elements
-	doc := bson.D{
-		{"prodType", prodType},
-		{"prodUnit", prodUnit},
-		{"prodId", prodId},
-		{"prodQuantity", prodQuantity},
-		{"prodName", prodName},
-		{"bought", prodIsBought},
-	}
-	fmt.Println(doc)
-
 	// complete operations
 	var res []interface{}
 	if operation.opType == Insert {
+		// add all products to a single interface
+		prod := operation.product
+		prodType := prod.Type
+		prodUnit := prod.Unit
+		prodId := prod.ItemId
+		prodQuantity := prod.Quantity
+		prodName := prod.ProductName
+		prodIsBought := prod.AddedToCart
+		// add the elements to an interface of bson elements
+		doc := bson.D{
+			{"prodType", prodType},
+			{"prodUnit", prodUnit},
+			{"prodId", prodId},
+			{"prodQuantity", prodQuantity},
+			{"prodName", prodName},
+			{"bought", prodIsBought},
+		}
+		fmt.Println(doc)
 		// insert the bson object slice using InsertMany()
 		results, err := prodCollection.InsertOne(context.TODO(), doc)
 		// check for errors in the insertion
@@ -193,8 +189,10 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		res := append(res, results.InsertedID)
 		return res, nil
 	} else if operation.opType == Remove {
+		prodId := operation.productId.ProductId
 		// remove specified elements from the collection
-		result, err := prodCollection.DeleteMany(context.TODO(), doc)
+		doc := bson.D{{"prodId", bson.D{{"productid", prodId}}}}
+		result, err := prodCollection.DeleteOne(context.TODO(), doc)
 		if err != nil {
 			panic(err)
 		}

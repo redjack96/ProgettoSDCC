@@ -16,7 +16,7 @@ use api_gateway::shopping_list::Unit;
 use api_gateway::shopping_list::Response;
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-
+use async_trait::async_trait;
 
 
 // enum Unit {
@@ -55,18 +55,19 @@ async fn manual_hello() -> impl Responder {
 
 #[get("/greet/{name}")]
 async fn greet(name: web::Path<String>) -> impl Responder {
+    println!("Sent greetings to {name}");
     format!("Hello {name}!")
 }
 
 #[post("/addProduct/{product}")]
 async fn add_product(product: web::Path<String>) -> impl Responder {
     let configs = get_properties();
-    println!("Waiting for response");
+    println!("Product addition requested.");
     // Crea un canale per la connessione al server
     let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
     while let Err(_) = channel {
         thread::sleep(Duration::from_millis(4000));
-        println!("Waiting for shopping_list!");
+        println!("Waiting for shopping_list service!");
         channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
     }
     println!("Channel created");
@@ -95,6 +96,40 @@ async fn add_product(product: web::Path<String>) -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
+#[post("/removeProduct/{productId}")]
+async fn remove_product(productId: web::Path<String>) -> impl Responder {
+    let configs = get_properties();
+    println!("Product removal requested.");
+    // Crea un canale per la connessione al server
+    let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
+    while let Err(_) = channel {
+        thread::sleep(Duration::from_millis(4000));
+        println!("Waiting for shopping_list service!");
+        channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
+    }
+    println!("Channel created");
+    // Creo un gRPC client
+    let mut client = ShoppingListClient::new(channel.unwrap());
+    println!("gRPC client created");
+    // Creo una Request del crate tonic
+    let string_id = productId.into_inner().to_string();
+    let id = string_id.parse::<i64>().unwrap();
+    let request = tonic::Request::new(
+        ProductId {
+            product_id: id
+        },
+    );
+    println!("Request created");
+    // Invio la richiesta e attendo la risposta:
+    let response = client.remove_product_from_list(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+    let response_str = format!("Response received: {:?}", response);
+    println!("{}", response_str);
+    HttpResponse::Ok().body(response_str)
+}
+
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -109,6 +144,7 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .service(greet)
             .service(add_product)
+            .service(remove_product)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await
