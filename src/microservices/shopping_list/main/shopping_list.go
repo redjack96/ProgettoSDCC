@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -57,13 +58,15 @@ type OpType int64
 const (
 	Insert OpType = iota
 	Remove
-	Modify
+	Update
 )
 
 type DBOperation struct {
-	opType    OpType
-	product   *pb.Product
-	productId *pb.ProductId
+	opType        OpType
+	product       *pb.Product
+	productId     *pb.ProductId
+	productRemove *pb.ProductRemove
+	productUpdate *pb.ProductUpdate
 }
 
 //func (p Product) ToString() string {
@@ -84,7 +87,6 @@ type serverShoppingList struct {
 // AddProductToList is the function to be called remotely. It is a method of the server struct (class)
 func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.Product) (*pb.Response, error) {
 	log.Printf("Received: %+v", product)
-	// FIXME: (controlla se corretto) aggiungi prodotto a un database (es. mongodb)
 	operation := new(DBOperation)
 	operation.opType = Insert
 	operation.product = product
@@ -96,12 +98,11 @@ func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.P
 	return &pb.Response{Msg: "Ok - Product added"}, nil
 }
 
-func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productId *pb.ProductId) (*pb.Response, error) {
-	log.Printf("Removing product: %s", productId.ProductName)
-	// FIXME: (controlla se corretto) rimuovi prodotto dal database (es. mongodb)
+func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productRemove *pb.ProductRemove) (*pb.Response, error) {
+	log.Printf("Removing product: %s", productRemove.ProductName)
 	operation := new(DBOperation)
 	operation.opType = Remove
-	operation.productId = productId
+	operation.productRemove = productRemove
 	qResult, err := queryDB(*operation)
 	if err != nil {
 		log.Fatalln("Error querying DB", err)
@@ -110,8 +111,17 @@ func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productI
 	return &pb.Response{Msg: "OK - Product removed"}, nil
 }
 
-func (s *serverShoppingList) UpdateProductInList(ctx context.Context, product *pb.Product) (*pb.Response, error) {
+func (s *serverShoppingList) UpdateProductInList(ctx context.Context, productUpdate *pb.ProductUpdate) (*pb.Response, error) {
 	// TODO: aggiorna prodotto nel database (es. mongodb)
+	log.Printf("Updating field %s of product with id %s.", productUpdate.Field, productUpdate.ProductId)
+	operation := new(DBOperation)
+	operation.opType = Update
+	operation.productUpdate = productUpdate
+	qResult, err := queryDB(*operation)
+	if err != nil {
+		log.Fatalln("Error querying DB", err)
+	}
+	fmt.Println(qResult)
 	return &pb.Response{Msg: "ok - product updated"}, nil
 }
 
@@ -190,7 +200,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		res := append(res, results.InsertedID)
 		return res, nil
 	} else if operation.opType == Remove {
-		prodName := operation.productId.ProductName
+		prodName := operation.productRemove.ProductName
 		// remove specified elements from the collection
 		doc := bson.D{{"prodName", prodName}}
 		result, err := prodCollection.DeleteOne(context.TODO(), doc)
@@ -198,6 +208,20 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 			panic(err)
 		}
 		res := append(res, result.DeletedCount)
+		return res, nil
+	} else if operation.opType == Update {
+		idString := operation.productUpdate.ProductId
+		field := operation.productUpdate.Field
+		value := operation.productUpdate.Value
+
+		id, _ := primitive.ObjectIDFromHex(idString)
+		filter := bson.D{{"_id", id}}
+		update := bson.D{{"$set", bson.D{{field, value}}}}
+		result, err := prodCollection.UpdateOne(context.TODO(), filter, update)
+		if err != nil {
+			panic(err)
+		}
+		res := append(res, result.ModifiedCount)
 		return res, nil
 	}
 	return res, nil
@@ -228,28 +252,4 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-}
-
-// TODO: ELIMINA!
-func useless() {
-	//prod := Product{
-	//	id:          1,
-	//	name:        "Prosciutto",
-	//	prodType:    Meat,
-	//	expire_date: "2022/12/31",
-	//	expired:     false,
-	//}
-	//
-	//product_list := make([]Product, 10)
-	//
-	//product_list[0] = prod
-	//
-	//shoppingList := ShoppingList{
-	//	name:     "lista1",
-	//	products: product_list,
-	//}
-	//
-	//fmt.Printf("This is a shopping list.\n%+v\n", shoppingList)
-	val, _ := props.GetProperties()
-	fmt.Printf("Properties %+v\n", val)
 }

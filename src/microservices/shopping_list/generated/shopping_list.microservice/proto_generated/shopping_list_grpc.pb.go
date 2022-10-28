@@ -23,8 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ShoppingListClient interface {
 	AddProductToList(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error)
-	RemoveProductFromList(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error)
-	UpdateProductInList(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error)
+	RemoveProductFromList(ctx context.Context, in *ProductRemove, opts ...grpc.CallOption) (*Response, error)
+	UpdateProductInList(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error)
 	AddProductToCart(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error)
 	RemoveProductFromCart(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error)
 	GetList(ctx context.Context, in *ListId, opts ...grpc.CallOption) (*ProductList, error)
@@ -48,7 +48,7 @@ func (c *shoppingListClient) AddProductToList(ctx context.Context, in *Product, 
 	return out, nil
 }
 
-func (c *shoppingListClient) RemoveProductFromList(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error) {
+func (c *shoppingListClient) RemoveProductFromList(ctx context.Context, in *ProductRemove, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/shopping_list.ShoppingList/RemoveProductFromList", in, out, opts...)
 	if err != nil {
@@ -57,7 +57,7 @@ func (c *shoppingListClient) RemoveProductFromList(ctx context.Context, in *Prod
 	return out, nil
 }
 
-func (c *shoppingListClient) UpdateProductInList(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error) {
+func (c *shoppingListClient) UpdateProductInList(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/shopping_list.ShoppingList/UpdateProductInList", in, out, opts...)
 	if err != nil {
@@ -107,8 +107,8 @@ func (c *shoppingListClient) BuyAllProductsInCart(ctx context.Context, in *ListI
 // for forward compatibility
 type ShoppingListServer interface {
 	AddProductToList(context.Context, *Product) (*Response, error)
-	RemoveProductFromList(context.Context, *ProductId) (*Response, error)
-	UpdateProductInList(context.Context, *Product) (*Response, error)
+	RemoveProductFromList(context.Context, *ProductRemove) (*Response, error)
+	UpdateProductInList(context.Context, *ProductUpdate) (*Response, error)
 	AddProductToCart(context.Context, *ProductId) (*Response, error)
 	RemoveProductFromCart(context.Context, *ProductId) (*Response, error)
 	GetList(context.Context, *ListId) (*ProductList, error)
@@ -123,10 +123,10 @@ type UnimplementedShoppingListServer struct {
 func (UnimplementedShoppingListServer) AddProductToList(context.Context, *Product) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddProductToList not implemented")
 }
-func (UnimplementedShoppingListServer) RemoveProductFromList(context.Context, *ProductId) (*Response, error) {
+func (UnimplementedShoppingListServer) RemoveProductFromList(context.Context, *ProductRemove) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveProductFromList not implemented")
 }
-func (UnimplementedShoppingListServer) UpdateProductInList(context.Context, *Product) (*Response, error) {
+func (UnimplementedShoppingListServer) UpdateProductInList(context.Context, *ProductUpdate) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductInList not implemented")
 }
 func (UnimplementedShoppingListServer) AddProductToCart(context.Context, *ProductId) (*Response, error) {
@@ -173,7 +173,7 @@ func _ShoppingList_AddProductToList_Handler(srv interface{}, ctx context.Context
 }
 
 func _ShoppingList_RemoveProductFromList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductId)
+	in := new(ProductRemove)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -185,13 +185,13 @@ func _ShoppingList_RemoveProductFromList_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/shopping_list.ShoppingList/RemoveProductFromList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShoppingListServer).RemoveProductFromList(ctx, req.(*ProductId))
+		return srv.(ShoppingListServer).RemoveProductFromList(ctx, req.(*ProductRemove))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ShoppingList_UpdateProductInList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Product)
+	in := new(ProductUpdate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func _ShoppingList_UpdateProductInList_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/shopping_list.ShoppingList/UpdateProductInList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShoppingListServer).UpdateProductInList(ctx, req.(*Product))
+		return srv.(ShoppingListServer).UpdateProductInList(ctx, req.(*ProductUpdate))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -11,6 +11,8 @@ use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
 use api_gateway::shopping_list::Product;
 use api_gateway::shopping_list::ProductId;
+use api_gateway::shopping_list::ProductRemove;
+use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
 use api_gateway::shopping_list::Unit;
 use api_gateway::shopping_list::Response;
@@ -134,7 +136,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
 }
 
 #[post("/removeProduct/{productName}")]
-async fn remove_product(productName: web::Path<String>) -> impl Responder {
+async fn remove_product(product_name: web::Path<String>) -> impl Responder {
     let configs = get_properties();
     println!("Product removal requested.");
     // Crea un canale per la connessione al server
@@ -149,15 +151,52 @@ async fn remove_product(productName: web::Path<String>) -> impl Responder {
     let mut client = ShoppingListClient::new(channel.unwrap());
     println!("gRPC client created");
     // Creo una Request del crate tonic
-    let string_name = productName.into_inner().to_string();
+    let string_name = product_name.into_inner().to_string();
     let request = tonic::Request::new(
-        ProductId {
+        ProductRemove {
             product_name: string_name
         },
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
     let response = client.remove_product_from_list(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+    let response_str = format!("Response received: {:?}", response);
+    println!("{}", response_str);
+    HttpResponse::Ok().body(response_str)
+}
+
+#[post("/updateProduct/{product_id}/{field}/{value}")]
+async fn update_product(req: HttpRequest) -> impl Responder {
+    let configs = get_properties();
+    println!("Product update requested.");
+    // Crea un canale per la connessione al server
+    let mut channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
+    while let Err(_) = channel {
+        thread::sleep(Duration::from_millis(4000));
+        println!("Waiting for shopping_list service!");
+        channel = tonic::transport::Channel::builder(Uri::try_from(format!("http://shopping_list:{}", configs.shopping_list_port)).unwrap()).connect().await;
+    }
+    println!("Channel created");
+    // Creo un gRPC client
+    let mut client = ShoppingListClient::new(channel.unwrap());
+    println!("gRPC client created");
+    // Creo una Request del crate tonic
+    let id = req.match_info().get("product_id").unwrap().to_string();
+    let field = req.match_info().get("field").unwrap().to_string();
+    let value = req.match_info().get("value").unwrap().to_string();
+    let request = tonic::Request::new(
+        ProductUpdate {
+            product_id: id,
+            field,
+            value
+        },
+    );
+    println!("Request created");
+    // Invio la richiesta e attendo la risposta:
+    let response = client.update_product_in_list(request)
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
@@ -181,6 +220,7 @@ async fn main() -> std::io::Result<()> {
             .service(greet)
             .service(add_product)
             .service(remove_product)
+            .service(update_product)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await

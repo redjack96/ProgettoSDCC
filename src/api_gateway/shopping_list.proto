@@ -11,8 +11,8 @@ package shopping_list;
 // Important: each method can have only one input and one output!!!
 service ShoppingList {
   rpc AddProductToList(Product) returns (Response);
-  rpc RemoveProductFromList(ProductId) returns (Response);
-  rpc UpdateProductInList(Product) returns (Response);
+  rpc RemoveProductFromList(ProductRemove) returns (Response);
+  rpc UpdateProductInList(ProductUpdate) returns (Response);
   rpc AddProductToCart(ProductId) returns (Response);
   rpc RemoveProductFromCart(ProductId) returns (Response);
   rpc GetList(ListId) returns (ProductList);
@@ -35,9 +35,18 @@ enum Unit {
   Grams = 3;
 }
 
-message ProductId {
+message ProductUpdate {
+  string productId = 2;
+  string field = 3; // for update
+  string value = 4; // for update
+}
+
+message ProductRemove {
     string productName = 1;
-    // int64 listId = 2; // TODO: decidere se serve
+}
+
+message ProductId {
+  string productName = 1;
 }
 
 // argument
