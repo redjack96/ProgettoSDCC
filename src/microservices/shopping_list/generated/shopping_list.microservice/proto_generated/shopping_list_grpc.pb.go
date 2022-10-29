@@ -25,8 +25,8 @@ type ShoppingListClient interface {
 	AddProductToList(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error)
 	RemoveProductFromList(ctx context.Context, in *ProductRemove, opts ...grpc.CallOption) (*Response, error)
 	UpdateProductInList(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error)
-	AddProductToCart(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error)
-	RemoveProductFromCart(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error)
+	AddProductToCart(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error)
+	RemoveProductFromCart(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error)
 	GetList(ctx context.Context, in *ListId, opts ...grpc.CallOption) (*ProductList, error)
 	BuyAllProductsInCart(ctx context.Context, in *ListId, opts ...grpc.CallOption) (*Response, error)
 }
@@ -66,7 +66,7 @@ func (c *shoppingListClient) UpdateProductInList(ctx context.Context, in *Produc
 	return out, nil
 }
 
-func (c *shoppingListClient) AddProductToCart(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error) {
+func (c *shoppingListClient) AddProductToCart(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/shopping_list.ShoppingList/AddProductToCart", in, out, opts...)
 	if err != nil {
@@ -75,7 +75,7 @@ func (c *shoppingListClient) AddProductToCart(ctx context.Context, in *ProductId
 	return out, nil
 }
 
-func (c *shoppingListClient) RemoveProductFromCart(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error) {
+func (c *shoppingListClient) RemoveProductFromCart(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/shopping_list.ShoppingList/RemoveProductFromCart", in, out, opts...)
 	if err != nil {
@@ -109,8 +109,8 @@ type ShoppingListServer interface {
 	AddProductToList(context.Context, *Product) (*Response, error)
 	RemoveProductFromList(context.Context, *ProductRemove) (*Response, error)
 	UpdateProductInList(context.Context, *ProductUpdate) (*Response, error)
-	AddProductToCart(context.Context, *ProductId) (*Response, error)
-	RemoveProductFromCart(context.Context, *ProductId) (*Response, error)
+	AddProductToCart(context.Context, *ProductUpdate) (*Response, error)
+	RemoveProductFromCart(context.Context, *ProductUpdate) (*Response, error)
 	GetList(context.Context, *ListId) (*ProductList, error)
 	BuyAllProductsInCart(context.Context, *ListId) (*Response, error)
 	mustEmbedUnimplementedShoppingListServer()
@@ -129,10 +129,10 @@ func (UnimplementedShoppingListServer) RemoveProductFromList(context.Context, *P
 func (UnimplementedShoppingListServer) UpdateProductInList(context.Context, *ProductUpdate) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductInList not implemented")
 }
-func (UnimplementedShoppingListServer) AddProductToCart(context.Context, *ProductId) (*Response, error) {
+func (UnimplementedShoppingListServer) AddProductToCart(context.Context, *ProductUpdate) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddProductToCart not implemented")
 }
-func (UnimplementedShoppingListServer) RemoveProductFromCart(context.Context, *ProductId) (*Response, error) {
+func (UnimplementedShoppingListServer) RemoveProductFromCart(context.Context, *ProductUpdate) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveProductFromCart not implemented")
 }
 func (UnimplementedShoppingListServer) GetList(context.Context, *ListId) (*ProductList, error) {
@@ -209,7 +209,7 @@ func _ShoppingList_UpdateProductInList_Handler(srv interface{}, ctx context.Cont
 }
 
 func _ShoppingList_AddProductToCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductId)
+	in := new(ProductUpdate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -221,13 +221,13 @@ func _ShoppingList_AddProductToCart_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/shopping_list.ShoppingList/AddProductToCart",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShoppingListServer).AddProductToCart(ctx, req.(*ProductId))
+		return srv.(ShoppingListServer).AddProductToCart(ctx, req.(*ProductUpdate))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ShoppingList_RemoveProductFromCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductId)
+	in := new(ProductUpdate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func _ShoppingList_RemoveProductFromCart_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/shopping_list.ShoppingList/RemoveProductFromCart",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShoppingListServer).RemoveProductFromCart(ctx, req.(*ProductId))
+		return srv.(ShoppingListServer).RemoveProductFromCart(ctx, req.(*ProductUpdate))
 	}
 	return interceptor(ctx, in, info, handler)
 }

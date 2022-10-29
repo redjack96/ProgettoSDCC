@@ -64,7 +64,6 @@ const (
 type DBOperation struct {
 	opType        OpType
 	product       *pb.Product
-	productId     *pb.ProductId
 	productRemove *pb.ProductRemove
 	productUpdate *pb.ProductUpdate
 }
@@ -112,7 +111,6 @@ func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productR
 }
 
 func (s *serverShoppingList) UpdateProductInList(ctx context.Context, productUpdate *pb.ProductUpdate) (*pb.Response, error) {
-	// TODO: aggiorna prodotto nel database (es. mongodb)
 	log.Printf("Updating field %s of product with id %s.", productUpdate.Field, productUpdate.ProductId)
 	operation := new(DBOperation)
 	operation.opType = Update
@@ -130,12 +128,30 @@ func (s *serverShoppingList) UpdateProductInList(ctx context.Context, productUpd
 //  nel secondo caso: i prodotti checkati dovrebbero essere inviati direttamente in dispensa, tutti insieme. (questo dovrebbe esser fatto da productStorage, questo microservizio fa da client)
 
 // AddProductToCart sets the product as added to cart
-func (s *serverShoppingList) AddProductToCart(ctx context.Context, productId *pb.ProductId) (*pb.Response, error) {
+func (s *serverShoppingList) AddProductToCart(ctx context.Context, product *pb.ProductUpdate) (*pb.Response, error) {
+	log.Printf("Adding product to cart with id %s.", product.ProductId)
+	operation := new(DBOperation)
+	operation.opType = Update
+	operation.productUpdate = product
+	qResult, err := queryDB(*operation)
+	if err != nil {
+		log.Fatalln("Error querying DB", err)
+	}
+	fmt.Println(qResult)
 	return &pb.Response{Msg: "ok - product added to cart"}, nil
 }
 
 // RemoveProductFromCart sets the product as not added to cart yet
-func (s *serverShoppingList) RemoveProductFromCart(ctx context.Context, productId *pb.ProductId) (*pb.Response, error) {
+func (s *serverShoppingList) RemoveProductFromCart(ctx context.Context, product *pb.ProductUpdate) (*pb.Response, error) {
+	log.Printf("Removing product to cart with id %s.", product.ProductId)
+	operation := new(DBOperation)
+	operation.opType = Update
+	operation.productUpdate = product
+	qResult, err := queryDB(*operation)
+	if err != nil {
+		log.Fatalln("Error querying DB", err)
+	}
+	fmt.Println(qResult)
 	return &pb.Response{Msg: "ok - product removed from cart"}, nil
 }
 
@@ -148,6 +164,7 @@ func (s *serverShoppingList) GetList(ctx context.Context, listId *pb.ListId) (*p
 }
 
 func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, listId *pb.ListId) (*pb.Response, error) {
+	//log.Printf("Removing product to cart with id %s.", product.ProductId)
 	return &pb.Response{Msg: "ok - all product bought and sent to pantry"}, nil
 }
 
@@ -178,7 +195,8 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		prodUnit := prod.Unit
 		prodQuantity := prod.Quantity
 		prodName := prod.ProductName
-		prodIsBought := prod.AddedToCart
+		prodInCart := prod.AddedToCart
+		prodCheckedOut := prod.CheckedOut
 		tmExpiry := prod.Expiration
 		prodExpiry := time.Unix(tmExpiry.Seconds, 0)
 		// add the elements to an interface of bson elements
@@ -188,7 +206,8 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 			{"prodExpiry", prodExpiry},
 			{"prodQuantity", prodQuantity},
 			{"prodName", prodName},
-			{"bought", prodIsBought},
+			{"inCart", prodInCart},
+			{"checkedOut", prodCheckedOut},
 		}
 		fmt.Println(doc)
 		// insert the document in the collection

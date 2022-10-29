@@ -13,8 +13,8 @@ service ShoppingList {
   rpc AddProductToList(Product) returns (Response);
   rpc RemoveProductFromList(ProductRemove) returns (Response);
   rpc UpdateProductInList(ProductUpdate) returns (Response);
-  rpc AddProductToCart(ProductId) returns (Response);
-  rpc RemoveProductFromCart(ProductId) returns (Response);
+  rpc AddProductToCart(ProductUpdate) returns (Response);
+  rpc RemoveProductFromCart(ProductUpdate) returns (Response);
   rpc GetList(ListId) returns (ProductList);
   rpc BuyAllProductsInCart(ListId) returns (Response);
 }
@@ -36,18 +36,19 @@ enum Unit {
 }
 
 message ProductUpdate {
-  string productId = 2;
-  string field = 3; // for update
-  string value = 4; // for update
+  string productId = 1;
+  string field = 2; // for update
+  string value = 3; // for update
 }
 
 message ProductRemove {
     string productName = 1;
 }
 
-message ProductId {
-  string productName = 1;
-}
+//message ProductId {
+//  string productId = 1;
+//  string productName = 2;
+//}
 
 // argument
 message Product {
@@ -56,7 +57,8 @@ message Product {
   Unit unit = 3;
   int32 quantity = 4;
   bool addedToCart = 5;
-  google.protobuf.Timestamp expiration = 6;
+  bool checkedOut = 6;
+  google.protobuf.Timestamp expiration = 7;
 }
 
 message ListId {
