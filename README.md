@@ -1,8 +1,10 @@
-# SDCC Final Project
+# S.D.C.C. Shopping List
+Smart Distributed Capable & Consumption-Aware Shopping list. 
 A smart automated shopping list, built with microservices.
 
+_Definitely not the final project of Distributed Systems and Cloud Computing._
 ## Microservices
-This project is made of by 6 microservices:
+This project is made of 6 microservices:
 
 1. **ShoppingListService**: implements the shopping list (Golang)
 2. **ProductStorageService**: implements the house pantry and storage with bought items (Rustlang). Stateful.
@@ -17,7 +19,7 @@ TODO: The following pattern are implemented:
 
 - Circuit Breaker:
 - Database per Service:
-- API Gateway:
+- API Gateway: implemented in Rust. It's a REST API server (built with crate actix-web) and a grpc client (with crates prost+tonic). 
 
 ## Development Build single container
 

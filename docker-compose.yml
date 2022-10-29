@@ -17,10 +17,12 @@ services:
     image: "api_gateway"
     container_name: "ApiGateway"
     build: "src/api_gateway"
+    volumes:
+      - "./config.properties:/api_gateway/config.properties"
     ports:
       - "8007:8007"
-#    depends_on:
-#      - shopping_list
+    depends_on:
+      - shopping_list
 #      - product_storage
 #      - recipes
 #      - consumptions
@@ -42,8 +44,8 @@ services:
     #crea un bind-mount per sviluppare facilmente (così modifiche nel codice si ripercuotono anche nel container). Quando si rilascia va eliminato e sostituito con un COPY nel Dockerfile 
     #il secondo bind-mount serve a copiare il file di configurazione
     volumes:
-      - "./src/microservices/product_storage:/usr/src/product_storage"
-      - "./config.properties:/usr/src/product_storage/config.properties"
+      - "./src/microservices/product_storage:/product_storage"
+      - "./config.properties:/product_storage/config.properties"
   # recipes:
   #   image: recipes
   #   container_name: "RecipesService"

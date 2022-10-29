@@ -1,3 +1,5 @@
+mod properties;
+
 enum Unit{
     Bottle,
     Packet,

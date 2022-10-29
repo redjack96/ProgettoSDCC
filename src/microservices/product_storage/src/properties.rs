@@ -27,14 +27,14 @@ pub struct Properties {
     pub mongodb_address: String,
 }
 
-const DEFAULT_PORT : &str = "0";
-const DEFAULT_ADDR : &str = "localhost";
+const DEFAULT_PORT : &String = &"0".to_string();
+const DEFAULT_ADDR : &String = &"localhost".to_string();
 
 fn get_port_or_default(map: &HashMap<String, String>, key: &str) -> i32 {
-    map.get(key).unwrap_or(&DEFAULT_PORT.to_string()).parse().unwrap_or(0)
+    map.get(key).unwrap_or(DEFAULT_PORT).parse().unwrap_or(0)
 }
 fn get_addr_or_default(map: &HashMap<String, String>, key: &str) -> String {
-    map.get(key).unwrap_or(&DEFAULT_ADDR.to_string()).to_string()
+    map.get(key).unwrap_or(DEFAULT_ADDR).to_string()
 }
 
 pub fn get_properties() -> Properties {
