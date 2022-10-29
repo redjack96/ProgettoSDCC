@@ -18,43 +18,6 @@ import (
 	"time"
 )
 
-type ShoppingList struct {
-	name     string
-	products []Product
-}
-
-// ProductType is an enum. In go enum does not exist
-type ProductType int64
-
-const (
-	Meat ProductType = iota // con la parola chiave iota si definiscono i tipi dell'enum
-	Fish
-	Fruit
-	Vegetable
-	Drink
-	Other
-)
-
-// Unit is an enum
-type Unit int64
-
-const (
-	Bottle Unit = iota
-	Packet
-	Kg
-	Grams
-)
-
-type Product struct {
-	itemId      int64 // an int with type ProductId.Two Products with the same name can have different ProductIds
-	productName string
-	prodType    ProductType
-	unit        Unit
-	quantity    int32
-	bought      bool // true if it is checked on the list
-	// expireDate string // Todo: usare una data
-}
-
 type OpType int64
 
 const (
