@@ -9,10 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net"
 	pb "shopping_list.microservice/generated/shopping_list.microservice/proto_generated"
 	props "shopping_list.microservice/main/util"
+	"strconv"
 	"time"
 )
 
@@ -158,44 +160,40 @@ func (s *serverShoppingList) RemoveProductFromCart(ctx context.Context, product 
 
 func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*pb.ProductList, error) {
 	products := make([]*pb.Product, 0)
+	operation := DBOperation{
+		opType:        Select,
+		product:       nil,
+		productRemove: nil,
+		productUpdate: nil,
+	}
 
-	operation := new(DBOperation)
-	operation.opType = Select
-	productListBson, err := queryDB(*operation)
+	// Get products collection
+	res, err := queryDB(operation)
+	var cursor *mongo.Cursor
+	cursor = res[0].(*mongo.Cursor)
 	if err == nil {
 		// indice, prodotto
-		for _, val := range productListBson {
-			doc, _ := bson.Marshal(val)
-			var prod pb.Product
-			err = bson.Unmarshal(doc, &prod)
+		for cursor.Next(context.TODO()) {
+			curr := cursor.Current
+			addedToCart, _ := strconv.ParseBool(curr.Lookup("addedToCart").String())
+			checkedOut, _ := strconv.ParseBool(curr.Lookup("checkedOut").String())
+			prod := pb.Product{
+				ProductName: curr.Lookup("productName").StringValue(),
+				Type:        pb.ProductType(curr.Lookup("type").Int32()), // I numeri sono salvati in mongodb come int32
+				Unit:        pb.Unit(curr.Lookup("unit").Int32()),
+				Quantity:    curr.Lookup("quantity").Int32(),
+				AddedToCart: addedToCart,
+				CheckedOut:  checkedOut,
+				Expiration:  timestamppb.New(curr.Lookup("expiration").Time()),
+			}
 			products = append(products, &prod)
-			fmt.Println(&prod)
 		}
 	}
-	//products[0] = &pb.Product{
-	//	ProductName: "Prosciutto",
-	//	Type:        pb.ProductType_Meat,
-	//	Unit:        pb.Unit_Grams,
-	//	Quantity:    250,
-	//	AddedToCart: false,
-	//	CheckedOut:  false,
-	//	Expiration:  timestamppb.Now(),
-	//}
-	//
-	//products[1] = &pb.Product{
-	//	ProductName: "Mela",
-	//	Type:        pb.ProductType_Fruit,
-	//	Unit:        pb.Unit_Packet,
-	//	Quantity:    1,
-	//	AddedToCart: true,
-	//	CheckedOut:  false,
-	//	Expiration:  timestamppb.Now(),
-	//}
 	x := &pb.ProductList{
 		Name:     "Product List",
 		Products: products,
 	}
-	fmt.Println(x)
+	fmt.Printf("Product List: %+v", x)
 	return x, nil
 }
 
@@ -278,18 +276,10 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 			context.TODO(),
 			bson.D{},
 		)
-		for cursor.Next(context.TODO()) {
-			var result bson.D
-			if err := cursor.Decode(&result); err != nil {
-				log.Fatal(err)
-			}
-			fmt.Printf("Result: %+v\n", result)
-			res = append(res, result)
-		}
-		if err := cursor.Err(); err != nil {
+		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(res)
+		res = append(res, cursor)
 		return res, err
 	}
 	return res, nil
