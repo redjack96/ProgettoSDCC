@@ -59,6 +59,7 @@ const (
 	Insert OpType = iota
 	Remove
 	Update
+	Select
 )
 
 type DBOperation struct {
@@ -155,21 +156,52 @@ func (s *serverShoppingList) RemoveProductFromCart(ctx context.Context, product 
 	return &pb.Response{Msg: "ok - product removed from cart"}, nil
 }
 
-func (s *serverShoppingList) GetList(ctx context.Context, listId *pb.ListId) (*pb.ProductList, error) {
-	return &pb.ProductList{
-		Id:       &pb.ListId{ListId: 1},
+func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*pb.ProductList, error) {
+	products := make([]*pb.Product, 0)
+
+	operation := new(DBOperation)
+	operation.opType = Select
+	productListBson, err := queryDB(*operation)
+	if err == nil {
+		// indice, prodotto
+		for _, val := range productListBson {
+			doc, _ := bson.Marshal(val)
+			var prod pb.Product
+			err = bson.Unmarshal(doc, &prod)
+			products = append(products, &prod)
+			fmt.Println(&prod)
+		}
+	}
+	//products[0] = &pb.Product{
+	//	ProductName: "Prosciutto",
+	//	Type:        pb.ProductType_Meat,
+	//	Unit:        pb.Unit_Grams,
+	//	Quantity:    250,
+	//	AddedToCart: false,
+	//	CheckedOut:  false,
+	//	Expiration:  timestamppb.Now(),
+	//}
+	//
+	//products[1] = &pb.Product{
+	//	ProductName: "Mela",
+	//	Type:        pb.ProductType_Fruit,
+	//	Unit:        pb.Unit_Packet,
+	//	Quantity:    1,
+	//	AddedToCart: true,
+	//	CheckedOut:  false,
+	//	Expiration:  timestamppb.Now(),
+	//}
+	x := &pb.ProductList{
 		Name:     "Product List",
-		Products: nil,
-	}, nil
+		Products: products,
+	}
+	fmt.Println(x)
+	return x, nil
 }
 
-func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, listId *pb.ListId) (*pb.Response, error) {
+func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, entireList *pb.ProductList) (*pb.Response, error) {
 	//log.Printf("Removing product to cart with id %s.", product.ProductId)
 	return &pb.Response{Msg: "ok - all product bought and sent to pantry"}, nil
-}
-
-func removeProduct() Product {
-	return Product{}
 }
 
 /* Function to query the MongoDB database */
@@ -183,7 +215,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
 		panic(err)
 	}
-	// Select products collection
+	// Get products collection
 	prodCollection := client.Database("appdb").Collection("products")
 
 	// complete operations
@@ -201,33 +233,31 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		prodExpiry := time.Unix(tmExpiry.Seconds, 0)
 		// add the elements to an interface of bson elements
 		doc := bson.D{
-			{"prodType", prodType},
-			{"prodUnit", prodUnit},
-			{"prodExpiry", prodExpiry},
-			{"prodQuantity", prodQuantity},
-			{"prodName", prodName},
-			{"inCart", prodInCart},
+			{"type", prodType},
+			{"unit", prodUnit},
+			{"expiration", prodExpiry},
+			{"quantity", prodQuantity},
+			{"productName", prodName},
+			{"addedToCart", prodInCart},
 			{"checkedOut", prodCheckedOut},
 		}
 		fmt.Println(doc)
 		// insert the document in the collection
 		results, err := prodCollection.InsertOne(context.TODO(), doc)
 		// check for errors in the insertion
-		if err != nil {
-			panic(err)
+		if err == nil {
+			res = append(res, results.InsertedID)
 		}
-		res := append(res, results.InsertedID)
-		return res, nil
+		return res, err
 	} else if operation.opType == Remove {
 		prodName := operation.productRemove.ProductName
 		// remove specified elements from the collection
-		doc := bson.D{{"prodName", prodName}}
+		doc := bson.D{{"productName", prodName}}
 		result, err := prodCollection.DeleteOne(context.TODO(), doc)
-		if err != nil {
-			panic(err)
+		if err == nil {
+			res = append(res, result.DeletedCount)
 		}
-		res := append(res, result.DeletedCount)
-		return res, nil
+		return res, err
 	} else if operation.opType == Update {
 		idString := operation.productUpdate.ProductId
 		field := operation.productUpdate.Field
@@ -238,10 +268,29 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		update := bson.D{{"$set", bson.D{{field, value}}}}
 		result, err := prodCollection.UpdateOne(context.TODO(), filter, update)
 		if err != nil {
-			panic(err)
+			res = append(res, result.ModifiedCount)
 		}
-		res := append(res, result.ModifiedCount)
-		return res, nil
+		return res, err
+	} else if operation.opType == Select {
+		// apply a filter
+		// filter := bson.D{{"inCart", bson.D{{"$eq", "true"}}}}
+		cursor, err := prodCollection.Find(
+			context.TODO(),
+			bson.D{},
+		)
+		for cursor.Next(context.TODO()) {
+			var result bson.D
+			if err := cursor.Decode(&result); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("Result: %+v\n", result)
+			res = append(res, result)
+		}
+		if err := cursor.Err(); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(res)
+		return res, err
 	}
 	return res, nil
 }
