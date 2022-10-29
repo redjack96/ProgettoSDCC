@@ -1,0 +1,21 @@
+// version of protocol buffer used
+syntax = "proto3";
+
+// package name for the buffer will be used later
+package summary;
+import "shopping_list.proto";
+
+// service which can be executed
+service Summary {
+  rpc WeekSummary(shopping_list.Product) returns (SummaryData);
+  rpc MonthSummary(shopping_list.Product) returns (SummaryData);
+}
+
+message SummaryData {
+  int64 itemId = 1;
+  int32 bought = 2;
+  int32 used = 3;
+  int32 rebought_times = 4; // Quante volte è stato comprato in settimana/mese
+  int32 number_expired = 5; // Quanti sono scaduti
+  int32 remaining = 6; // Quanti ne rimangono ora
+}

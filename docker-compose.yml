@@ -19,6 +19,7 @@ services:
     build: "src/api_gateway"
     volumes:
       - "./config.properties:/api_gateway/config.properties"
+      - "./src/proto:/api_gateway/proto"
     ports:
       - "8007:8007"
     depends_on:
@@ -33,33 +34,32 @@ services:
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
     build: "src/microservices/shopping_list"
     volumes:
-#      - "./src/microservices/shopping_list:/usr/src/shopping_list"
       - "./config.properties:/usr/src/shopping_list/config.properties"
+      - "./src/proto:/usr/src/shopping_list/proto"
     depends_on:
       - mongo
   product_storage:
     image: "product_storage"
     container_name: "ProductStorageService"
     build: "src/microservices/product_storage"
-    #crea un bind-mount per sviluppare facilmente (così modifiche nel codice si ripercuotono anche nel container). Quando si rilascia va eliminato e sostituito con un COPY nel Dockerfile 
-    #il secondo bind-mount serve a copiare il file di configurazione
     volumes:
-      - "./src/microservices/product_storage:/product_storage"
       - "./config.properties:/product_storage/config.properties"
-  # recipes:
-  #   image: recipes
-  #   container_name: "RecipesService"
-  #   build: "src/microservices/recipes"
-  #   volumes: 
-  #     - "src/microservices/recipes:/usr/src/recipes"
-  #     - "./config.properties:/usr/src/recipes"
-  # consumptions:
-  #   image: consumptions
-  #   container_name: "ConsumptionService"
-  #   build: "src/microservices/consumptions"
-  #   volumes:
-  #     - "src/microservices/consumptions:/usr/src/consumptions"
-  #     - "./config.properties:/usr/src/consumptions"
+      - "./src/proto:/product_storage/proto"
+#  recipes:
+#    image: recipes
+#    container_name: "RecipesService"
+#    build: "src/microservices/recipes"
+#    volumes:
+#      - "./config.properties:/usr/src/recipes"
+#      - "./src/proto:/usr/src/recipes/proto"
+#  consumptions:
+#    image: consumptions
+#    container_name: "ConsumptionService"
+#    build: "src/microservices/consumptions"
+#    volumes:
+#      - "./config.properties:/usr/src/consumptions"
+#      - "./src/proto:/usr/src/consumptions/proto"
+
   # notifications:
   #   image: notifications
   #   container_name: "NotificationsService"

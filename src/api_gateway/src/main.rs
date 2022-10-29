@@ -10,7 +10,6 @@ use tonic::transport::{Channel, Uri};
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
 use api_gateway::shopping_list::Product;
-use api_gateway::shopping_list::ProductId;
 use api_gateway::shopping_list::ProductRemove;
 use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
@@ -112,6 +111,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
             unit,
             quantity,
             added_to_cart: false,
+            checked_out: false,
             expiration: Some(expiry_date)
         },
     );
