@@ -24,7 +24,7 @@ type ShoppingListClient interface {
 	AddProductToCart(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error)
 	RemoveProductFromCart(ctx context.Context, in *ProductUpdate, opts ...grpc.CallOption) (*Response, error)
 	GetList(ctx context.Context, in *GetListRequest, opts ...grpc.CallOption) (*ProductList, error)
-	BuyAllProductsInCart(ctx context.Context, in *ProductList, opts ...grpc.CallOption) (*Response, error)
+	BuyAllProductsInCart(ctx context.Context, in *BuyRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type shoppingListClient struct {
@@ -89,7 +89,7 @@ func (c *shoppingListClient) GetList(ctx context.Context, in *GetListRequest, op
 	return out, nil
 }
 
-func (c *shoppingListClient) BuyAllProductsInCart(ctx context.Context, in *ProductList, opts ...grpc.CallOption) (*Response, error) {
+func (c *shoppingListClient) BuyAllProductsInCart(ctx context.Context, in *BuyRequest, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/shopping_list.ShoppingList/BuyAllProductsInCart", in, out, opts...)
 	if err != nil {
@@ -108,7 +108,7 @@ type ShoppingListServer interface {
 	AddProductToCart(context.Context, *ProductUpdate) (*Response, error)
 	RemoveProductFromCart(context.Context, *ProductUpdate) (*Response, error)
 	GetList(context.Context, *GetListRequest) (*ProductList, error)
-	BuyAllProductsInCart(context.Context, *ProductList) (*Response, error)
+	BuyAllProductsInCart(context.Context, *BuyRequest) (*Response, error)
 	mustEmbedUnimplementedShoppingListServer()
 }
 
@@ -134,7 +134,7 @@ func (UnimplementedShoppingListServer) RemoveProductFromCart(context.Context, *P
 func (UnimplementedShoppingListServer) GetList(context.Context, *GetListRequest) (*ProductList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetList not implemented")
 }
-func (UnimplementedShoppingListServer) BuyAllProductsInCart(context.Context, *ProductList) (*Response, error) {
+func (UnimplementedShoppingListServer) BuyAllProductsInCart(context.Context, *BuyRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BuyAllProductsInCart not implemented")
 }
 func (UnimplementedShoppingListServer) mustEmbedUnimplementedShoppingListServer() {}
@@ -259,7 +259,7 @@ func _ShoppingList_GetList_Handler(srv interface{}, ctx context.Context, dec fun
 }
 
 func _ShoppingList_BuyAllProductsInCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductList)
+	in := new(BuyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -271,7 +271,7 @@ func _ShoppingList_BuyAllProductsInCart_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/shopping_list.ShoppingList/BuyAllProductsInCart",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShoppingListServer).BuyAllProductsInCart(ctx, req.(*ProductList))
+		return srv.(ShoppingListServer).BuyAllProductsInCart(ctx, req.(*BuyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

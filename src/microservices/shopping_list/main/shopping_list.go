@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net"
@@ -160,8 +161,51 @@ func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*
 	return x, nil
 }
 
-func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, entireList *pb.ProductList) (*pb.Response, error) {
-	//log.Printf("Removing product to cart with id %s.", product.ProductId)
+func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.BuyRequest) (*pb.Response, error) {
+	log.Printf("Buying all products in cart...")
+
+	onlyInCart := make([]*pb.Product, 0)
+	// TODO: sto riutilizzando il metodo sopra!!!
+	entireList, _ := s.GetList(ctx, &pb.GetListRequest{})
+	for i := 0; i < len(entireList.Products); i++ {
+		prod := entireList.Products[i]
+		if prod.AddedToCart {
+			onlyInCart = append(onlyInCart, prod)
+		}
+	}
+	// TODO: eliminare i prodotti nel carrello da mongodb
+	//fmt.Println(entireList)
+	//fmt.Println(onlyInCart)
+	// Sending products to ProductStorage
+	properties, _ := props.GetProperties()
+	productStorageAddress := fmt.Sprintf("%s:%d", properties.ProductStorageAddress, properties.ProductStoragePort)
+	conn, err := grpc.Dial(productStorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("did non connect: %v", err)
+	}
+	defer func(conn *grpc.ClientConn) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatalf("cannot close connection: %v", err)
+		}
+	}(conn) // runs immediately this function (like in JavaScript). To be more precise, it runs the lambda function at the end of the main function.
+
+	// pb stand for ProtocolBuffer
+	c := pb.NewProductStorageClient(conn)
+	fmt.Println(c)
+	// Contact server and print out its response; cancel is a function
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	r, err := c.AddBoughtProductToPantry(ctx, &pb.ProductList{
+		Id:       entireList.Id,
+		Name:     entireList.Name,
+		Products: onlyInCart,
+	})
+	if err != nil {
+		return &pb.Response{Msg: "could not add bought items to Pantry"}, err
+	}
+	log.Printf("Response received: %s", r.Msg)
 	return &pb.Response{Msg: "ok - all product bought and sent to pantry"}, nil
 }
 
@@ -223,10 +267,15 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		idString := operation.productUpdate.ProductId
 		field := operation.productUpdate.Field
 		value := operation.productUpdate.Value
-
 		id, _ := primitive.ObjectIDFromHex(idString)
 		filter := bson.D{{"_id", id}}
-		update := bson.D{{"$set", bson.D{{field, value}}}}
+		var update bson.D
+		if field == "addedToCart" {
+			valueBool, _ := strconv.ParseBool(value)
+			update = bson.D{{"$set", bson.D{{field, valueBool}}}}
+		} else {
+			update = bson.D{{"$set", bson.D{{field, value}}}}
+		}
 		result, err := prodCollection.UpdateOne(context.TODO(), filter, update)
 		if err != nil {
 			res = append(res, result.ModifiedCount)
@@ -250,7 +299,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 
 // Run in the server/ directory
 // go run .\server.go
-// PREREQUISITE in this folder!!: protoc --go_out generated --go-grpc_out generated shopping_list.proto
+// PREREQUISITE in this folder!!: protoc --go_out generated --go-grpc_out generated *.proto
 func main() {
 	// Retrieve the properties from the file
 	properties, _ := props.GetProperties()

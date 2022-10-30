@@ -16,7 +16,7 @@ service ShoppingList {
   rpc AddProductToCart(ProductUpdate) returns (Response);
   rpc RemoveProductFromCart(ProductUpdate) returns (Response);
   rpc GetList(GetListRequest) returns (ProductList);
-  rpc BuyAllProductsInCart(ProductList) returns (Response);
+  rpc BuyAllProductsInCart(BuyRequest) returns (Response);
 }
 
 enum ProductType {
@@ -61,16 +61,18 @@ message Product {
   google.protobuf.Timestamp expiration = 7;
 }
 
-message GetListRequest {
-//     int64 listId = 1;
+message ListId {
+    int64 listId = 1;
 }
 // shopping List
 message ProductList {
-    // ListId id = 1;
-    string name = 1;
-    repeated Product products = 2; // list of products
+    ListId id = 1;
+    string name = 2;
+    repeated Product products = 3; // list of products
 }
 
+message GetListRequest {}
+message BuyRequest {}
 message Response {
   string msg = 1; // "ok" se ha successo, altrimenti l'errore e il messaggio di errore.
 }

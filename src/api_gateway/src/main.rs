@@ -15,6 +15,7 @@ use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
 use api_gateway::shopping_list::Unit;
 use api_gateway::shopping_list::GetListRequest;
+use api_gateway::shopping_list::BuyRequest;
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use prost_types::Timestamp;
@@ -58,7 +59,7 @@ fn type_from_str(input: &str) -> ProductType {
 //     // expireDate string // Todo: usare una data
 // }
 
-
+// TODO: rimuovere queste API di test
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -287,6 +288,29 @@ async fn get_shopping_list() -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
+// rpc BuyAllProductsInCart(ProductList) returns (Response)
+#[post("/buyProductInCart")]
+async fn buy_products_in_cart() -> impl Responder {
+    let configs = get_properties();
+    println!("Buy products requested");
+    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    println!("Channel created");
+    let mut client = ShoppingListClient::new(channel);
+    println!("gRPC client created");
+    // TODO: non so se va bene: la lista la prende direttamente dal database e la filtra lato Go.
+    // Creating a Tonic request
+    let request = tonic::Request::new(BuyRequest{});
+    println!("Request created");
+    // Sending request and waiting for response
+    let response = client.buy_all_products_in_cart(request)
+        .await
+        .unwrap()
+        .into_inner();
+    let response_str = format!("Response received: {:?}", response);
+    println!("{}", response_str);
+    HttpResponse::Ok().body(response_str)
+}
+
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -306,6 +330,7 @@ async fn main() -> std::io::Result<()> {
             .service(add_to_cart)
             .service(remove_from_cart)
             .service(get_shopping_list)
+            .service(buy_products_in_cart)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await

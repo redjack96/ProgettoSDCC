@@ -11,7 +11,12 @@ WORKDIR /product_storage
 COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./src/lib.rs ./src/lib.rs
+COPY ./shopping_list.proto ./shopping_list.proto
 COPY ./product_storage.proto ./product_storage.proto
+COPY ./recipes.proto ./recipes.proto
+COPY ./consumptions.proto ./consumptions.proto
+COPY ./notifications.proto ./notifications.proto
+COPY ./summary.proto ./summary.proto
 COPY build.rs ./build.rs
 
 # this build step will cache your dependencies

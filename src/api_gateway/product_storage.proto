@@ -4,11 +4,12 @@ import "shopping_list.proto";
 
 // package name for the buffer will be used later
 package product_storage;
-
+option go_package = "shopping_list.microservice/proto_generated";
 // service which can be executed
 service ProductStorage {
-  rpc AddProductToPantry(Item) returns (shopping_list.Response);
-  rpc RemoveProductFromPantry(ProductId) returns (Item);
+  rpc AddBoughtProductToPantry(shopping_list.ProductList) returns (shopping_list.Response); // TODO: aggiungere nel messaggio di output il numero di prodotti aggiunti
+  rpc AddProductToPantry(Item) returns (shopping_list.Response); // manually added products
+  rpc RemoveProductFromPantry(ProductId) returns (Item); // manually or because used by recipes
   rpc UpdateProductInPantry(ProductId) returns (shopping_list.Response);
   rpc GetPantry(PantryMessage) returns (Pantry); // TODO: per ora restituisce l'intera dispensa. Forse e' un po' eccessivo!
 }

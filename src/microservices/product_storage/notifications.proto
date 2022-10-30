@@ -1,8 +1,8 @@
 // version of protocol buffer used
 syntax = "proto3";
-
 // package name for the buffer will be used later
 package notifications;
+option go_package = "shopping_list.microservice/proto_generated";
 import "shopping_list.proto";
 
 // service which can be executed

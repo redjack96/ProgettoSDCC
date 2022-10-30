@@ -15,8 +15,8 @@ service ShoppingList {
   rpc UpdateProductInList(ProductUpdate) returns (Response);
   rpc AddProductToCart(ProductUpdate) returns (Response);
   rpc RemoveProductFromCart(ProductUpdate) returns (Response);
-  rpc GetList(ListId) returns (ProductList);
-  rpc BuyAllProductsInCart(ListId) returns (Response);
+  rpc GetList(GetListRequest) returns (ProductList);
+  rpc BuyAllProductsInCart(BuyRequest) returns (Response);
 }
 
 enum ProductType {
@@ -71,6 +71,8 @@ message ProductList {
     repeated Product products = 3; // list of products
 }
 
+message GetListRequest {}
+message BuyRequest {}
 message Response {
   string msg = 1; // "ok" se ha successo, altrimenti l'errore e il messaggio di errore.
 }

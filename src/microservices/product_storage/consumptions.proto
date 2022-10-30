@@ -3,7 +3,7 @@ syntax = "proto3";
 
 // package name for the buffer will be used later
 package consumptions;
-
+option go_package = "shopping_list.microservice/proto_generated";
 // service which can be executed
 service Estimator {
   // This function should receive and return a stream of object
