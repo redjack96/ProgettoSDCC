@@ -1,4 +1,5 @@
 mod properties;
+mod surreal;
 
 // use std::os::unix::net::SocketAddr;
 use tonic::{transport::Server, Request, Status};
@@ -8,6 +9,7 @@ use product_storage::shopping_list::product_storage_server::{ProductStorage, Pro
 // use product_storage::product_storage::{HelloReply, HelloRequest};
 use product_storage::shopping_list::{ProductList, ProductId, PantryMessage};
 use crate::properties::get_properties;
+use crate::surreal::create_database;
 
 /*enum Unit{
     Bottle,
@@ -57,6 +59,7 @@ pub struct ProductStorageImpl {}
 impl ProductStorage for ProductStorageImpl {
     async fn add_bought_product_to_pantry(&self, request: Request<ProductList>) -> Result<tonic::Response<product_storage::shopping_list::Response>, Status> {
         println!("Added to pantry {}", request.get_ref().products.len());
+        //TODO: aggiungere data di acquisto per prodotto in arrivo
         Ok(tonic::Response::new(product_storage::shopping_list::Response { // le struct si istanziano esattamente come in Go
             msg: format!("Items added to pantry {}", request.get_ref().products.len()),
         })) // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
@@ -80,6 +83,8 @@ impl ProductStorage for ProductStorageImpl {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let configs = get_properties();
     let addr = format!("[::]:{}", configs.product_storage_port);
+    // Create surreal database
+    let db = create_database().await;
     // Creo il servizio
     let service = ProductStorageImpl::default(); // istanzia la struct impostando TUTTI i valori in default!
     // aggiungo l'indirizzo al server

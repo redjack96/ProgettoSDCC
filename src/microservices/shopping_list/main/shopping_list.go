@@ -174,6 +174,7 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 		}
 	}
 	// TODO: eliminare i prodotti nel carrello da mongodb
+	// TODO: aggiungere comunicazione con consumption service per predire i consumi (aggiungere al dataset delle cose comprate)
 	//fmt.Println(entireList)
 	//fmt.Println(onlyInCart)
 	// Sending products to ProductStorage

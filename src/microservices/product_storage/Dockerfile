@@ -2,7 +2,10 @@
 # first we start from rust image and install our app
 FROM rust:latest as builder
 
-RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y protobuf-compiler libclang-dev libssl-dev && rm -rf /var/lib/apt/lists/*
+# TODO: installare anche sudo apt-get install -y libclang-dev
+# TODO: installare anche sudo apt install libssl-dev
+
 # create a new empty shell project
 RUN USER=root cargo new product_storage
 WORKDIR /product_storage
