@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM golang:latest
 WORKDIR /usr/src/shopping_list
 # Copy go.mod and go.sum files to workspace

@@ -8,57 +8,19 @@ use tonic::{transport::Server, Request, Status};
 use product_storage::shopping_list::product_storage_server::{ProductStorage, ProductStorageServer};
 // nome_progetto::package_file_proto::NomeMessage
 // use product_storage::product_storage::{HelloReply, HelloRequest};
-use product_storage::shopping_list::{ProductList, ProductId, PantryMessage};
+use product_storage::shopping_list::{ProductList, ProductId, PantryMessage, ListId};
 use crate::properties::get_properties;
 // use crate::surreal::{create_database, execute_query};
 
-/*enum Unit{
-    Bottle,
-    Packet,
-    Kg,
-    Grams
-}
-enum ProductType{
-    Meat,
-    Fish,
-    Fruit,
-    Vegetable,
-    Drink,
-    Other
-}
-
-struct ProductId(i64);
-
-struct Product{
-    id: ProductId,
-    product_info: ProductInfo,
-    quantity: i32,
-    quantity_expired: i32,
-    min_expire_date: String,
-    last_used: String,      // Todo: usare una data qui
-    last_bought: String,    // Todo: e qui
-}
-
-//TODO: la quantità va messa qui o no?
-struct ProductInfo {
-    id: ProductId, // e' un intero a cui ho cambiato il nome i64. Rappresenta l'id di un prodotto. Due prodotti con lo stesso nome possono avere id differenti.
-    name: String,
-    r#type: ProductType,    // r# serve per fare escape della parola chiave type. Cosi' si puo accedere a ProductInfo.type
-    expire_date: String,    // Todo: usare una data
-    expired: bool,
-}
-
-// dispensa
-struct Pantry {
-    products: Vec<Product>
-}
-*/
 #[derive(Default)]
 pub struct ProductStorageImpl {}
 
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
     async fn add_bought_product_to_pantry(&self, request: Request<ProductList>) -> Result<tonic::Response<product_storage::shopping_list::Response>, Status> {
+        let msg= format!("Items Added to pantry: {}", request.get_ref().products.len());
+        let product_list: ProductList = request.into_inner();
+        println!("ListId: {:?}, ListName: {}, Number of products: {}", product_list.id.unwrap_or(ListId{list_id:0}).list_id, product_list.name, product_list.products.len());
         //TODO: aggiungere data di acquisto per prodotto in arrivo
         //TODO: aggiungere elementi al db
         println!("Adding elements received to db");
@@ -67,7 +29,7 @@ impl ProductStorage for ProductStorageImpl {
         // add_products_to_db(product_list.products);
         println!("Added to pantry {}", request.get_ref().products.len());
         Ok(tonic::Response::new(product_storage::shopping_list::Response { // le struct si istanziano esattamente come in Go
-            msg: format!("Items added to pantry {}", request.get_ref().products.len()),
+            msg
         })) // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
         // In teoria questo METODO va sempre a buon fine, ma ricordiamo che è asincrono
     }

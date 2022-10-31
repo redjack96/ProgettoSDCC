@@ -134,7 +134,7 @@ func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*
 	// Get products collection
 	res, err := queryDB(operation)
 	var cursor *mongo.Cursor
-	cursor = res[0].(*mongo.Cursor)
+	cursor = res.(*mongo.Cursor)
 	if err == nil {
 		// indice, prodotto
 		for cursor.Next(context.TODO()) {
@@ -211,7 +211,7 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 }
 
 /* Function to query the MongoDB database */
-func queryDB(operation DBOperation) ([]interface{}, error) {
+func queryDB(operation DBOperation) (interface{}, error) {
 	// connect mongo database
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://root:example@mongo:27017"))
 	if err != nil {
@@ -225,7 +225,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 	prodCollection := client.Database("appdb").Collection("products")
 
 	// complete operations
-	var res []interface{}
+	var res interface{}
 	if operation.opType == Insert {
 		// add all products to a single interface
 		prod := operation.product
@@ -252,7 +252,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		results, err := prodCollection.InsertOne(context.TODO(), doc)
 		// check for errors in the insertion
 		if err == nil {
-			res = append(res, results.InsertedID)
+			res = results.InsertedID
 		}
 		return res, err
 	} else if operation.opType == Remove {
@@ -261,7 +261,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		doc := bson.D{{"productName", prodName}}
 		result, err := prodCollection.DeleteOne(context.TODO(), doc)
 		if err == nil {
-			res = append(res, result.DeletedCount)
+			res = result.DeletedCount
 		}
 		return res, err
 	} else if operation.opType == Update {
@@ -279,7 +279,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		}
 		result, err := prodCollection.UpdateOne(context.TODO(), filter, update)
 		if err != nil {
-			res = append(res, result.ModifiedCount)
+			res = result.ModifiedCount
 		}
 		return res, err
 	} else if operation.opType == Select {
@@ -292,7 +292,7 @@ func queryDB(operation DBOperation) ([]interface{}, error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res = append(res, cursor)
+		res = cursor
 		return res, err
 	}
 	return res, nil

@@ -40,24 +40,6 @@ fn type_from_str(input: &str) -> ProductType {
         _ => ProductType::Other
     }
 }
-// #[derive(Debug, PartialEq)]
-// enum Unit {
-//     Bottle = 0,
-//     Packet = 1,
-//     Kg = 2,
-//     Grams = 3
-// }
-
-// struct Product {
-//     item_id: i64,
-//     // an int with type ProductId.Two Products with the same name can have different ProductIds
-//     product_name: String,
-//     prod_type: ProductType,
-//     unit: Unit,
-//     quantity: i32,
-//     added_to_cart: bool, // true if it is checked on the list
-//     // expireDate string // Todo: usare una data
-// }
 
 // TODO: rimuovere queste API di test
 #[get("/")]
@@ -297,7 +279,6 @@ async fn buy_products_in_cart() -> impl Responder {
     println!("Channel created");
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
-    // TODO: non so se va bene: la lista la prende direttamente dal database e la filtra lato Go.
     // Creating a Tonic request
     let request = tonic::Request::new(BuyRequest{});
     println!("Request created");

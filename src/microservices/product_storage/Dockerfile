@@ -1,38 +1,38 @@
-# Here we do a multi-build dockerfile to reduce final container size
-# first we start from rust image and install our app
-FROM rust:latest as builder
-
-RUN apt-get update && apt-get install -y protobuf-compiler libclang-dev libssl-dev && rm -rf /var/lib/apt/lists/*
-# TODO: installare anche sudo apt-get install -y libclang-dev
-# TODO: installare anche sudo apt install libssl-dev
-
-# create a new empty shell project
-RUN USER=root cargo new product_storage
+# Stage 1 - we prepare the dependencies to install and build
+FROM rust as planner
 WORKDIR /product_storage
+RUN cargo install cargo-chef
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
 
-# copy over your manifests
-COPY ./Cargo.lock ./Cargo.lock
-COPY ./Cargo.toml ./Cargo.toml
-COPY ./src/lib.rs ./src/lib.rs
-COPY ./shopping_list.proto ./shopping_list.proto
-COPY ./product_storage.proto ./product_storage.proto
-COPY ./recipes.proto ./recipes.proto
-COPY ./consumptions.proto ./consumptions.proto
-COPY ./notifications.proto ./notifications.proto
-COPY ./summary.proto ./summary.proto
-COPY build.rs ./build.rs
+# Stage 2 - we build (cook) our dependencies with cargo-chef
+FROM rust as cacher
+WORKDIR /product_storage
+RUN cargo install cargo-chef
+COPY --from=planner /product_storage/recipe.json recipe.json
+RUN apt-get update && apt-get install -y libclang-dev libssl-dev
+RUN cargo chef cook --release --recipe-path recipe.json
 
-# this build step will cache your dependencies
-RUN cargo build --release
-RUN rm src/*.rs
-
-# copy your source tree
-COPY ./src ./src
-
-
-# build for release
-RUN rm ./target/release/deps/product_storage*
+# Stage 3 - compile only our app
+FROM rust as builder
+WORKDIR /product_storage
+# Copy sources
+COPY . .
+# Copy dependencies from cacher Stage
+COPY --from=cacher /product_storage/target target
+COPY --from=cacher /usr/local/cargo /usr/local/cargo
+RUN apt-get update && apt-get install -y protobuf-compiler
+# Build (only) the app
 RUN cargo build --bin product_storage --release
 
+# Use google distroless image to have smaller docker image size
+FROM ubuntu
+
+WORKDIR /product_storage
+RUN apt-get update && apt-get install libcurl4 libcurl4-openssl-dev -y
+
+# Copy app from builder
+COPY --from=builder /product_storage/target/release/product_storage product_storage
+
 # set the startup command to run your binary
-CMD ["./target/release/product_storage"]
+CMD ["./product_storage"]
