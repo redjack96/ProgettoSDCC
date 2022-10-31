@@ -45,6 +45,7 @@ services:
     volumes:
       - "./config.properties:/product_storage/config.properties"
       - "./src/proto:/product_storage/proto"
+      - "./src/microservices/product_storage/test.db:/product_storage/test.db"
 #  recipes:
 #    image: recipes
 #    container_name: "RecipesService"

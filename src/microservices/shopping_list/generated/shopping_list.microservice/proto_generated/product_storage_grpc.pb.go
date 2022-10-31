@@ -18,10 +18,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProductStorageClient interface {
-	AddBoughtProductToPantry(ctx context.Context, in *ProductList, opts ...grpc.CallOption) (*Response, error)
+	AddBoughtProductsToPantry(ctx context.Context, in *ProductList, opts ...grpc.CallOption) (*Response, error)
 	AddProductToPantry(ctx context.Context, in *Item, opts ...grpc.CallOption) (*Response, error)
-	RemoveProductFromPantry(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Item, error)
-	UpdateProductInPantry(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error)
+	DropProductFromPantry(ctx context.Context, in *ItemName, opts ...grpc.CallOption) (*Response, error)
+	UpdateProductInPantry(ctx context.Context, in *ItemName, opts ...grpc.CallOption) (*Response, error)
+	UseProductInPantry(ctx context.Context, in *UsedItem, opts ...grpc.CallOption) (*Response, error)
 	GetPantry(ctx context.Context, in *PantryMessage, opts ...grpc.CallOption) (*Pantry, error)
 }
 
@@ -33,9 +34,9 @@ func NewProductStorageClient(cc grpc.ClientConnInterface) ProductStorageClient {
 	return &productStorageClient{cc}
 }
 
-func (c *productStorageClient) AddBoughtProductToPantry(ctx context.Context, in *ProductList, opts ...grpc.CallOption) (*Response, error) {
+func (c *productStorageClient) AddBoughtProductsToPantry(ctx context.Context, in *ProductList, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/product_storage.ProductStorage/AddBoughtProductToPantry", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/product_storage.ProductStorage/AddBoughtProductsToPantry", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,18 +52,27 @@ func (c *productStorageClient) AddProductToPantry(ctx context.Context, in *Item,
 	return out, nil
 }
 
-func (c *productStorageClient) RemoveProductFromPantry(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Item, error) {
-	out := new(Item)
-	err := c.cc.Invoke(ctx, "/product_storage.ProductStorage/RemoveProductFromPantry", in, out, opts...)
+func (c *productStorageClient) DropProductFromPantry(ctx context.Context, in *ItemName, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/product_storage.ProductStorage/DropProductFromPantry", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *productStorageClient) UpdateProductInPantry(ctx context.Context, in *ProductId, opts ...grpc.CallOption) (*Response, error) {
+func (c *productStorageClient) UpdateProductInPantry(ctx context.Context, in *ItemName, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
 	err := c.cc.Invoke(ctx, "/product_storage.ProductStorage/UpdateProductInPantry", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productStorageClient) UseProductInPantry(ctx context.Context, in *UsedItem, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/product_storage.ProductStorage/UseProductInPantry", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,10 +92,11 @@ func (c *productStorageClient) GetPantry(ctx context.Context, in *PantryMessage,
 // All implementations must embed UnimplementedProductStorageServer
 // for forward compatibility
 type ProductStorageServer interface {
-	AddBoughtProductToPantry(context.Context, *ProductList) (*Response, error)
+	AddBoughtProductsToPantry(context.Context, *ProductList) (*Response, error)
 	AddProductToPantry(context.Context, *Item) (*Response, error)
-	RemoveProductFromPantry(context.Context, *ProductId) (*Item, error)
-	UpdateProductInPantry(context.Context, *ProductId) (*Response, error)
+	DropProductFromPantry(context.Context, *ItemName) (*Response, error)
+	UpdateProductInPantry(context.Context, *ItemName) (*Response, error)
+	UseProductInPantry(context.Context, *UsedItem) (*Response, error)
 	GetPantry(context.Context, *PantryMessage) (*Pantry, error)
 	mustEmbedUnimplementedProductStorageServer()
 }
@@ -94,17 +105,20 @@ type ProductStorageServer interface {
 type UnimplementedProductStorageServer struct {
 }
 
-func (UnimplementedProductStorageServer) AddBoughtProductToPantry(context.Context, *ProductList) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddBoughtProductToPantry not implemented")
+func (UnimplementedProductStorageServer) AddBoughtProductsToPantry(context.Context, *ProductList) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddBoughtProductsToPantry not implemented")
 }
 func (UnimplementedProductStorageServer) AddProductToPantry(context.Context, *Item) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddProductToPantry not implemented")
 }
-func (UnimplementedProductStorageServer) RemoveProductFromPantry(context.Context, *ProductId) (*Item, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveProductFromPantry not implemented")
+func (UnimplementedProductStorageServer) DropProductFromPantry(context.Context, *ItemName) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropProductFromPantry not implemented")
 }
-func (UnimplementedProductStorageServer) UpdateProductInPantry(context.Context, *ProductId) (*Response, error) {
+func (UnimplementedProductStorageServer) UpdateProductInPantry(context.Context, *ItemName) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductInPantry not implemented")
+}
+func (UnimplementedProductStorageServer) UseProductInPantry(context.Context, *UsedItem) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UseProductInPantry not implemented")
 }
 func (UnimplementedProductStorageServer) GetPantry(context.Context, *PantryMessage) (*Pantry, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPantry not implemented")
@@ -122,20 +136,20 @@ func RegisterProductStorageServer(s grpc.ServiceRegistrar, srv ProductStorageSer
 	s.RegisterService(&ProductStorage_ServiceDesc, srv)
 }
 
-func _ProductStorage_AddBoughtProductToPantry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ProductStorage_AddBoughtProductsToPantry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProductList)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductStorageServer).AddBoughtProductToPantry(ctx, in)
+		return srv.(ProductStorageServer).AddBoughtProductsToPantry(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/product_storage.ProductStorage/AddBoughtProductToPantry",
+		FullMethod: "/product_storage.ProductStorage/AddBoughtProductsToPantry",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductStorageServer).AddBoughtProductToPantry(ctx, req.(*ProductList))
+		return srv.(ProductStorageServer).AddBoughtProductsToPantry(ctx, req.(*ProductList))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -158,26 +172,26 @@ func _ProductStorage_AddProductToPantry_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductStorage_RemoveProductFromPantry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductId)
+func _ProductStorage_DropProductFromPantry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ItemName)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductStorageServer).RemoveProductFromPantry(ctx, in)
+		return srv.(ProductStorageServer).DropProductFromPantry(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/product_storage.ProductStorage/RemoveProductFromPantry",
+		FullMethod: "/product_storage.ProductStorage/DropProductFromPantry",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductStorageServer).RemoveProductFromPantry(ctx, req.(*ProductId))
+		return srv.(ProductStorageServer).DropProductFromPantry(ctx, req.(*ItemName))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _ProductStorage_UpdateProductInPantry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductId)
+	in := new(ItemName)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -189,7 +203,25 @@ func _ProductStorage_UpdateProductInPantry_Handler(srv interface{}, ctx context.
 		FullMethod: "/product_storage.ProductStorage/UpdateProductInPantry",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductStorageServer).UpdateProductInPantry(ctx, req.(*ProductId))
+		return srv.(ProductStorageServer).UpdateProductInPantry(ctx, req.(*ItemName))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductStorage_UseProductInPantry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UsedItem)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductStorageServer).UseProductInPantry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/product_storage.ProductStorage/UseProductInPantry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductStorageServer).UseProductInPantry(ctx, req.(*UsedItem))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -220,20 +252,24 @@ var ProductStorage_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ProductStorageServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddBoughtProductToPantry",
-			Handler:    _ProductStorage_AddBoughtProductToPantry_Handler,
+			MethodName: "AddBoughtProductsToPantry",
+			Handler:    _ProductStorage_AddBoughtProductsToPantry_Handler,
 		},
 		{
 			MethodName: "AddProductToPantry",
 			Handler:    _ProductStorage_AddProductToPantry_Handler,
 		},
 		{
-			MethodName: "RemoveProductFromPantry",
-			Handler:    _ProductStorage_RemoveProductFromPantry_Handler,
+			MethodName: "DropProductFromPantry",
+			Handler:    _ProductStorage_DropProductFromPantry_Handler,
 		},
 		{
 			MethodName: "UpdateProductInPantry",
 			Handler:    _ProductStorage_UpdateProductInPantry_Handler,
+		},
+		{
+			MethodName: "UseProductInPantry",
+			Handler:    _ProductStorage_UseProductInPantry_Handler,
 		},
 		{
 			MethodName: "GetPantry",

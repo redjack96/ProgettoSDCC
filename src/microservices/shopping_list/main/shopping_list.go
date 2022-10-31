@@ -205,7 +205,7 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	r, err := c.AddBoughtProductToPantry(ctx, &pb.ProductList{
+	r, err := c.AddBoughtProductsToPantry(ctx, &pb.ProductList{
 		Id:       entireList.Id,
 		Name:     entireList.Name,
 		Products: onlyInCart,

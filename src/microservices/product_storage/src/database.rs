@@ -1,17 +1,12 @@
-use std::any::Any;
-use std::fmt::format;
-use std::iter::Product;
-use actix_web::http::header::q;
-use sqlite3::{Connection, Value};
-use crate::database::QueryType::{InsertNew, Select, UpdateExisting};
-use chrono::{DateTime, TimeZone, Utc};
+use sqlite3::{Connection};
+use chrono::{TimeZone, Utc};
 use crate::ProductItem;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum QueryType {
     Select,
     InsertNew,
-    UpdateExisting
+    UpdateExisting,
 }
 
 pub struct Database {
@@ -33,46 +28,57 @@ impl Database {
                 "
         CREATE TABLE if not exists Products (
         name TEXT,
-        type INTEGER,
+        item_type INTEGER,
         unit INTEGER,
         quantity INTEGER,
         expiration DATETIME,
-        buy_date DATETIME);
+        last_used INTEGER,
+        use_number INTEGER,
+        total_used_number INTEGER,
+        times_is_bought INTEGER,
+        buy_date DATETIME
+        );
         ",
             )
             .unwrap()
     }
 
+    /// prepares a sql query. FIXME: it is vulnerable to SQL injection
+    /// # Arguments
+    ///
+    /// * `product`: &ProductItem to select, insert, update or remove
+    /// * `kind`: the kind of the query
+    /// * `former_quantity`: only for updates: if not used, use 0
+    /// * `former_expiration`: only for updates: if not used, use 0
+    ///
+    /// returns: String query
     pub fn prepare_product_statement(&self, product: &ProductItem, kind: QueryType, former_quantity: i32, former_expiration: i64) -> String {
-        if kind == Select {
-            format!("SELECT * FROM Products WHERE name='{}' AND type='{}' AND unit='{}';",
-                    product.name.as_str(),
-                    product.item_type.to_string(),
-                    product.unit.to_string())
-        } else if kind == InsertNew {
-            format!("INSERT INTO Products (name,type,unit,quantity,expiration,buy_date) \
-            VALUES ('{}','{}','{}','{}','{}','{}');",
-                    product.name.as_str(),
-                    product.item_type.to_string(),
-                    product.unit.to_string(),
-                    product.quantity.to_string(),
-                    product.expiration.to_string(),
-                    product.buy_date.to_string())
-        } else {
-            let new_quantity = former_quantity + product.quantity;
-            let mut new_expiration;
-            if product.expiration >= former_expiration {
-                new_expiration = former_expiration;
-            } else {
-                new_expiration = product.expiration;
-            }
-            format!("UPDATE Products \
+        match kind {
+            QueryType::Select => format!("SELECT * FROM Products WHERE name='{}' AND item_type='{}' AND unit='{}';", // TODO: forse type e unit non servono
+                                         product.name.as_str(),
+                                         product.item_type.to_string(),
+                                         product.unit.to_string()),
+            QueryType::InsertNew => format!("INSERT INTO Products (name,item_type,unit,quantity,\
+            expiration,last_used,use_number,total_used_number,times_is_bought,buy_date) VALUES \
+            ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}');",
+                                            product.name, product.item_type, product.unit,
+                                            product.quantity, product.expiration, product.last_used,
+                                            product.use_number, product.total_used_number,
+                                            product.times_is_bought, product.buy_date),
+            QueryType::UpdateExisting => {
+                // sums the quantity
+                let new_quantity = former_quantity + product.quantity;
+                // gets the most imminent expiration
+                let new_expiration;
+                if product.expiration >= former_expiration {
+                    new_expiration = former_expiration;
+                } else {
+                    new_expiration = product.expiration;
+                }
+                format!("UPDATE Products \
                      SET quantity='{}', expiration='{}', buy_date='{}'\
-                     WHERE name='{}';",
-                    new_quantity.to_string(),
-                    new_expiration.to_string(),
-                    product.buy_date.to_string(),
-                    product.name.as_str())
+                     WHERE name='{}';", new_quantity, new_expiration, product.buy_date, product.name)
+            }
         }
     }
 
@@ -87,28 +93,26 @@ impl Database {
         let mut v: Vec<ProductItem> = Vec::new();
         while let Ok(Some(row)) = cursor.next() {
             let name = row.get(0)
-                .expect("None")
-                .as_string()
-                .unwrap();
+                .map_or("Unknown Product", |v| v.as_string().unwrap_or("Unknown Product"));
             let item_type = row.get(1)
-                .expect("None")
-                .as_integer()
-                .unwrap();
+                .map_or(0, |v| v.as_integer().unwrap_or(0));
             let unit = row.get(2)
-                .expect("None")
-                .as_integer()
-                .unwrap();
+                .map_or(0, |v| v.as_integer().unwrap_or(0));
             let quantity = row.get(3)
-                .expect("None")
-                .as_integer()
-                .unwrap();
+                .map_or(0, |v| v.as_integer().unwrap_or(0));
             let expiration_ts = row.get(4)
-                .expect("None")
-                .as_integer()
-                .unwrap();
+                .map_or(i64::MAX, |v| v.as_integer().unwrap_or(i64::MAX)); // per non renderlo la scadenza minima, se non sai qual è
             let expiration = Utc.timestamp(expiration_ts, 0);
-            let buy_date_ts = row.get(5)
-                .expect("None")
+            let last_used= row.get(5)
+                .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
+            let use_number = row.get(6)
+                .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
+            let total_used = row.get(7)
+                .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
+            let times_is_bought = row.get(8)
+                .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
+            let buy_date_ts = row.get(9)
+                .expect("failed to get buy date timestamp")
                 .as_integer()
                 .unwrap();
             let buy_date = Utc.timestamp(buy_date_ts, 0);
@@ -118,7 +122,11 @@ impl Database {
                 unit: unit as i32,
                 quantity: quantity as i32,
                 expiration: expiration_ts,
-                buy_date: buy_date_ts
+                last_used,
+                use_number: use_number as i32,
+                total_used_number: total_used as i32,
+                times_is_bought: times_is_bought as i32,
+                buy_date: buy_date_ts,
             };
             v.push(item);
             println!("{}", name);
@@ -129,9 +137,7 @@ impl Database {
         return v;
     }
 
-    pub fn execute_insert_query(&self, query: &str) {
-        self.conn
-            .execute(query)
-            .unwrap()
+    pub fn execute_insert_update_or_delete(&self, query: &str) {
+        self.conn.execute(query).expect("query cannot be executed");
     }
 }

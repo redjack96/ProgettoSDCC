@@ -1,21 +1,23 @@
 // version of protocol buffer used
 syntax = "proto3";
 import "shopping_list.proto";
+import "google/protobuf/timestamp.proto";
 
 // package name for the buffer will be used later
 package product_storage;
 option go_package = "shopping_list.microservice/proto_generated";
 // service which can be executed
 service ProductStorage {
-  rpc AddBoughtProductToPantry(shopping_list.ProductList) returns (shopping_list.Response); // TODO: aggiungere nel messaggio di output il numero di prodotti aggiunti
+  rpc AddBoughtProductsToPantry(shopping_list.ProductList) returns (shopping_list.Response); // TODO: aggiungere nel messaggio di output il numero di prodotti aggiunti
   rpc AddProductToPantry(Item) returns (shopping_list.Response); // manually added products
-  rpc RemoveProductFromPantry(ProductId) returns (Item); // manually or because used by recipes
-  rpc UpdateProductInPantry(ProductId) returns (shopping_list.Response);
+  rpc DropProductFromPantry(ItemName) returns (shopping_list.Response); // manually or because used by recipes
+  rpc UpdateProductInPantry(ItemName) returns (shopping_list.Response);
+  rpc UseProductInPantry(UsedItem) returns (shopping_list.Response);
   rpc GetPantry(PantryMessage) returns (Pantry); // TODO: per ora restituisce l'intera dispensa. Forse e' un po' eccessivo!
 }
 
-message ProductId {
-    int64 productId = 1;
+message ItemName {
+    string name = 1;
 }
 
 message Date{
@@ -30,14 +32,24 @@ message Date{
 // argument
 message Item {
   int64 itemId = 1;
-  shopping_list.ProductType type = 2;
-  shopping_list.Unit unit = 3;
-  int32 quantity = 4;
-  Date expiration_date = 5;
+  string itemName = 2;
+  shopping_list.ProductType type = 3;
+  shopping_list.Unit unit = 4;
+  int32 quantity = 5;
+  google.protobuf.Timestamp expiration = 6;
+  int64 lastUsed = 7;
+  int32 useNumber = 8; // times the item is used
+  int32 totalUsedNumber = 9; // times
+  int32 timesIsBought = 10;
 }
 
 message Pantry {
     repeated Item products = 1; // list of products
+}
+
+message UsedItem {
+  string name = 1;
+  int32 quantity = 2;
 }
 
 message PantryMessage{}
