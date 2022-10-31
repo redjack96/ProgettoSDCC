@@ -289,7 +289,7 @@ async fn get_shopping_list() -> impl Responder {
 }
 
 // rpc BuyAllProductsInCart(ProductList) returns (Response)
-#[post("/buyProductInCart")]
+#[post("/buyProductsInCart")]
 async fn buy_products_in_cart() -> impl Responder {
     let configs = get_properties();
     println!("Buy products requested");

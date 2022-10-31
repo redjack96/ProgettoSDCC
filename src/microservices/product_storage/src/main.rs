@@ -1,6 +1,7 @@
 mod properties;
-mod surreal;
+mod database;
 
+use crate::database::Database;
 // use std::os::unix::net::SocketAddr;
 use tonic::{transport::Server, Request, Status};
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
@@ -9,7 +10,7 @@ use product_storage::shopping_list::product_storage_server::{ProductStorage, Pro
 // use product_storage::product_storage::{HelloReply, HelloRequest};
 use product_storage::shopping_list::{ProductList, ProductId, PantryMessage};
 use crate::properties::get_properties;
-use crate::surreal::create_database;
+// use crate::surreal::{create_database, execute_query};
 
 /*enum Unit{
     Bottle,
@@ -58,8 +59,13 @@ pub struct ProductStorageImpl {}
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
     async fn add_bought_product_to_pantry(&self, request: Request<ProductList>) -> Result<tonic::Response<product_storage::shopping_list::Response>, Status> {
-        println!("Added to pantry {}", request.get_ref().products.len());
         //TODO: aggiungere data di acquisto per prodotto in arrivo
+        //TODO: aggiungere elementi al db
+        println!("Adding elements received to db");
+        let product_list: ProductList = request.into_inner();
+        println!("{}", product_list);
+        // add_products_to_db(product_list.products);
+        println!("Added to pantry {}", request.get_ref().products.len());
         Ok(tonic::Response::new(product_storage::shopping_list::Response { // le struct si istanziano esattamente come in Go
             msg: format!("Items added to pantry {}", request.get_ref().products.len()),
         })) // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
@@ -83,8 +89,6 @@ impl ProductStorage for ProductStorageImpl {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let configs = get_properties();
     let addr = format!("[::]:{}", configs.product_storage_port);
-    // Create surreal database
-    let db = create_database().await;
     // Creo il servizio
     let service = ProductStorageImpl::default(); // istanzia la struct impostando TUTTI i valori in default!
     // aggiungo l'indirizzo al server
@@ -93,7 +97,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(ProductStorageServer::new(service)) // Qua si possono aggiungere altri service se vuoi!!!
         .serve(addr.parse().unwrap()) // inizia a servire a questo indirizzo!
         .await?; // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
+    // Create db and create products table
+    let db = Database::new();
+    db.create_table_products();
     println!("Rust to the rescue!");
     // Restituisce una tupla vuota dentro un Result Ok!
     Ok(())
 }
+
+// fn add_products_to_db(list: ) {
+//     for prod in list {
+//         println!("{}",prod);
+//     }
+// }

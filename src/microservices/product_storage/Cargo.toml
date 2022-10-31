@@ -14,7 +14,9 @@ prost-types = "0.11.1"
 actix-web = "4"
 chrono = "0.4"
 java-properties = "1.4.1"
-surrealdb = "1.0.0-beta.8"
+#surrealdb = "1.0.0-beta.8"
+sqlite3 = "0.24.0"
+serde = "1.0.147"
 
 [build-dependencies]
 tonic-build = "0.8.0"
