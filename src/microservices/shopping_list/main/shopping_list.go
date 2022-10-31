@@ -26,6 +26,7 @@ const (
 	Remove
 	Update
 	Select
+	Buy
 )
 
 type DBOperation struct {
@@ -165,7 +166,6 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 	log.Printf("Buying all products in cart...")
 
 	onlyInCart := make([]*pb.Product, 0)
-	// TODO: sto riutilizzando il metodo sopra!!!
 	entireList, _ := s.GetList(ctx, &pb.GetListRequest{})
 	for i := 0; i < len(entireList.Products); i++ {
 		prod := entireList.Products[i]
@@ -173,10 +173,17 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 			onlyInCart = append(onlyInCart, prod)
 		}
 	}
-	// TODO: eliminare i prodotti nel carrello da mongodb
+
+	// Remove products from cart in mongodb
+	operation := new(DBOperation)
+	operation.opType = Buy
+	qResult, err := queryDB(*operation)
+	if err != nil {
+		log.Fatalln("Error querying DB", err)
+	}
+	fmt.Printf("Removed %d elements from shopping list", qResult)
+
 	// TODO: aggiungere comunicazione con consumption service per predire i consumi (aggiungere al dataset delle cose comprate)
-	//fmt.Println(entireList)
-	//fmt.Println(onlyInCart)
 	// Sending products to ProductStorage
 	properties, _ := props.GetProperties()
 	productStorageAddress := fmt.Sprintf("%s:%d", properties.ProductStorageAddress, properties.ProductStoragePort)
@@ -293,6 +300,15 @@ func queryDB(operation DBOperation) (interface{}, error) {
 			log.Fatal(err)
 		}
 		res = cursor
+		return res, err
+	} else {
+		// Buy product (delete all in cart)
+		fmt.Println("Deleting all products in cart...")
+		doc := bson.D{{"addedToCart", true}}
+		result, err := prodCollection.DeleteMany(context.TODO(), doc)
+		if err == nil {
+			res = result.DeletedCount
+		}
 		return res, err
 	}
 	return res, nil

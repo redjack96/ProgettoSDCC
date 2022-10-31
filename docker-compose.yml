@@ -88,6 +88,7 @@ services:
   # # UI per amministrare MongoDB
   mongo-express:
     image: mongo-express
+    restart: always
     container_name: mongo-site
     ports:
       - "8081:8081"

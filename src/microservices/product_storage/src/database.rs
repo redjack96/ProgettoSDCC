@@ -1,7 +1,9 @@
+use std::fmt::format;
 use std::iter::Product;
 use actix_web::http::header::q;
 use sqlite3::{Connection, Value};
 use crate::database::QueryType::{Insert, Select};
+use chrono::{DateTime, TimeZone, Utc};
 use crate::ProductItem;
 
 #[derive(PartialEq)]
@@ -62,11 +64,28 @@ impl Database {
             .cursor();
 
         while let Ok(row) = cursor.next() {
-            let val = row.unwrap().get(0)
+            let name = row.unwrap().get(0)
                 .expect("Noneeee")
                 .as_string()
                 .unwrap();
-            println!("{}", val)
+            let quantity = row.unwrap().get(3)
+                .expect("Noneeee")
+                .as_integer()
+                .unwrap();
+            let expiration_ts = row.unwrap().get(4)
+                .expect("Noneeee")
+                .as_integer()
+                .unwrap();
+            let expiration = Utc.timestamp(expiration_ts, 0);
+            let buy_date_ts = row.unwrap().get(5)
+                .expect("Noneeee")
+                .as_integer()
+                .unwrap();
+            let buy_date = Utc.timestamp(buy_date_ts, 0);
+            println!("{}", name);
+            println!("{}", quantity);
+            println!("{}", buy_date);
+            println!("{}", expiration);
         }
     }
 

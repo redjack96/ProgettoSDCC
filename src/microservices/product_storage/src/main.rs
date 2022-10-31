@@ -34,8 +34,8 @@ impl ProductStorage for ProductStorageImpl {
         let msg= format!("Items Added to pantry: {}", request.get_ref().products.len());
         let product_list = request.into_inner();
         println!("ListId: {:?}, ListName: {}, Number of products: {}", product_list.id.unwrap_or(ListId{list_id:0}).list_id, product_list.name, product_list.products.len());
-        //FIXME: aggiungere data di acquisto per prodotto in arrivo
-        //FIXME: aggiungere elementi al db
+        // Buy date is added to the incoming items
+        // Those items must be added to the database
         println!("Adding elements received to db");
         let products = product_list.products;
         for elem in products {
@@ -52,7 +52,7 @@ impl ProductStorage for ProductStorageImpl {
             println!("{}", query);
             db.execute_insert_query(query.as_str());
 
-            // //TODO: elimina questa parte (serve per verificare se è stato inserito qualcosa)
+            // // //TODO: elimina questa parte (serve per verificare se è stato inserito qualcosa)
             // let query = db.prepare_product_statement(&item, QueryType::Select);
             // println!("{}", query);
             // db.execute_select_query(query.as_str());
