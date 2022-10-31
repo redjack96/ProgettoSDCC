@@ -1,7 +1,11 @@
 mod properties;
 mod database;
 
-use crate::database::Database;
+use std::time::SystemTime;
+use actix_web::http::header::q;
+use chrono::Utc;
+use prost_types::Timestamp;
+use crate::database::{Database, QueryType};
 // use std::os::unix::net::SocketAddr;
 use tonic::{transport::Server, Request, Status};
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
@@ -15,19 +19,46 @@ use crate::properties::get_properties;
 #[derive(Default)]
 pub struct ProductStorageImpl {}
 
+struct ProductItem {
+    name: String,
+    item_type: i32,
+    unit: i32,
+    quantity: i32,
+    expiration: i64,
+    buy_date: i64
+}
+
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
     async fn add_bought_product_to_pantry(&self, request: Request<ProductList>) -> Result<tonic::Response<product_storage::shopping_list::Response>, Status> {
         let msg= format!("Items Added to pantry: {}", request.get_ref().products.len());
-        let product_list: ProductList = request.into_inner();
+        let product_list = request.into_inner();
         println!("ListId: {:?}, ListName: {}, Number of products: {}", product_list.id.unwrap_or(ListId{list_id:0}).list_id, product_list.name, product_list.products.len());
-        //TODO: aggiungere data di acquisto per prodotto in arrivo
-        //TODO: aggiungere elementi al db
+        //FIXME: aggiungere data di acquisto per prodotto in arrivo
+        //FIXME: aggiungere elementi al db
         println!("Adding elements received to db");
-        let product_list: ProductList = request.into_inner();
-        println!("{}", product_list);
+        let products = product_list.products;
+        for elem in products {
+            let item = ProductItem {
+                name: elem.product_name,
+                item_type: elem.r#type,
+                unit: elem.unit,
+                quantity: elem.quantity,
+                expiration: elem.expiration.unwrap().seconds,
+                buy_date: Utc::now().timestamp()
+            };
+            let db = Database::new();
+            let query = db.prepare_product_statement(&item, QueryType::Insert);
+            println!("{}", query);
+            db.execute_insert_query(query.as_str());
+
+            // //TODO: elimina questa parte (serve per verificare se è stato inserito qualcosa)
+            // let query = db.prepare_product_statement(&item, QueryType::Select);
+            // println!("{}", query);
+            // db.execute_select_query(query.as_str());
+        }
+
         // add_products_to_db(product_list.products);
-        println!("Added to pantry {}", request.get_ref().products.len());
         Ok(tonic::Response::new(product_storage::shopping_list::Response { // le struct si istanziano esattamente come in Go
             msg
         })) // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
@@ -51,6 +82,10 @@ impl ProductStorage for ProductStorageImpl {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let configs = get_properties();
     let addr = format!("[::]:{}", configs.product_storage_port);
+    // Create db and create products table
+    let db = Database::new();
+    db.create_table_products();
+    println!("Created database tables!");
     // Creo il servizio
     let service = ProductStorageImpl::default(); // istanzia la struct impostando TUTTI i valori in default!
     // aggiungo l'indirizzo al server
@@ -59,16 +94,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(ProductStorageServer::new(service)) // Qua si possono aggiungere altri service se vuoi!!!
         .serve(addr.parse().unwrap()) // inizia a servire a questo indirizzo!
         .await?; // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
-    // Create db and create products table
-    let db = Database::new();
-    db.create_table_products();
-    println!("Rust to the rescue!");
     // Restituisce una tupla vuota dentro un Result Ok!
     Ok(())
 }
-
-// fn add_products_to_db(list: ) {
-//     for prod in list {
-//         println!("{}",prod);
-//     }
-// }
