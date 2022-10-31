@@ -33,32 +33,10 @@ impl ProductStorage for ProductStorageImpl {
     async fn add_bought_product_to_pantry(&self, request: Request<ProductList>) -> Result<tonic::Response<product_storage::shopping_list::Response>, Status> {
         let msg= format!("Items Added to pantry: {}", request.get_ref().products.len());
         let product_list = request.into_inner();
-        println!("ListId: {:?}, ListName: {}, Number of products: {}", product_list.id.unwrap_or(ListId{list_id:0}).list_id, product_list.name, product_list.products.len());
         // Buy date is added to the incoming items
         // Those items must be added to the database
         println!("Adding elements received to db");
-        let products = product_list.products;
-        for elem in products {
-            let item = ProductItem {
-                name: elem.product_name,
-                item_type: elem.r#type,
-                unit: elem.unit,
-                quantity: elem.quantity,
-                expiration: elem.expiration.unwrap().seconds,
-                buy_date: Utc::now().timestamp()
-            };
-            let db = Database::new();
-            let query = db.prepare_product_statement(&item, QueryType::Insert);
-            println!("{}", query);
-            db.execute_insert_query(query.as_str());
-
-            // // //TODO: elimina questa parte (serve per verificare se è stato inserito qualcosa)
-            // let query = db.prepare_product_statement(&item, QueryType::Select);
-            // println!("{}", query);
-            // db.execute_select_query(query.as_str());
-        }
-
-        // add_products_to_db(product_list.products);
+        add_products_to_db(product_list);
         Ok(tonic::Response::new(product_storage::shopping_list::Response { // le struct si istanziano esattamente come in Go
             msg
         })) // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
@@ -75,6 +53,45 @@ impl ProductStorage for ProductStorageImpl {
     }
     async fn get_pantry(&self, _msg: Request<PantryMessage>) -> Result<tonic::Response<product_storage::shopping_list::Pantry>, Status> {
         todo!()
+    }
+}
+
+fn add_products_to_db(product_list: ProductList) {
+    println!("ListId: {:?}, ListName: {}, Number of products: {}", product_list.id.unwrap_or(ListId{list_id:0}).list_id, product_list.name, product_list.products.len());
+    let products = product_list.products;
+    for elem in products {
+        let item = ProductItem {
+            name: elem.product_name,
+            item_type: elem.r#type,
+            unit: elem.unit,
+            quantity: elem.quantity,
+            expiration: elem.expiration.unwrap().seconds,
+            buy_date: Utc::now().timestamp()
+        };
+        let db = Database::new();
+
+        // TODO: First check if element with same name already present in db
+        let query = db.prepare_product_statement(&item, QueryType::Select,
+                                                 0, 0);
+        let items = db.execute_select_query(query.as_str());
+        let mut query;
+        if items.capacity() != 0 {
+            // Incrementa quantità e aggiorna scadenza
+            query = db.prepare_product_statement(&item, QueryType::UpdateExisting,
+                                                 items.get(0).unwrap().quantity,
+                                                 items.get(0).unwrap().expiration);
+        } else {
+            query = db.prepare_product_statement(&item, QueryType::InsertNew,
+                                                 0, 0);
+        }
+
+        println!("{}", query);
+        db.execute_insert_query(query.as_str());
+
+        // // //TODO: elimina questa parte (serve per verificare se è stato inserito qualcosa)
+        // let query = db.prepare_product_statement(&item, QueryType::Select);
+        // println!("{}", query);
+        // db.execute_select_query(query.as_str());
     }
 }
 
