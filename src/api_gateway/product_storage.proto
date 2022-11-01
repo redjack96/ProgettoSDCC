@@ -50,6 +50,8 @@ message Pantry {
 message UsedItem {
   string name = 1;
   int32 quantity = 2;
+  shopping_list.Unit unit = 3;
+  shopping_list.ProductType itemType = 4;
 }
 
 message PantryMessage{}

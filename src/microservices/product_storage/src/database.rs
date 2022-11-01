@@ -73,6 +73,7 @@ impl Database {
                 format!("UPDATE Products \
                      SET quantity='{}', expiration='{}', buy_date='{}'\
                      WHERE name='{}';", new_quantity, new_expiration, product.buy_date, product.name)
+                // TODO: aggiornare il numero di volte in cui è acquistato.
             }
         }
     }

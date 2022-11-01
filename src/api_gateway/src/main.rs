@@ -17,6 +17,7 @@ use api_gateway::shopping_list::Unit;
 use api_gateway::shopping_list::GetListRequest;
 use api_gateway::shopping_list::BuyRequest;
 use api_gateway::shopping_list::Item;
+use api_gateway::shopping_list::UsedItem;
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use prost_types::Timestamp;
@@ -446,6 +447,40 @@ async fn get_pantry() -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
+#[post("/useProductInPantry/{name}/{quantity}/{unit}/{type}")]
+async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
+    let configs = get_properties();
+    println!("Storage content requested.");
+    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    println!("Channel to product_storage created");
+    // Create a gRPC client for ProductStorage
+    let mut client = ProductStorageClient::new(channel);
+    println!("gRPC client created");
+
+    let name = req.match_info().get("name").unwrap_or("Unknown Product").to_string();
+    let quantity = req.match_info().get("quantity").unwrap_or("1").to_string();
+    let unit = req.match_info().get("unit").unwrap_or("Packet").to_string();
+    let ptype = req.match_info().get("type").unwrap_or("Other").to_string();
+
+    // Creates a tonic::Request
+    let request = tonic::Request::new(UsedItem {
+        name,
+        quantity: quantity.parse::<i32>().unwrap_or(1),
+        unit: unit.parse::<i32>().unwrap_or(Unit::Packet.into()),
+        item_type: ptype.parse::<i32>().unwrap_or(ProductType::Other.into()),
+    });
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.use_product_in_pantry(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+
+    let response_str = format!("Response received: {:?}", response);
+    HttpResponse::Ok().body(response_str)
+}
+
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -470,6 +505,7 @@ async fn main() -> std::io::Result<()> {
             .service(drop_product_from_storage)
             .service(update_product_in_storage)
             .service(get_pantry)
+            .service(use_product_in_pantry)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await
