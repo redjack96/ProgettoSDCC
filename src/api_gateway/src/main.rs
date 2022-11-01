@@ -9,7 +9,7 @@ use tonic::transport::{Channel, Uri};
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
-use api_gateway::shopping_list::{ItemName, Product};
+use api_gateway::shopping_list::{ItemName, PantryMessage, Product};
 use api_gateway::shopping_list::ProductRemove;
 use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
@@ -259,7 +259,7 @@ async fn get_shopping_list() -> impl Responder {
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
-    let request = tonic::Request::new(GetListRequest{});
+    let request = tonic::Request::new(GetListRequest {});
 
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
@@ -282,7 +282,7 @@ async fn buy_products_in_cart() -> impl Responder {
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creating a Tonic request
-    let request = tonic::Request::new(BuyRequest{});
+    let request = tonic::Request::new(BuyRequest {});
     println!("Request created");
     // Sending request and waiting for response
     let response = client.buy_all_products_in_cart(request)
@@ -295,7 +295,7 @@ async fn buy_products_in_cart() -> impl Responder {
 }
 
 #[post("/addProductToStorage/{name}/{quantity}/{unit}/{type}/{expiry}")]
-async fn add_product_to_storage(req: HttpRequest) -> impl Responder{
+async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition to product storage requested.");
     // Crea un canale per la connessione al server
@@ -356,7 +356,7 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     let mut client = ProductStorageClient::new(channel);
     println!("gRPC client created");
     let request = tonic::Request::new(
-    ItemName{
+        ItemName {
             name: prod_name
         },
     );
@@ -370,21 +370,8 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
-/*
-pub struct ProductItem {
-    pub name: String,
-    pub item_type: i32,
-    pub unit: i32,
-    pub quantity: i32,
-    pub expiration: i64,
-    pub last_used: i64,
-    pub use_number: i32,
-    pub total_used_number: i32,
-    pub times_is_bought: i32,
-    pub buy_date: i64,
-}
- */
-#[post("updateProductInStorage/{name}/{quantity}/{unit}/{type}/{expiration}/{lastUsed}/{useNumber}/{totalUseNumber}/{timesIsBought}/{buyDate}")]
+
+#[post("/updateProductInStorage/{name}/{quantity}/{unit}/{type}/{expiration}/{lastUsed}/{useNumber}/{totalUseNumber}/{timesIsBought}/{buyDate}")]
 async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition to product storage requested.");
@@ -435,6 +422,30 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
+#[get("/getPantry")]
+async fn get_pantry() -> impl Responder {
+    let configs = get_properties();
+    println!("Storage content requested.");
+    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    println!("Channel to product_storage created");
+    // Create a gRPC client for ProductStorage
+    let mut client = ProductStorageClient::new(channel);
+    println!("gRPC client created");
+
+    // Creates a tonic::Request
+    let request = tonic::Request::new(PantryMessage {});
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.get_pantry(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+
+    let response_str = format!("Response received: {:?}", response);
+    HttpResponse::Ok().body(response_str)
+}
+
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -458,6 +469,7 @@ async fn main() -> std::io::Result<()> {
             .service(add_product_to_storage)
             .service(drop_product_from_storage)
             .service(update_product_in_storage)
+            .service(get_pantry)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await

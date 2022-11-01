@@ -29,6 +29,28 @@ pub struct ProductItem {
     pub buy_date: i64,
 }
 
+impl ProductItem {
+    fn to_item(&self) -> Item {
+        // let date_time = prost_types::Timestamp::from();
+        let ts = prost_types::Timestamp {
+            seconds: self.expiration,
+            nanos: 0
+        };
+        Item {
+            item_id: 0,
+            item_name: self.name.clone(),
+            r#type: self.item_type,
+            unit: self.unit,
+            quantity: self.quantity,
+            expiration: Some(ts),
+            last_used: self.last_used,
+            use_number: self.use_number,
+            total_used_number: self.total_used_number,
+            times_is_bought: self.times_is_bought,
+        }
+    }
+}
+
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
     // Adds all bought products to pantry
@@ -74,8 +96,12 @@ impl ProductStorage for ProductStorageImpl {
         todo!()
     }
 
-    async fn get_pantry(&self, _request: Request<PantryMessage>) -> Result<Response<Pantry>, Status> {
-        todo!()
+    async fn get_pantry(&self, _: Request<PantryMessage>) -> Result<Response<Pantry>, Status> {
+        println!("Getting pantry!");
+        let products = select_pantry();
+        Ok(Response::new(Pantry{
+            products
+        }))
     }
 }
 // used by add_bought_products_to_pantry
@@ -151,6 +177,12 @@ fn add_single_product_to_db(elem: Item) {
 
     println!("{}", query);
     db.execute_insert_update_or_delete(query.as_str());
+}
+
+fn select_pantry() -> Vec<Item> {
+    let db = Database::new();
+    let prod_item = db.execute_select_query("SELECT * FROM Products");
+    prod_item.iter().map(|pi| pi.to_item()).collect()
 }
 
 

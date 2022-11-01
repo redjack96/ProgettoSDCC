@@ -24,23 +24,19 @@ impl Database {
     pub fn create_table_products(&self) {
         println!("in create table products");
         self.conn
-            .execute(
-                "
-        CREATE TABLE if not exists Products (
-        name TEXT,
-        item_type INTEGER,
-        unit INTEGER,
-        quantity INTEGER,
-        expiration DATETIME,
-        last_used INTEGER,
-        use_number INTEGER,
-        total_used_number INTEGER,
-        times_is_bought INTEGER,
-        buy_date DATETIME
-        );
-        ",
-            )
-            .unwrap()
+            .execute("CREATE TABLE if not exists Products (
+                name TEXT,
+                item_type INTEGER,
+                unit INTEGER,
+                quantity INTEGER,
+                expiration DATETIME,
+                last_used INTEGER,
+                use_number INTEGER,
+                total_used_number INTEGER,
+                times_is_bought INTEGER,
+                buy_date DATETIME
+                );",
+            ).expect("Create table failed!");
     }
 
     /// prepares a sql query. FIXME: it is vulnerable to SQL injection
@@ -103,7 +99,7 @@ impl Database {
             let expiration_ts = row.get(4)
                 .map_or(i64::MAX, |v| v.as_integer().unwrap_or(i64::MAX)); // per non renderlo la scadenza minima, se non sai qual è
             let expiration = Utc.timestamp(expiration_ts, 0);
-            let last_used= row.get(5)
+            let last_used = row.get(5)
                 .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
             let use_number = row.get(6)
                 .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
