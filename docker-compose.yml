@@ -50,12 +50,12 @@ services:
       - "./src/proto:/product_storage/proto"
       - "./src/microservices/product_storage/test.db:/product_storage/test.db"
   notifications:
-    image: notifications
+    image: "notifications"
     container_name: "NotificationsService"
     build: "src/microservices/notifications"
     volumes:
-      - "./src/proto:/notifications"
-      - "./config.properties:/notifications/src/main/resources"
+      - "./src/proto:/notifications/proto"
+      - "./config.properties:/notifications/src/main/resources/config.properties"
 
     # summary:
     #   image: summary
