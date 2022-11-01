@@ -32,6 +32,7 @@ pub struct ProductItem {
 impl ProductItem {
     fn to_item(&self) -> Item {
         // let date_time = prost_types::Timestamp::from();
+        println!("Converting to item");
         let ts = prost_types::Timestamp {
             seconds: self.expiration,
             nanos: 0
@@ -181,7 +182,9 @@ fn add_single_product_to_db(elem: Item) {
 
 fn select_pantry() -> Vec<Item> {
     let db = Database::new();
-    let prod_item = db.execute_select_query("SELECT * FROM Products");
+    println!("Selecting all items in pantry.");
+    let prod_item = db.execute_select_query("SELECT * FROM Products;");
+    println!("Selected all items in pantry");
     prod_item.iter().map(|pi| pi.to_item()).collect()
 }
 
