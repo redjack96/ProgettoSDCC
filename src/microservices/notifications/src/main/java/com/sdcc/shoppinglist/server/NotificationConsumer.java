@@ -32,7 +32,6 @@ public class NotificationConsumer {
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", StringDeserializer.class);
         try (Consumer<Long, String> consumer = new KafkaConsumer<>(props)) {
-            Map<String, FileWriter> topicWriterMap = new HashMap<>();
             consumer.subscribe(Pattern.compile("notification"));
 
             log.info("Starting receiving notifications");

@@ -44,7 +44,13 @@ services:
   product_storage:
     image: "product_storage"
     container_name: "ProductStorageService"
+    depends_on:
+      - kafka
     build: "src/microservices/product_storage"
+    environment:
+      TOPIC: notification
+      ENVIRONMENT: local
+      INTERNAL_KAFKA_ADDR: 'kafka:9092'
     volumes:
       - "./config.properties:/product_storage/config.properties"
       - "./src/proto:/product_storage/proto"
@@ -53,9 +59,14 @@ services:
     image: "notifications"
     container_name: "NotificationsService"
     build: "src/microservices/notifications"
+    environment:
+      ENVIRONMENT: local
+      INTERNAL_KAFKA_ADDR: 'kafka:9092'
     volumes:
       - "./src/proto:/notifications/proto"
       - "./config.properties:/notifications/src/main/resources/config.properties"
+    depends_on:
+      - product_storage
 
     # summary:
     #   image: summary
@@ -88,6 +99,8 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
 
   kafka:
+    # CREARE TOPIC
+    # docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic notification
     image: bitnami/kafka:latest
     ports:
       - '9092:9092' # internal
@@ -98,15 +111,14 @@ services:
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      - KAFKA_CREATE_TOPICS= 'notification:1:1'
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CREATE_TOPICS= 'test:1:1'
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
       - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:29092
       - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:29092
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
     depends_on:
       - zookeeper
-#    volumes:
-#      - "./sabd2-kafka/target:/target"
   
   # database mongodb.
   mongo:

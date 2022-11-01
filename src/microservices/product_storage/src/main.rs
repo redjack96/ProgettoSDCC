@@ -1,17 +1,19 @@
 mod properties;
 mod database;
 
+use std::thread;
+use std::time::Duration;
+use std::fmt::Write;
+use std::process::Command;
+use std::thread::sleep;
 use chrono::{TimeZone, Utc};
 use crate::database::{Database, QueryType};
-// use std::os::unix::net::SocketAddr;
 use tonic::{transport::Server, Request, Status, Response};
-// nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
+use kafka::producer::{Producer, Record, RequiredAcks};
+// HELP: nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use product_storage::shopping_list::product_storage_server::{ProductStorage, ProductStorageServer};
-// nome_progetto::package_file_proto::NomeMessage
-// use product_storage::product_storage::{HelloReply, HelloRequest};
 use product_storage::shopping_list::{ProductList, ItemName, PantryMessage, ListId, UsedItem, Item, Pantry};
 use crate::properties::get_properties;
-// use crate::surreal::{create_database, execute_query};
 
 #[derive(Default)]
 pub struct ProductStorageImpl {}
@@ -212,6 +214,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Database::new();
     db.create_table_products();
     println!("Created database tables!");
+
+    // Activate thread to communicate with NotificationService (with Kafka)
+    // if there are expired products
+    let handle = thread::spawn( || {
+        println!("Thread<3<3<3");
+        sleep(Duration::from_secs(15));
+        Command::new("kafka-topics.sh")
+            .args(["--create", "--bootstrap-server", "kafka:9092", "--replication-factor", "1", "--partitions", "1", "--topic", "notification"])
+            .output()
+            .expect("Failed execution of topics creation");
+
+        let mut producer =
+            Producer::from_hosts(vec!("kafka:9092".to_owned()))
+                .with_ack_timeout(Duration::from_secs(1))
+                .with_required_acks(RequiredAcks::One)
+                .create()
+                .unwrap();
+
+        let mut buf = String::with_capacity(2);
+        for i in 0..10 {
+            let _ = write!(&mut buf, "{}", i); // some computation of the message data to be sent
+            producer
+                .send(&Record::from_value("notification", buf.as_bytes()))
+                .expect(&format!("Cannot send message with id {}", i));
+            buf.clear();
+        }
+    });
+
     // Creo il servizio
     let service = ProductStorageImpl::default(); // istanzia la struct impostando TUTTI i valori in default!
     // aggiungo l'indirizzo al server
@@ -221,5 +251,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .serve(addr.parse().unwrap()) // inizia a servire a questo indirizzo!
         .await?; // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
     // Restituisce una tupla vuota dentro un Result Ok!
+    handle.join().unwrap();
     Ok(())
 }
