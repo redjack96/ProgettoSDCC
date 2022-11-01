@@ -6,13 +6,15 @@ version: '3.1'
 #  ports:
 #    - ${PORT}:${PORT}
 services:
-  # I nostri containers
-  frontend:
-    image: "web_ui"
-    container_name: "SDCCShoppingList"
-    build: "src/frontend"
-    ports:
-      - "3000:3000"
+  # OUR MICROSERVICES ----------------------------------------------------------------------------------
+  # --- FRONT-END
+  #  frontend:
+  #    image: "web_ui"
+  #    container_name: "SDCCShoppingList"
+  #    build: "src/frontend"
+  #    ports:
+  #      - "3000:3000"
+  # --- API-GATEWAY
   api_gateway:
     image: "api_gateway"
     container_name: "ApiGateway"
@@ -24,11 +26,12 @@ services:
       - "8007:8007"
     depends_on:
       - shopping_list
-#      - product_storage
-#      - recipes
-#      - consumptions
-#      - notifications
-#      - summary
+      - product_storage
+      - notifications
+  #      - recipes
+  #      - consumptions
+  #      - summary
+  # --- APP-MICROSERVICES
   shopping_list:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
@@ -46,38 +49,66 @@ services:
       - "./config.properties:/product_storage/config.properties"
       - "./src/proto:/product_storage/proto"
       - "./src/microservices/product_storage/test.db:/product_storage/test.db"
-#  recipes:
-#    image: recipes
-#    container_name: "RecipesService"
-#    build: "src/microservices/recipes"
-#    volumes:
-#      - "./config.properties:/usr/src/recipes"
-#      - "./src/proto:/usr/src/recipes/proto"
-#  consumptions:
-#    image: consumptions
-#    container_name: "ConsumptionService"
-#    build: "src/microservices/consumptions"
-#    volumes:
-#      - "./config.properties:/usr/src/consumptions"
-#      - "./src/proto:/usr/src/consumptions/proto"
+  notifications:
+    image: notifications
+    container_name: "NotificationsService"
+    build: "src/microservices/notifications"
+    volumes:
+      - "./src/proto:/notifications"
+      - "./config.properties:/notifications/src/main/resources"
 
-  # notifications:
-  #   image: notifications
-  #   container_name: "NotificationsService"
-  #   build: "src/microservices/notifications"
-  #   volumes:
-  #     - "src/microservices/notifications:/usr/src/notifications"
-  #     - "./config.properties:/usr/src/notifications"
-  # summary:
-  #   image: summary
-  #   container_name: "SummaryService"
-  #   build: "src/microservices/summary"
-  #   volumes:
-  #     - "src/microservices/summary:/usr/src/summary"
-  #     - "./config.properties:/usr/src/summary"
+    # summary:
+    #   image: summary
+    #   container_name: "SummaryService"
+    #   build: "src/microservices/summary"
+    #   volumes:
+    #     - "src/microservices/summary:/usr/src/summary"
+    #     - "./config.properties:/usr/src/summary"
+    #  recipes:
+    #    image: recipes
+    #    container_name: "RecipesService"
+    #    build: "src/microservices/recipes"
+    #    volumes:
+    #      - "./config.properties:/usr/src/recipes"
+    #      - "./src/proto:/usr/src/recipes/proto"
+    #  consumptions:
+    #    image: consumptions
+    #    container_name: "ConsumptionService"
+    #    build: "src/microservices/consumptions"
+    #    volumes:
+    #      - "./config.properties:/usr/src/consumptions"
+    #      - "./src/proto:/usr/src/consumptions/proto"
+
+  # KAFKA + ZOOKEEPER ---------------------------------------------------------------
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - '9092:9092' # internal
+      - '29092:29092' # localhost
+    container_name: kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CREATE_TOPICS= 'notification:1:1'
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:29092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zookeeper
+#    volumes:
+#      - "./sabd2-kafka/target:/target"
   
-  # database mongodb. 
-  # Todo: aggiungere questo database all'interno del microservizio product_storage
+  # database mongodb.
   mongo:
     image: mongo
     container_name: mongo
