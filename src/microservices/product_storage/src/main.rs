@@ -1,6 +1,7 @@
 mod properties;
 mod database;
 
+use std::cmp::max;
 use chrono::{TimeZone, Utc};
 use crate::database::{Database, QueryType};
 // use std::os::unix::net::SocketAddr;
@@ -52,6 +53,28 @@ impl ProductItem {
     }
 }
 
+fn unit_to_str(unit: i32) -> String {
+    let u = match unit {
+        0 => "Bottle",
+        2 => "Kg",
+        3 => "Grams",
+        _ => "Packet",
+    };
+    u.to_string()
+}
+
+fn prod_type_to_str(unit: i32) -> String {
+    let u = match unit {
+        0 => "Meat",
+        1 => "Fish",
+        2 => "Fruit",
+        3 => "Vegetable",
+        4 => "Drink",
+        _ => "Other",
+    };
+    u.to_string()
+}
+
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
     // Adds all bought products to pantry
@@ -86,15 +109,19 @@ impl ProductStorage for ProductStorageImpl {
     async fn update_product_in_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
         let msg = format!("Item manually updated in pantry: {}, quantity: {} {} ({}), expiration: {}",
-                          prod.item_name, prod.quantity, prod.unit, prod.r#type,
+                          prod.item_name, prod.quantity, unit_to_str(prod.unit), prod_type_to_str(prod.r#type),
                           Utc.timestamp(prod.expiration.as_ref().map(|t| t.seconds).unwrap_or(0), 0));
         println!("Removing item from db");
         update_product_in_db(prod);
         Ok(Response::new(product_storage::shopping_list::Response{msg}))
     }
 
-    async fn use_product_in_pantry(&self, _request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
-        todo!()
+    async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
+        let prod = request.into_inner();
+        let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);
+        println!("Using item from db");
+        use_product_in_db(prod);
+        Ok(Response::new(product_storage::shopping_list::Response{msg}))
     }
 
     async fn get_pantry(&self, _: Request<PantryMessage>) -> Result<Response<Pantry>, Status> {
@@ -202,6 +229,25 @@ fn update_product_in_db(elem: Item) {
                         elem.item_name, elem.r#type, elem.unit, elem.quantity, elem.expiration.unwrap_or_default());
     // First check if element with same name already present in db
     db.execute_insert_update_or_delete(&query);
+}
+
+fn use_product_in_db(elem: UsedItem) {
+    let db = Database::new();
+    // first we need to get current number of product
+    let select = format!("SELECT * FROM Products WHERE name='{}' AND unit='{}' AND item_type='{}';", elem.name, elem.unit, elem.item_type);
+    println!("{}", select);
+    let prod_item = db.execute_select_query(&select);
+    if let Some(prod) = prod_item.first() {
+        let new_quantity = max(prod.quantity - elem.quantity, 0);
+        println!("old quantity: {}, used_quantity: {}, new quantity: {}", prod.quantity, elem.quantity, new_quantity);
+        let used_number = prod.total_used_number; // numero di prodotti usati in totale (ho usato 103 pacchetti di pasta finora)
+        let use_number = prod.use_number; // numero di volte che il prodotto viene usato (es. l'ho usato 3 volte)
+        let query = format!("UPDATE OR IGNORE Products SET name='{}',item_type='{}',unit='{}',quantity='{}',last_used='{}',total_used_number='{}',use_number='{}';",
+                            elem.name, elem.item_type, elem.unit, new_quantity, Utc::now().timestamp(), used_number + elem.quantity, use_number + 1);
+        db.execute_insert_update_or_delete(&query);
+    } else {
+        println!("No product {} in pantry!", elem.name);
+    }
 }
 
 #[tokio::main]
