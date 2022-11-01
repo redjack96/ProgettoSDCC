@@ -27,7 +27,7 @@ services:
     depends_on:
       - shopping_list
       - product_storage
-      - notifications
+  #    - notifications
   #      - recipes
   #      - consumptions
   #      - summary

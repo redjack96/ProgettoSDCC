@@ -156,7 +156,7 @@ fn add_single_product_to_db(elem: Item) {
         use_number: 0,
         total_used_number: 0,
         times_is_bought: 1,
-        buy_date: 0, // we do not know when it is bought
+        buy_date: Utc::now().timestamp(), // we do not know when it is bought
     };
     let db = Database::new();
 

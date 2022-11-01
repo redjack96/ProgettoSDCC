@@ -15,7 +15,6 @@ pub struct Database {
 
 impl Database {
     pub fn new() -> Self {
-        println!("in new");
         Database {
             conn: sqlite3::open("test.db").unwrap()
         }
