@@ -107,7 +107,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -135,7 +135,7 @@ async fn remove_product(product_name: web::Path<String>) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -167,7 +167,7 @@ async fn update_product(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -211,7 +211,7 @@ async fn add_to_cart(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -243,7 +243,7 @@ async fn remove_from_cart(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -289,7 +289,7 @@ async fn buy_products_in_cart() -> impl Responder {
         .await
         .unwrap()
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -339,7 +339,7 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder{
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -366,7 +366,71 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {}", response.msg);
+    println!("{}", response_str);
+    HttpResponse::Ok().body(response_str)
+}
+/*
+pub struct ProductItem {
+    pub name: String,
+    pub item_type: i32,
+    pub unit: i32,
+    pub quantity: i32,
+    pub expiration: i64,
+    pub last_used: i64,
+    pub use_number: i32,
+    pub total_used_number: i32,
+    pub times_is_bought: i32,
+    pub buy_date: i64,
+}
+ */
+#[post("updateProductInStorage/{name}/{quantity}/{unit}/{type}/{expiration}/{lastUsed}/{useNumber}/{totalUseNumber}/{timesIsBought}/{buyDate}")]
+async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
+    let configs = get_properties();
+    println!("Product addition to product storage requested.");
+    // Crea un canale per la connessione al server
+    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    println!("Channel to product_storage created");
+    // Create a gRPC client for ProductStorage
+    let mut client = ProductStorageClient::new(channel);
+    println!("gRPC client created");
+    // Creates a tonic::Request
+    let prod_name = req.match_info().get("name").unwrap_or("Unknown Product").to_string();
+    let quantity = req.match_info().get("quantity").unwrap_or("1").parse::<i32>().unwrap_or(1);
+    let unit_str = req.match_info().get("unit").unwrap_or("Packet");
+    let ptype_str = req.match_info().get("type").unwrap_or("Other");
+    let expiry = req.match_info().get("expiry").unwrap_or("9999-12-31");
+
+    // transform data collected from url
+    let mut expiry_str = expiry.split("-");
+    let year = expiry_str.next().map(|y| y.parse::<i64>().unwrap_or(9999)).unwrap_or(9999);
+    let month = expiry_str.next().map(|m| m.parse::<u8>().unwrap_or(12)).unwrap_or(12);
+    let day = expiry_str.next().map(|d| d.parse::<u8>().unwrap_or(31)).unwrap_or(31);
+    let expiry_date = Timestamp::date(year, month, day).unwrap_or_default();
+    let unit = unit_from_str(unit_str).into();
+    let ptype = type_from_str(ptype_str).into();
+    let request = tonic::Request::new(
+        Item {
+            item_id: 0,
+            item_name: prod_name,
+            r#type: ptype,
+            unit,
+            quantity,
+            expiration: Some(expiry_date),
+            last_used: 0,
+            use_number: 0,
+            total_used_number: 0,
+            times_is_bought: 1, // anche se è aggiunto a mano, è stato comunque comprato un giorno.
+        },
+    );
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.update_product_in_pantry(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+    let response_str = format!("Response received: {}", response.msg);
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -393,6 +457,7 @@ async fn main() -> std::io::Result<()> {
             .service(buy_products_in_cart)
             .service(add_product_to_storage)
             .service(drop_product_from_storage)
+            .service(update_product_in_storage)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await

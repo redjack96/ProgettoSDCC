@@ -1,7 +1,7 @@
 mod properties;
 mod database;
 
-use chrono::Utc;
+use chrono::{TimeZone, Utc};
 use crate::database::{Database, QueryType};
 // use std::os::unix::net::SocketAddr;
 use tonic::{transport::Server, Request, Status, Response};
@@ -15,28 +15,7 @@ use crate::properties::get_properties;
 
 #[derive(Default)]
 pub struct ProductStorageImpl {}
-// #[prost(int64, tag="1")]
-//     pub item_id: i64,
-//     #[prost(string, tag="2")]
-//     pub item_name: ::prost::alloc::string::String,
-//     #[prost(enumeration="super::shopping_list::ProductType", tag="3")]
-//     pub r#type: i32,
-//     #[prost(enumeration="super::shopping_list::Unit", tag="4")]
-//     pub unit: i32,
-//     #[prost(int32, tag="5")]
-//     pub quantity: i32,
-//     #[prost(message, optional, tag="6")]
-//     pub expiration: ::core::option::Option<::prost_types::Timestamp>,
-//     #[prost(int64, tag="7")]
-//     pub last_used: i64,
-//     /// times the item is used
-//     #[prost(int32, tag="8")]
-//     pub use_number: i32,
-//     /// times
-//     #[prost(int32, tag="9")]
-//     pub total_used_number: i32,
-//     #[prost(int32, tag="10")]
-//     pub times_is_bought: i32,
+
 pub struct ProductItem {
     pub name: String,
     pub item_type: i32,
@@ -81,8 +60,14 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response{msg}))
     }
 
-    async fn update_product_in_pantry(&self, _request: Request<ItemName>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
-        todo!()
+    async fn update_product_in_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
+        let prod = request.into_inner();
+        let msg = format!("Item manually updated in pantry: {}, quantity: {} {} ({}), expiration: {}",
+                          prod.item_name, prod.quantity, prod.unit, prod.r#type,
+                          Utc.timestamp(prod.expiration.as_ref().map(|t| t.seconds).unwrap_or(0), 0));
+        println!("Removing item from db");
+        update_product_in_db(prod);
+        Ok(Response::new(product_storage::shopping_list::Response{msg}))
     }
 
     async fn use_product_in_pantry(&self, _request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
@@ -174,6 +159,14 @@ fn delete_product_from_db(elem: ItemName) {
     let query = format!("DELETE FROM Products WHERE name='{}';", elem.name);
     // First check if element with same name already present in db
     db.execute_insert_update_or_delete(query.as_str());
+}
+
+fn update_product_in_db(elem: Item) {
+    let db = Database::new();
+    let query = format!("UPDATE OR IGNORE Products SET name='{}',item_type='{}',unit='{}',quantity='{}',expiration='{}';",
+                        elem.item_name, elem.r#type, elem.unit, elem.quantity, elem.expiration.unwrap_or_default());
+    // First check if element with same name already present in db
+    db.execute_insert_update_or_delete(&query);
 }
 
 #[tokio::main]
