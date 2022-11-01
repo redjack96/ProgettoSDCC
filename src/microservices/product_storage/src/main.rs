@@ -1,20 +1,28 @@
 mod properties;
 mod database;
 
-use std::thread;
-use std::time::Duration;
-use std::fmt::Write;
-use std::process::Command;
 use std::thread::sleep;
 use std::cmp::max;
 use chrono::{TimeZone, Utc};
+// use kafka::Error;
+// use kafka::producer::{DefaultPartitioner, Producer, Record, RequiredAcks};
 use crate::database::{Database, QueryType};
 use tonic::{transport::Server, Request, Status, Response};
-use kafka::producer::{Producer, Record, RequiredAcks};
 // HELP: nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use product_storage::shopping_list::product_storage_server::{ProductStorage, ProductStorageServer};
 use product_storage::shopping_list::{ProductList, ItemName, PantryMessage, ListId, UsedItem, Item, Pantry};
 use crate::properties::get_properties;
+use rskafka::{
+    client::{
+        ClientBuilder,
+        partition::{Compression},
+    },
+    record::Record,
+    time::OffsetDateTime,
+};
+use std::collections::BTreeMap;
+use std::time::Duration;
+// use rskafka::client::error::Error::ServerError;
 
 #[derive(Default)]
 pub struct ProductStorageImpl {}
@@ -38,7 +46,7 @@ impl ProductItem {
         println!("Converting to item");
         let ts = prost_types::Timestamp {
             seconds: self.expiration,
-            nanos: 0
+            nanos: 0,
         };
         Item {
             item_id: 0,
@@ -54,6 +62,9 @@ impl ProductItem {
         }
     }
 }
+
+// const KAFKA_RETRIES: i32 = 5;
+const KAFKA_TOPIC: &str = "notification";
 
 fn unit_to_str(unit: i32) -> String {
     let u = match unit {
@@ -105,7 +116,7 @@ impl ProductStorage for ProductStorageImpl {
         let item = request.into_inner();
         println!("Removing item from db");
         delete_product_from_db(item);
-        Ok(Response::new(product_storage::shopping_list::Response{msg}))
+        Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
     async fn update_product_in_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
@@ -115,7 +126,7 @@ impl ProductStorage for ProductStorageImpl {
                           Utc.timestamp(prod.expiration.as_ref().map(|t| t.seconds).unwrap_or(0), 0));
         println!("Removing item from db");
         update_product_in_db(prod);
-        Ok(Response::new(product_storage::shopping_list::Response{msg}))
+        Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
@@ -123,17 +134,18 @@ impl ProductStorage for ProductStorageImpl {
         let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);
         println!("Using item from db");
         use_product_in_db(prod);
-        Ok(Response::new(product_storage::shopping_list::Response{msg}))
+        Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
     async fn get_pantry(&self, _: Request<PantryMessage>) -> Result<Response<Pantry>, Status> {
         println!("Getting pantry!");
         let products = select_pantry();
-        Ok(Response::new(Pantry{
+        Ok(Response::new(Pantry {
             products
         }))
     }
 }
+
 // used by add_bought_products_to_pantry
 fn add_products_to_db(product_list: ProductList) {
     println!("ListId: {:?}, ListName: {}, Number of products: {}", product_list.id.unwrap_or(ListId { list_id: 0 }).list_id, product_list.name, product_list.products.len());
@@ -172,6 +184,7 @@ fn add_products_to_db(product_list: ProductList) {
         db.execute_insert_update_or_delete(query.as_str());
     }
 }
+
 // used by add_product_to_pantry
 fn add_single_product_to_db(elem: Item) {
     println!("add single product: {}", elem.item_name);
@@ -263,40 +276,117 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Activate thread to communicate with NotificationService (with Kafka)
     // if there are expired products
-    let handle = thread::spawn( || {
-        println!("Thread<3<3<3");
-        sleep(Duration::from_secs(15));
-        Command::new("kafka-topics.sh")
-            .args(["--create", "--bootstrap-server", "kafka:9092", "--replication-factor", "1", "--partitions", "1", "--topic", "notification"])
-            .output()
-            .expect("Failed execution of topics creation");
-
-        let mut producer =
-            Producer::from_hosts(vec!("kafka:9092".to_owned()))
-                .with_ack_timeout(Duration::from_secs(1))
-                .with_required_acks(RequiredAcks::One)
-                .create()
-                .unwrap();
-
-        let mut buf = String::with_capacity(2);
-        for i in 0..10 {
-            let _ = write!(&mut buf, "{}", i); // some computation of the message data to be sent
-            producer
-                .send(&Record::from_value("notification", buf.as_bytes()))
-                .expect(&format!("Cannot send message with id {}", i));
-            buf.clear();
-        }
-    });
+    // let handle = thread::Builder::new()
+    //     .name("kafka-producer-thread".to_string())
+    //     .spawn(async_func)
+    //     .unwrap();
 
     // Creo il servizio
     let service = ProductStorageImpl::default(); // istanzia la struct impostando TUTTI i valori in default!
     // aggiungo l'indirizzo al server
-    println!("Server listening on {}", addr);
-    Server::builder()
+    let grpc_server = Server::builder()
         .add_service(ProductStorageServer::new(service)) // Qua si possono aggiungere altri service se vuoi!!!
-        .serve(addr.parse().unwrap()) // inizia a servire a questo indirizzo!
-        .await?; // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
+        .serve(addr.parse().unwrap()); // inizia a servire a questo indirizzo!
+    // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
+
+    println!("Server listening on {}", addr);
+
+    let x = tokio::join!(grpc_server, async_kafka_producer());
+    x.0.unwrap();
     // Restituisce una tupla vuota dentro un Result Ok!
-    handle.join().unwrap();
+    // handle.join().unwrap().await;
     Ok(())
+}
+
+async fn async_kafka_producer() {
+    println!("Running async func for kafka");
+    sleep(Duration::from_secs(15));
+    println!("Now i want to connect to kafka");
+    // setup client
+    let connection = "kafka:9092".to_owned();
+    let client = ClientBuilder::new(vec![connection]).build().await.unwrap();
+
+    // create a topic
+    let controller_client = client.controller_client().unwrap();
+    match controller_client.create_topic(
+        KAFKA_TOPIC,
+        1,      // partitions
+        1,      // replication factor
+        5_000,  // timeout (ms)
+    ).await {
+        Ok(_) => println!("created topic {KAFKA_TOPIC}"),
+        Err(_) => println!("the topic already exists"),
+    }
+
+    // get a partition-bound client
+    let partition_client = client
+        .partition_client(
+            KAFKA_TOPIC.to_owned(),
+            0,  // partition
+        )
+        .unwrap();
+
+    // produce some data
+    let record = Record {
+        key: None,
+        value: Some("hello kafka".into()),
+        headers: BTreeMap::from([
+            ("foo".to_owned(), "bar".into()),
+        ]),
+        timestamp: OffsetDateTime::now_utc(),
+    };
+    partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
+    println!("Topic produced??");
+    // consume data
+    // let (records, high_watermark) = partition_client
+    //     .fetch_records(
+    //         0,  // offset
+    //         1..1_000_000,  // min..max bytes
+    //         1_000,  // max wait time
+    //     )
+    //     .await
+    //     .unwrap();
+    //
+    // println!("I got it the record {:#?}", records);
+    //I got it the record [RecordAndOffset { record: Record { key: None, value: Some([48]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 0 }, RecordAndOffset { record: Record { key: None, value: Some([49]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 1 }, RecordAndOffset { record: Record { key: None, value: Some([50]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 2 }, RecordAndOffset { record: Record { key: None, value: Some([51]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 3 }, RecordAndOffset { record: Record { key: None, value: Some([52]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 4 }, RecordAndOffset { record: Record { key: None, value: Some([53]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 5 }, RecordAndOffset { record: Record { key: None, value: Some([54]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 6 }, RecordAndOffset { record: Record { key: None, value: Some([55]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 7 }, RecordAndOffset { record: Record { key: None, value: Some([56]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 8 }, RecordAndOffset { record: Record { key: None, value: Some([57]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 9 }, RecordAndOffset { record: Record { key: None, value: Some([104, 101, 108, 108, 111, 32, 107, 97, 102, 107, 97]), headers: {"foo": [98, 97, 114]}, timestamp: 2022-11-01 21:25:08.431 +00:00:00 }, offset: 10 }, RecordAndOffset { record: Record { key: None, value: Some([104, 101, 108, 108, 111, 32, 107, 97, 102, 107, 97]), headers: {"foo": [98, 97, 114]}, timestamp: 2022-11-01 21:26:30.963 +00:00:00 }, offset: 11 }, RecordAndOffset { record: Record { key: None, value: Some([104, 101, 108, 108, 111, 32, 107, 97, 102, 107, 97]), headers: {"foo": [98, 97, 114]}, timestamp: 2022-11-01 21:33:00.91 +00:00:00 }, offset: 12 }]
+}
+
+#[allow(dead_code)]
+fn kafka_rust_not_working() {
+    // let mut producer: kafka::Result<Producer<DefaultPartitioner>> = Err(kafka::Error::NoHostReachable);
+    // while producer.is_err() {
+    //     sleep(Duration::from_secs(1));
+    //     println!("Thread: waiting for kafka to build Producer");
+    //     producer = Producer::from_hosts(vec!("kafka:9092".to_owned()))
+    //         .with_
+    //         .with_ack_timeout(Duration::from_secs(1))
+    //         .with_required_acks(RequiredAcks::One)
+    //         .create();
+    // }
+    // let mut producer = producer.unwrap(); // here it cannot panic!
+    // println!("Thread: created producer");
+    // // loop {
+    // sleep(Duration::from_secs(5));
+    // println!("Thread: writing things");
+    // let mut buf = String::with_capacity(2);
+    // let mut retries = KAFKA_RETRIES;
+    // for i in 0..10 {
+    //     let _ = write!(&mut buf, "{}", i); // some computation of the message data to be sent
+    //     let mut send_result = producer.send(&Record::from_value(KAFKA_TOPIC, buf.as_bytes())
+    //         .with_partition(0));
+    //     // we retry
+    //     while send_result.is_err() && retries > 0 {
+    //         sleep(Duration::from_secs(1));
+    //         send_result = producer.send(&Record::from_value(KAFKA_TOPIC, buf.as_bytes())
+    //             .with_partition(0));
+    //         retries -= 1;
+    //     }
+    //     if send_result.is_err() {
+    //         panic!("Failed to send topic to kafka");
+    //     } else {
+    //         println!("Sent successfully!");
+    //     }
+    //     retries = KAFKA_RETRIES;
+    //     buf.clear();
+    // }
 }

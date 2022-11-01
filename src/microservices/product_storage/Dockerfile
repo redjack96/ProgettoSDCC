@@ -29,7 +29,6 @@ RUN rm src/*.rs
 # copy your source tree
 COPY ./src ./src
 
-
 # build for release
 RUN rm ./target/release/deps/product_storage*
 RUN cargo build --bin product_storage --release
