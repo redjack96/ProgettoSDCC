@@ -2,6 +2,7 @@ mod properties;
 mod database;
 
 use std::any::Any;
+use std::collections::HashMap;
 use tokio::time::sleep;
 use std::cmp::max;
 use chrono::{TimeZone, Utc};
@@ -25,7 +26,9 @@ use rskafka::{
     time::OffsetDateTime,
 };
 use std::collections::BTreeMap;
+use std::string::ToString;
 use std::time::Duration;
+use rskafka::client::controller::ControllerClient;
 use rskafka::client::partition::PartitionClient;
 use crate::database::QueryType::{SelectConsumed, SelectExpired};
 use crate::Notify::{Consumed, Expired};
@@ -102,7 +105,7 @@ pub fn prod_type_to_str(unit: i32) -> String {
     u.to_string()
 }
 
-pub fn notify_to_str(input: Notify) -> u8 {
+pub fn notify_to_int(input: Notify) -> u8 {
     match input {
         Expired => 1,
         Consumed => 2
@@ -333,27 +336,32 @@ async fn async_kafka_producer() {
     println!("Establishing connection to Kafka broker...");
     // setup client
     let connection = "kafka:9092".to_owned();
+    let topics: Vec<String> = Vec::from(["expired".to_string(), "consumed".to_string()]); //TODO forse si può fare meglio
     let client = ClientBuilder::new(vec![connection]).build().await.unwrap();
 
-    // create a topic
+    // create needed topics
     let controller_client = client.controller_client().unwrap();
-    match controller_client.create_topic(
-        KAFKA_TOPIC,
-        1,      // partitions
-        1,      // replication factor
-        5_000,  // timeout (ms)
-    ).await {
-        Ok(_) => println!("created topic {KAFKA_TOPIC}"),
-        Err(_) => println!("the topic already exists"),
+    let mut partitions: HashMap<String, PartitionClient> = HashMap::new();
+    for topic in topics {
+        let status = topic.to_string();
+        match controller_client.create_topic(
+            &topic,
+            1,      // partitions
+            1,      // replication factor
+            5_000,  // timeout (ms)
+        ).await {
+            Ok(_) => println!("created topic {KAFKA_TOPIC}"),
+            Err(_) => println!("the topic already exists"),
+        }
+        // get a partition-bound client
+        let partition_client = client
+            .partition_client(
+                &topic.to_owned(),
+                0,  // partition
+            )
+            .unwrap();
+        partitions.insert(status, partition_client);
     }
-
-    // get a partition-bound client
-    let partition_client = client
-        .partition_client(
-            KAFKA_TOPIC.to_owned(),
-            0,  // partition
-        )
-        .unwrap();
     println!("Connection to Kafka established.");
 
     loop {
@@ -362,13 +370,16 @@ async fn async_kafka_producer() {
         // check if there are expired or consumed products in pantry
         let expired = check_for_expired().await;
         let consumed = check_for_consumed().await;
+        let mut partition;
         if !expired.is_empty() {
             println!("There are {} expired products in pantry.", expired.len());
-            produce_to_kafka(&partition_client, Expired, expired).await;
+            partition = partitions.get("expired").expect("Impossible to get expired topic partition client.");
+            produce_to_kafka(&partition, Expired, expired).await;
         }
         if !consumed.is_empty() {
+            partition = partitions.get("consumed").expect("Impossible to get consumed topic partition client.");
             println!("There are {} consumed products in pantry.", consumed.len());
-            produce_to_kafka(&partition_client, Consumed, consumed).await;
+            produce_to_kafka(&partition, Consumed, consumed).await;
         }
     }
 }
@@ -390,12 +401,12 @@ async fn check_for_consumed() -> Vec<ProductItem> {
 async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, products: Vec<ProductItem>) {
     // convert ProductItems to json strings
     for product in products {
-        let serialized_product = serde_json::to_string(&product).unwrap();
+        let serialized_product = serde_json::to_string(&product).unwrap_or("{}".to_string());
         println!("{}", serialized_product);
 
         // create a record for the serialized product
         let record = Record {
-            key: Some(vec![notify_to_str(notify)]),
+            key: Some(vec![notify_to_int(notify)]),
             value: Some(serialized_product.into()),
             headers: BTreeMap::from([
                 ("foo".to_owned(), "bar".into()),
