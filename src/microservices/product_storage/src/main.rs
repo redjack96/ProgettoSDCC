@@ -22,10 +22,18 @@ use rskafka::{
 };
 use std::collections::BTreeMap;
 use std::time::Duration;
+use rskafka::client::partition::PartitionClient;
+use crate::database::QueryType::{SelectConsumed, SelectExpired};
+use crate::Notify::{Consumed, Expired};
 // use rskafka::client::error::Error::ServerError;
 
 #[derive(Default)]
 pub struct ProductStorageImpl {}
+
+pub enum Notify {
+    Consumed,
+    Expired
+}
 
 pub struct ProductItem {
     pub name: String,
@@ -167,20 +175,20 @@ fn add_products_to_db(product_list: ProductList) {
         let db = Database::new();
 
         // TODO: First check if element with same name already present in db
-        let query = db.prepare_product_statement(&item, QueryType::Select,
-                                                 0, 0, 0
+        let query = db.prepare_product_statement(Some(&item), QueryType::Select,
+                                                 Some(0), Some(0), Some(0)
         );
         let items = db.execute_select_query(query.as_str());
         let query;
         if items.capacity() != 0 {
             // Incrementa quantità e numero acquisti e aggiorna scadenza
-            query = db.prepare_product_statement(&item, QueryType::UpdateExisting,
-                                                 items.get(0).unwrap().quantity,
-                                                 items.get(0).unwrap().expiration,
-                                                 items.get(0).unwrap().times_is_bought);
+            query = db.prepare_product_statement(Some(&item), QueryType::UpdateExisting,
+                                                 Some(items.get(0).unwrap().quantity),
+                                                 Some(items.get(0).unwrap().expiration),
+                                                 Some(items.get(0).unwrap().times_is_bought));
         } else {
-            query = db.prepare_product_statement(&item, QueryType::InsertNew,
-                                                 0, 0, 0
+            query = db.prepare_product_statement(Some(&item), QueryType::InsertNew,
+                                                 Some(0), Some(0), Some(0)
             );
         }
 
@@ -207,23 +215,23 @@ fn add_single_product_to_db(elem: Item) {
     let db = Database::new();
 
     // build a select query. TODO: watch out for SQL injection!
-    let query = db.prepare_product_statement(&item, QueryType::Select,
-                                             0, 0, 0
+    let query = db.prepare_product_statement(Some(&item), QueryType::Select,
+                                             Some(0), Some(0), Some(0)
     );
     // First check if element with same name already present in db
     let items = db.execute_select_query(query.as_str());
     let query;
     if items.capacity() > 0 {
         // Increments quantity and updates expiration if the item is already present
-        query = db.prepare_product_statement(&item, QueryType::UpdateExisting,
-                                             items.get(0).unwrap().quantity,
-                                             items.get(0).unwrap().expiration,
-                                             items.get(0).unwrap().times_is_bought
+        query = db.prepare_product_statement(Some(&item), QueryType::UpdateExisting,
+                                             Some(items.get(0).unwrap().quantity),
+                                             Some(items.get(0).unwrap().expiration),
+                                             Some(items.get(0).unwrap().times_is_bought)
         );
     } else {
         // simply adds the new item
-        query = db.prepare_product_statement(&item, QueryType::InsertNew,
-                                             0, 0, 0
+        query = db.prepare_product_statement(Some(&item), QueryType::InsertNew,
+                                             Some(0), Some(0), Some(0)
         );
     }
 
@@ -254,7 +262,7 @@ fn update_product_in_db(elem: Item) {
     // First check if element with same name already present in db
     db.execute_insert_update_or_delete(&query);
 }
-// FIXME: unità e/o tipo sbagliate
+
 fn use_product_in_db(elem: UsedItem) -> String {
     let db = Database::new();
     // first we need to get current number of product
@@ -309,10 +317,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn async_kafka_producer() {
-    println!("Running async func for kafka");
-    //FIXME (sembra non servire?): sostituisci con un while ...is_err()
-    // sleep(Duration::from_secs(15));
-    println!("Now i want to connect to kafka");
+    println!("Establishing connection to Kafka broker...");
     // setup client
     let connection = "kafka:9092".to_owned();
     let client = ClientBuilder::new(vec![connection]).build().await.unwrap();
@@ -336,21 +341,50 @@ async fn async_kafka_producer() {
             0,  // partition
         )
         .unwrap();
+    println!("Connection to Kafka established.");
 
     loop {
+        println!("Asynchronously checking for consumed or expired products in pantry...");
         sleep(Duration::from_secs(60)).await;
-        // produce some data
-        let record = Record {
-            key: None,
-            value: Some("hello kafka".into()),
-            headers: BTreeMap::from([
-                ("foo".to_owned(), "bar".into()),
-            ]),
-            timestamp: OffsetDateTime::now_utc(),
-        };
-        partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
-        println!("Topic produced??");
+        // check if there are expired or consumed products in pantry
+        let expired = check_for_expired().await;
+        let consumed = check_for_consumed().await;
+        if !expired.is_empty() {
+            println!("There are some expired products in pantry.");
+            produce_to_kafka(&partition_client, Expired, expired);
+        } else if !consumed.is_empty() {
+            println!("There are some consumed products in pantry.");
+            produce_to_kafka(&partition_client, Consumed, consumed);
+        }
     }
+}
+
+async fn check_for_expired() -> Vec<ProductItem>{
+    let db = Database::new();
+    let query = db.prepare_product_statement(None, SelectExpired,
+                                 None, None, None);
+    db.execute_select_query(&query)
+}
+
+async fn check_for_consumed() -> Vec<ProductItem> {
+    let db = Database::new();
+    let query = db.prepare_product_statement(None, SelectConsumed,
+                                             None, None, None);
+    db.execute_select_query(&query)
+}
+
+async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, products: Vec<ProductItem>) {
+    // produce some data
+    let record = Record {
+        key: notify.into(),
+        value: Some("hello kafka".into()),
+        headers: BTreeMap::from([
+            ("foo".to_owned(), "bar".into()),
+        ]),
+        timestamp: OffsetDateTime::now_utc(),
+    };
+    partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
+    println!("Topic produced??");
 }
 
 

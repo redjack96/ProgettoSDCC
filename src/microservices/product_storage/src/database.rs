@@ -5,6 +5,8 @@ use crate::ProductItem;
 #[derive(PartialEq, Eq)]
 pub enum QueryType {
     Select,
+    SelectExpired,
+    SelectConsumed,
     InsertNew,
     UpdateExisting,
 }
@@ -47,23 +49,40 @@ impl Database {
     /// * `former_expiration`: only for updates: if not used, use 0
     ///
     /// returns: String query
-    pub fn prepare_product_statement(&self, product: &ProductItem, kind: QueryType,
-                                     former_quantity: i32,
-                                     former_expiration: i64,
-                                     former_bought: i32) -> String {
+    /// FIXME trasformare in metodi della struct database separati senza il match!!!
+    pub fn prepare_product_statement(&self, product: Option<&ProductItem>, kind: QueryType,
+                                     former_quantity: Option<i32>,
+                                     former_expiration: Option<i64>,
+                                     former_bought: Option<i32>) -> String {
         match kind {
-            QueryType::Select => format!("SELECT * FROM Products WHERE name='{}' AND item_type='{}' AND unit='{}';", // TODO: forse type e unit non servono
-                                         product.name.as_str(),
-                                         product.item_type.to_string(),
-                                         product.unit.to_string()),
-            QueryType::InsertNew => format!("INSERT INTO Products (name,item_type,unit,quantity,\
+            QueryType::Select => {
+                let product = product.expect("No product given.");
+                format!("SELECT * FROM Products WHERE name='{}' AND item_type='{}' AND unit='{}';", // TODO: forse type e unit non servono
+                        product.name.as_str(),
+                        product.item_type.to_string(),
+                        product.unit.to_string())
+            },
+            QueryType::InsertNew => {
+                let product = product.expect("No product given.");
+                format!("INSERT INTO Products (name,item_type,unit,quantity,\
             expiration,last_used,use_number,total_used_number,times_is_bought,buy_date) VALUES \
             ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}');",
-                                            product.name, product.item_type, product.unit,
-                                            product.quantity, product.expiration, product.last_used,
-                                            product.use_number, product.total_used_number,
-                                            product.times_is_bought, product.buy_date),
+                        product.name,
+                        product.item_type,
+                        product.unit,
+                        product.quantity,
+                        product.expiration,
+                        product.last_used,
+                        product.use_number,
+                        product.total_used_number,
+                        product.times_is_bought,
+                        product.buy_date)
+            },
             QueryType::UpdateExisting => {
+                let product = product.expect("No product given.");
+                let former_quantity = former_quantity.expect("No quantity given.");
+                let former_bought = former_bought.expect("No times bought given.");
+                let former_expiration = former_expiration.expect("No expiration given.");
                 // sums the quantity
                 let new_quantity = former_quantity + product.quantity;
                 // sums the buyout occurrences
@@ -77,7 +96,21 @@ impl Database {
                 }
                 format!("UPDATE Products \
                      SET quantity='{}', expiration='{}', buy_date='{}', times_is_bought='{}'\
-                     WHERE name='{}';", new_quantity, new_expiration, product.buy_date, num_buy, product.name)
+                     WHERE name='{}';", new_quantity, new_expiration,
+                        product.buy_date, num_buy,
+                        product.name)
+            }
+
+            QueryType::SelectExpired => {
+                // get current time in UNIX
+                let time_now = Utc::now().timestamp();
+                // select only expired products
+                format!("SELECT * FROM Products WHERE expiration<='{}'", time_now)
+            }
+
+            QueryType::SelectConsumed => {
+                // select only consumed products
+                format!("SELECT * FROM Products WHERE quantity='{}'", 0)
             }
         }
     }
