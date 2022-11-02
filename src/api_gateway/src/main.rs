@@ -268,7 +268,7 @@ async fn get_shopping_list() -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {:#?}", response); //:#? pretty prints!!!
     println!("{}", response_str);
     HttpResponse::Ok().body(response_str)
 }
@@ -443,7 +443,7 @@ async fn get_pantry() -> impl Responder {
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
 
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {:#?}", response);
     HttpResponse::Ok().body(response_str)
 }
 
@@ -480,7 +480,7 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
 
-    let response_str = format!("Response received: {:?}", response);
+    let response_str = format!("Response received: {:#?}", response);
     HttpResponse::Ok().body(response_str)
 }
 
