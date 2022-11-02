@@ -1,7 +1,7 @@
 mod properties;
 mod database;
 
-use std::thread::sleep;
+use tokio::time::sleep;
 use std::cmp::max;
 use chrono::{TimeZone, Utc};
 // use kafka::Error;
@@ -97,7 +97,6 @@ impl ProductStorage for ProductStorageImpl {
         // Buy date is added to the incoming items
         // Those items must be added to the database
         println!("Adding elements received to db");
-        //FIXME: aggiornare numero prodotti acquistati
         add_products_to_db(product_list);
         Ok(tonic::Response::new(product_storage::shopping_list::Response { msg }))
         // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
@@ -108,7 +107,6 @@ impl ProductStorage for ProductStorageImpl {
         let msg = format!("Item Added to pantry: {}, quantity: {}", request.get_ref().item_name, request.get_ref().quantity);
         let item = request.into_inner();
         println!("Adding single item to db");
-        //FIXME: aggiornare numero prodotti acquistati
         add_single_product_to_db(item);
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
@@ -170,17 +168,20 @@ fn add_products_to_db(product_list: ProductList) {
 
         // TODO: First check if element with same name already present in db
         let query = db.prepare_product_statement(&item, QueryType::Select,
-                                                 0, 0);
+                                                 0, 0, 0
+        );
         let items = db.execute_select_query(query.as_str());
         let query;
         if items.capacity() != 0 {
-            // Incrementa quantità e aggiorna scadenza
+            // Incrementa quantità e numero acquisti e aggiorna scadenza
             query = db.prepare_product_statement(&item, QueryType::UpdateExisting,
                                                  items.get(0).unwrap().quantity,
-                                                 items.get(0).unwrap().expiration);
+                                                 items.get(0).unwrap().expiration,
+                                                 items.get(0).unwrap().times_is_bought);
         } else {
             query = db.prepare_product_statement(&item, QueryType::InsertNew,
-                                                 0, 0);
+                                                 0, 0, 0
+            );
         }
 
         println!("{}", query);
@@ -206,7 +207,9 @@ fn add_single_product_to_db(elem: Item) {
     let db = Database::new();
 
     // build a select query. TODO: watch out for SQL injection!
-    let query = db.prepare_product_statement(&item, QueryType::Select, 0, 0);
+    let query = db.prepare_product_statement(&item, QueryType::Select,
+                                             0, 0, 0
+    );
     // First check if element with same name already present in db
     let items = db.execute_select_query(query.as_str());
     let query;
@@ -214,11 +217,14 @@ fn add_single_product_to_db(elem: Item) {
         // Increments quantity and updates expiration if the item is already present
         query = db.prepare_product_statement(&item, QueryType::UpdateExisting,
                                              items.get(0).unwrap().quantity,
-                                             items.get(0).unwrap().expiration);
+                                             items.get(0).unwrap().expiration,
+                                             items.get(0).unwrap().times_is_bought
+        );
     } else {
         // simply adds the new item
         query = db.prepare_product_statement(&item, QueryType::InsertNew,
-                                             0, 0);
+                                             0, 0, 0
+        );
     }
 
     println!("{}", query);
@@ -293,11 +299,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(ProductStorageServer::new(service)) // Qua si possono aggiungere altri service se vuoi!!!
         .serve(addr.parse().unwrap()); // inizia a servire a questo indirizzo!
     // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
-
-    println!("Server listening on {}", addr);
-
+    // grpc_server.await.unwrap();
     let x = tokio::join!(grpc_server, async_kafka_producer());
     x.0.unwrap();
+    println!("Server listening on {}", addr);
     // Restituisce una tupla vuota dentro un Result Ok!
     // handle.join().unwrap().await;
     Ok(())
@@ -305,8 +310,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn async_kafka_producer() {
     println!("Running async func for kafka");
-    //FIXME: sostituisci con un while ...is_err()
-    sleep(Duration::from_secs(15));
+    //FIXME (sembra non servire?): sostituisci con un while ...is_err()
+    // sleep(Duration::from_secs(15));
     println!("Now i want to connect to kafka");
     // setup client
     let connection = "kafka:9092".to_owned();
@@ -333,7 +338,7 @@ async fn async_kafka_producer() {
         .unwrap();
 
     loop {
-        sleep(Duration::from_secs(20));
+        sleep(Duration::from_secs(60)).await;
         // produce some data
         let record = Record {
             key: None,
@@ -345,18 +350,24 @@ async fn async_kafka_producer() {
         };
         partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
         println!("Topic produced??");
-        // consume data
-        // let (records, high_watermark) = partition_client
-        //     .fetch_records(
-        //         0,  // offset
-        //         1..1_000_000,  // min..max bytes
-        //         1_000,  // max wait time
-        //     )
-        //     .await
-        //     .unwrap();
-        //
-        // println!("I got it the record {:#?}", records);
     }
+}
+
+
+
+#[allow(dead_code)]
+fn kafka_consume() {
+    // consume data
+    // let (records, high_watermark) = partition_client
+    //     .fetch_records(
+    //         0,  // offset
+    //         1..1_000_000,  // min..max bytes
+    //         1_000,  // max wait time
+    //     )
+    //     .await
+    //     .unwrap();
+    //
+    // println!("I got it the record {:#?}", records);
 }
 
 #[allow(dead_code)]

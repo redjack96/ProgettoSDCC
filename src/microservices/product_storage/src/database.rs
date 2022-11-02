@@ -47,7 +47,10 @@ impl Database {
     /// * `former_expiration`: only for updates: if not used, use 0
     ///
     /// returns: String query
-    pub fn prepare_product_statement(&self, product: &ProductItem, kind: QueryType, former_quantity: i32, former_expiration: i64) -> String {
+    pub fn prepare_product_statement(&self, product: &ProductItem, kind: QueryType,
+                                     former_quantity: i32,
+                                     former_expiration: i64,
+                                     former_bought: i32) -> String {
         match kind {
             QueryType::Select => format!("SELECT * FROM Products WHERE name='{}' AND item_type='{}' AND unit='{}';", // TODO: forse type e unit non servono
                                          product.name.as_str(),
@@ -63,6 +66,8 @@ impl Database {
             QueryType::UpdateExisting => {
                 // sums the quantity
                 let new_quantity = former_quantity + product.quantity;
+                // sums the buyout occurrences
+                let num_buy = former_bought + product.times_is_bought;
                 // gets the most imminent expiration
                 let new_expiration;
                 if product.expiration >= former_expiration {
@@ -71,9 +76,8 @@ impl Database {
                     new_expiration = product.expiration;
                 }
                 format!("UPDATE Products \
-                     SET quantity='{}', expiration='{}', buy_date='{}'\
-                     WHERE name='{}';", new_quantity, new_expiration, product.buy_date, product.name)
-                // TODO: aggiornare il numero di volte in cui è acquistato.
+                     SET quantity='{}', expiration='{}', buy_date='{}', times_is_bought='{}'\
+                     WHERE name='{}';", new_quantity, new_expiration, product.buy_date, num_buy, product.name)
             }
         }
     }
