@@ -20,7 +20,6 @@ use api_gateway::shopping_list::Item;
 use api_gateway::shopping_list::UsedItem;
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
-use actix_web::cookie::time::OffsetDateTime;
 use prost_types::Timestamp;
 use api_gateway::shopping_list::product_storage_client::ProductStorageClient;
 
@@ -460,16 +459,19 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
 
     let name = req.match_info().get("name").unwrap_or("Unknown Product").to_string();
     let quantity = req.match_info().get("quantity").unwrap_or("1").to_string();
-    let unit = req.match_info().get("unit").unwrap_or("Packet").to_string();
-    let ptype = req.match_info().get("type").unwrap_or("Other").to_string();
-
+    let unit_str = req.match_info().get("unit").unwrap_or("Packet");
+    let ptype_str = req.match_info().get("type").unwrap_or("Other");
+    let unit: i32 = unit_from_str(unit_str).into();
+    let ptype: i32 = type_from_str(ptype_str).into();
+    println!("{},{},{},{}", name, quantity, unit, ptype);
     // Creates a tonic::Request
     let request = tonic::Request::new(UsedItem {
         name,
         quantity: quantity.parse::<i32>().unwrap_or(1),
-        unit: unit.parse::<i32>().unwrap_or(Unit::Packet.into()),
-        item_type: ptype.parse::<i32>().unwrap_or(ProductType::Other.into()),
+        unit,
+        item_type: ptype,
     });
+    println!("{:?}", request);
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:

@@ -37,14 +37,14 @@ public class NotificationConsumer {
 
             log.info("Starting receiving notifications");
             while (true) {
-                final ConsumerRecords<Long, String> consumerRecords = consumer.poll(Duration.ofMillis(1000));
+                final ConsumerRecords<Long, String> consumerRecords = consumer.poll(Duration.ofMillis(5000));
                 if (consumerRecords.count() == 0) {
                     log.info("No notifications to show");
                 } else {
                     consumerRecords.forEach(longStringConsumerRecord -> {
                         String topic = longStringConsumerRecord.topic();
                         String notificationMessage = longStringConsumerRecord.value();
-                        log.log(Level.INFO, "Topic: {0} - Record: {1}",
+                        log.log(Level.INFO, "Found notification!!! Topic: {0} - Record: {1}",
                                 Arrays.asList(topic, notificationMessage));
                     });
                 }

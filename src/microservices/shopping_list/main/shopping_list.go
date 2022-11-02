@@ -106,7 +106,10 @@ func (s *serverShoppingList) AddProductToCart(ctx context.Context, product *pb.P
 		log.Fatalln("Error querying DB", err)
 	}
 	fmt.Println(qResult)
-	return &pb.Response{Msg: "ok - product added to cart"}, nil
+	// FIXME: mettere il nome dentro il message RPC
+	// FIXME: (opzionale) cambiare il metodo di aggiornamento da per id a per nome[, unità, tipo]
+	msg := fmt.Sprintf("ok - product %s added to cart", product.ProductId)
+	return &pb.Response{Msg: msg}, nil
 }
 
 // RemoveProductFromCart sets the product as not added to cart yet
@@ -120,7 +123,10 @@ func (s *serverShoppingList) RemoveProductFromCart(ctx context.Context, product 
 		log.Fatalln("Error querying DB", err)
 	}
 	fmt.Println(qResult)
-	return &pb.Response{Msg: "ok - product removed from cart"}, nil
+	// FIXME: mettere il nome dentro il message RPC
+	// FIXME: (opzionale) cambiare il metodo di aggiornamento da per id a per nome[, unità, tipo]
+	msg := fmt.Sprintf("ok - product %s removed from cart", product.ProductId)
+	return &pb.Response{Msg: msg}, nil
 }
 
 func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*pb.ProductList, error) {

@@ -76,7 +76,7 @@ fn unit_to_str(unit: i32) -> String {
     u.to_string()
 }
 
-fn prod_type_to_str(unit: i32) -> String {
+pub fn prod_type_to_str(unit: i32) -> String {
     let u = match unit {
         0 => "Meat",
         1 => "Fish",
@@ -97,6 +97,7 @@ impl ProductStorage for ProductStorageImpl {
         // Buy date is added to the incoming items
         // Those items must be added to the database
         println!("Adding elements received to db");
+        //FIXME: aggiornare numero prodotti acquistati
         add_products_to_db(product_list);
         Ok(tonic::Response::new(product_storage::shopping_list::Response { msg }))
         // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
@@ -107,6 +108,7 @@ impl ProductStorage for ProductStorageImpl {
         let msg = format!("Item Added to pantry: {}, quantity: {}", request.get_ref().item_name, request.get_ref().quantity);
         let item = request.into_inner();
         println!("Adding single item to db");
+        //FIXME: aggiornare numero prodotti acquistati
         add_single_product_to_db(item);
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
@@ -131,6 +133,7 @@ impl ProductStorage for ProductStorageImpl {
 
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
+        println!("prod_unit: {}", prod.unit);
         let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);
         println!("Using item from db");
         use_product_in_db(prod);
@@ -187,7 +190,7 @@ fn add_products_to_db(product_list: ProductList) {
 
 // used by add_product_to_pantry
 fn add_single_product_to_db(elem: Item) {
-    println!("add single product: {}", elem.item_name);
+    println!("add single product: {}, quantity {} {}, type {}", elem.item_name, elem.quantity, unit_to_str(elem.unit), prod_type_to_str(elem.r#type));
     let item = ProductItem {
         name: elem.item_name,
         item_type: elem.r#type,
@@ -240,28 +243,30 @@ fn delete_product_from_db(elem: ItemName) {
 
 fn update_product_in_db(elem: Item) {
     let db = Database::new();
-    let query = format!("UPDATE OR IGNORE Products SET name='{}',item_type='{}',unit='{}',quantity='{}',expiration='{}';",
-                        elem.item_name, elem.r#type, elem.unit, elem.quantity, elem.expiration.unwrap_or_default());
+    let query = format!("UPDATE OR IGNORE Products SET quantity='{}',expiration='{}' WHERE name='{}' AND item_type='{}' AND unit='{}';",
+                        elem.quantity, elem.expiration.unwrap_or_default(), elem.item_name, elem.r#type, elem.unit);
     // First check if element with same name already present in db
     db.execute_insert_update_or_delete(&query);
 }
-
-fn use_product_in_db(elem: UsedItem) {
+// FIXME: unità e/o tipo sbagliate
+fn use_product_in_db(elem: UsedItem) -> String {
     let db = Database::new();
     // first we need to get current number of product
     let select = format!("SELECT * FROM Products WHERE name='{}' AND unit='{}' AND item_type='{}';", elem.name, elem.unit, elem.item_type);
     println!("{}", select);
     let prod_item = db.execute_select_query(&select);
+    println!("unit of elem from API: {}, unit of elem in table: {}", elem.unit, prod_item.first().map(|p| p.unit).unwrap());
     if let Some(prod) = prod_item.first() {
         let new_quantity = max(prod.quantity - elem.quantity, 0);
         println!("old quantity: {}, used_quantity: {}, new quantity: {}", prod.quantity, elem.quantity, new_quantity);
         let used_number = prod.total_used_number; // numero di prodotti usati in totale (ho usato 103 pacchetti di pasta finora)
         let use_number = prod.use_number; // numero di volte che il prodotto viene usato (es. l'ho usato 3 volte)
-        let query = format!("UPDATE OR IGNORE Products SET name='{}',item_type='{}',unit='{}',quantity='{}',last_used='{}',total_used_number='{}',use_number='{}';",
-                            elem.name, elem.item_type, elem.unit, new_quantity, Utc::now().timestamp(), used_number + elem.quantity, use_number + 1);
+        let query = format!("UPDATE OR IGNORE Products SET quantity='{}',last_used='{}',total_used_number='{}',use_number='{}' WHERE name='{}' AND item_type='{}' AND unit='{}';",
+                             new_quantity, Utc::now().timestamp(), used_number + elem.quantity, use_number + 1, elem.name, elem.item_type, elem.unit);
         db.execute_insert_update_or_delete(&query);
+        format!("Used product {} in pantry. Remaining: {}", elem.name, new_quantity)
     } else {
-        println!("No product {} in pantry!", elem.name);
+        format!("No product {} in pantry!", elem.name)
     }
 }
 
