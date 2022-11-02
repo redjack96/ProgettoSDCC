@@ -305,6 +305,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn async_kafka_producer() {
     println!("Running async func for kafka");
+    //FIXME: sostituisci con un while ...is_err()
     sleep(Duration::from_secs(15));
     println!("Now i want to connect to kafka");
     // setup client
@@ -331,29 +332,31 @@ async fn async_kafka_producer() {
         )
         .unwrap();
 
-    // produce some data
-    let record = Record {
-        key: None,
-        value: Some("hello kafka".into()),
-        headers: BTreeMap::from([
-            ("foo".to_owned(), "bar".into()),
-        ]),
-        timestamp: OffsetDateTime::now_utc(),
-    };
-    partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
-    println!("Topic produced??");
-    // consume data
-    // let (records, high_watermark) = partition_client
-    //     .fetch_records(
-    //         0,  // offset
-    //         1..1_000_000,  // min..max bytes
-    //         1_000,  // max wait time
-    //     )
-    //     .await
-    //     .unwrap();
-    //
-    // println!("I got it the record {:#?}", records);
-    //I got it the record [RecordAndOffset { record: Record { key: None, value: Some([48]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 0 }, RecordAndOffset { record: Record { key: None, value: Some([49]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 1 }, RecordAndOffset { record: Record { key: None, value: Some([50]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 2 }, RecordAndOffset { record: Record { key: None, value: Some([51]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 3 }, RecordAndOffset { record: Record { key: None, value: Some([52]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 4 }, RecordAndOffset { record: Record { key: None, value: Some([53]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 5 }, RecordAndOffset { record: Record { key: None, value: Some([54]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 6 }, RecordAndOffset { record: Record { key: None, value: Some([55]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 7 }, RecordAndOffset { record: Record { key: None, value: Some([56]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 8 }, RecordAndOffset { record: Record { key: None, value: Some([57]), headers: {}, timestamp: 1969-12-31 23:59:59.999 +00:00:00 }, offset: 9 }, RecordAndOffset { record: Record { key: None, value: Some([104, 101, 108, 108, 111, 32, 107, 97, 102, 107, 97]), headers: {"foo": [98, 97, 114]}, timestamp: 2022-11-01 21:25:08.431 +00:00:00 }, offset: 10 }, RecordAndOffset { record: Record { key: None, value: Some([104, 101, 108, 108, 111, 32, 107, 97, 102, 107, 97]), headers: {"foo": [98, 97, 114]}, timestamp: 2022-11-01 21:26:30.963 +00:00:00 }, offset: 11 }, RecordAndOffset { record: Record { key: None, value: Some([104, 101, 108, 108, 111, 32, 107, 97, 102, 107, 97]), headers: {"foo": [98, 97, 114]}, timestamp: 2022-11-01 21:33:00.91 +00:00:00 }, offset: 12 }]
+    loop {
+        sleep(Duration::from_secs(20));
+        // produce some data
+        let record = Record {
+            key: None,
+            value: Some("hello kafka".into()),
+            headers: BTreeMap::from([
+                ("foo".to_owned(), "bar".into()),
+            ]),
+            timestamp: OffsetDateTime::now_utc(),
+        };
+        partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
+        println!("Topic produced??");
+        // consume data
+        // let (records, high_watermark) = partition_client
+        //     .fetch_records(
+        //         0,  // offset
+        //         1..1_000_000,  // min..max bytes
+        //         1_000,  // max wait time
+        //     )
+        //     .await
+        //     .unwrap();
+        //
+        // println!("I got it the record {:#?}", records);
+    }
 }
 
 #[allow(dead_code)]
