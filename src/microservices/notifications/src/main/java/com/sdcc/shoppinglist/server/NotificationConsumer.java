@@ -6,7 +6,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,15 +36,14 @@ public class NotificationConsumer {
 
             log.info("Starting receiving notifications");
             while (true) {
-                final ConsumerRecords<Long, String> consumerRecords = consumer.poll(Duration.ofMillis(5000));
+                final ConsumerRecords<Long, String> consumerRecords = consumer.poll(Duration.ofMillis(1000));
                 if (consumerRecords.count() == 0) {
                     log.info("No notifications to show");
                 } else {
                     consumerRecords.forEach(longStringConsumerRecord -> {
                         String topic = longStringConsumerRecord.topic();
                         String notificationMessage = longStringConsumerRecord.value();
-                        log.log(Level.INFO, "Found notification!!! Topic: {0} - Record: {1}",
-                                Arrays.asList(topic, notificationMessage));
+                        log.log(Level.INFO, "Found notification!!! Topic:"+topic+" - Record:"+notificationMessage);
                     });
                 }
                 consumer.commitAsync();

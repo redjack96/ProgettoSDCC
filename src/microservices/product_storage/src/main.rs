@@ -1,9 +1,13 @@
 mod properties;
 mod database;
 
+use std::any::Any;
 use tokio::time::sleep;
 use std::cmp::max;
 use chrono::{TimeZone, Utc};
+extern crate serde;
+extern crate serde_json;
+#[macro_use] extern crate serde_derive;
 // use kafka::Error;
 // use kafka::producer::{DefaultPartitioner, Producer, Record, RequiredAcks};
 use crate::database::{Database, QueryType};
@@ -30,11 +34,13 @@ use crate::Notify::{Consumed, Expired};
 #[derive(Default)]
 pub struct ProductStorageImpl {}
 
+#[derive(Clone, Copy)]
 pub enum Notify {
     Consumed,
     Expired
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ProductItem {
     pub name: String,
     pub item_type: i32,
@@ -94,6 +100,13 @@ pub fn prod_type_to_str(unit: i32) -> String {
         _ => "Other",
     };
     u.to_string()
+}
+
+pub fn notify_to_str(input: Notify) -> u8 {
+    match input {
+        Expired => 1,
+        Consumed => 2
+    }
 }
 
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
@@ -350,11 +363,12 @@ async fn async_kafka_producer() {
         let expired = check_for_expired().await;
         let consumed = check_for_consumed().await;
         if !expired.is_empty() {
-            println!("There are some expired products in pantry.");
-            produce_to_kafka(&partition_client, Expired, expired);
-        } else if !consumed.is_empty() {
-            println!("There are some consumed products in pantry.");
-            produce_to_kafka(&partition_client, Consumed, consumed);
+            println!("There are {} expired products in pantry.", expired.len());
+            produce_to_kafka(&partition_client, Expired, expired).await;
+        }
+        if !consumed.is_empty() {
+            println!("There are {} consumed products in pantry.", consumed.len());
+            produce_to_kafka(&partition_client, Consumed, consumed).await;
         }
     }
 }
@@ -374,17 +388,25 @@ async fn check_for_consumed() -> Vec<ProductItem> {
 }
 
 async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, products: Vec<ProductItem>) {
-    // produce some data
-    let record = Record {
-        key: notify.into(),
-        value: Some("hello kafka".into()),
-        headers: BTreeMap::from([
-            ("foo".to_owned(), "bar".into()),
-        ]),
-        timestamp: OffsetDateTime::now_utc(),
-    };
-    partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
-    println!("Topic produced??");
+    // convert ProductItems to json strings
+    for product in products {
+        let serialized_product = serde_json::to_string(&product).unwrap();
+        println!("{}", serialized_product);
+
+        // create a record for the serialized product
+        let record = Record {
+            key: Some(vec![notify_to_str(notify)]),
+            value: Some(serialized_product.into()),
+            headers: BTreeMap::from([
+                ("foo".to_owned(), "bar".into()),
+            ]),
+            timestamp: OffsetDateTime::now_utc(),
+        };
+
+        // produce some data
+        partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
+        println!("Product sent to Kafka.");
+    }
 }
 
 
