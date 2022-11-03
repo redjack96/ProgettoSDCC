@@ -4,9 +4,9 @@ import "product_storage.proto";
 import "shopping_list.proto";
 
 option java_multiple_files = true;
-option java_package = "com.sdcc.shoppinglist";
-option java_outer_classname = "HelloWorldProto";
-option objc_class_prefix = "HLW";
+option java_package = "com.sdcc.shoppinglist.summary";
+option java_outer_classname = "SummaryProto";
+option objc_class_prefix = "SUM";
 
 // package name for the buffer will be used later
 package summary;

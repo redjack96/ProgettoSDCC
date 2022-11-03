@@ -1,5 +1,5 @@
 FROM maven:3.8.2-eclipse-temurin-17
-WORKDIR /notifications
+WORKDIR /summary
 COPY . .
 #RUN mvn protobuf:compile
 RUN mvn verify

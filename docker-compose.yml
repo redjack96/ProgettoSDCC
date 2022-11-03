@@ -59,22 +59,24 @@ services:
     image: "notifications"
     container_name: "NotificationsService"
     build: "src/microservices/notifications"
-#    environment:
-#      ENVIRONMENT: local
-#      INTERNAL_KAFKA_ADDR: 'kafka:9092'
+    #    environment:
+    #      ENVIRONMENT: local
+    #      INTERNAL_KAFKA_ADDR: 'kafka:9092'
     volumes:
       - "./src/proto:/notifications/proto"
       - "./config.properties:/notifications/src/main/resources/config.properties"
     depends_on:
       - product_storage
 
-    # summary:
-    #   image: summary
-    #   container_name: "SummaryService"
-    #   build: "src/microservices/summary"
-    #   volumes:
-    #     - "src/microservices/summary:/usr/src/summary"
-    #     - "./config.properties:/usr/src/summary"
+  summary:
+    image: summary
+    container_name: "SummaryService"
+    build: "src/microservices/summary"
+    volumes:
+      - "./src/proto:/summary/proto"
+      - "./config.properties:/summary/src/main/resources/config.properties"
+
+        
     #  recipes:
     #    image: recipes
     #    container_name: "RecipesService"
@@ -112,7 +114,7 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-#      - KAFKA_CREATE_TOPICS= 'test:1:1'
+      #      - KAFKA_CREATE_TOPICS= 'test:1:1'
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
       - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:29092
       - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:29092
@@ -121,23 +123,23 @@ services:
     depends_on:
       - zookeeper
 
-#  init-kafka:
-#      image: confluentinc/cp-kafka:latest
-#      depends_on:
-#        - kafka
-#      entrypoint: ['/bin/sh', '-c' ]
-#      command: |
-#        "
-#        # blocks until kafka is reachable
-#        kafka-topics --bootstrap-server kafka:9092 --list
-#
-#        echo -e 'Creating kafka topics'
-#        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic notification --replication-factor 1 --partitions 1
-#        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic client-alert --replication-factor 1 --partitions 1
-#
-#        echo -e 'Successfully created the following topics'
-#        kafka-topics --bootstrap-server kafka:9092 --list
-#        "
+  #  init-kafka:
+  #      image: confluentinc/cp-kafka:latest
+  #      depends_on:
+  #        - kafka
+  #      entrypoint: ['/bin/sh', '-c' ]
+  #      command: |
+  #        "
+  #        # blocks until kafka is reachable
+  #        kafka-topics --bootstrap-server kafka:9092 --list
+  #
+  #        echo -e 'Creating kafka topics'
+  #        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic notification --replication-factor 1 --partitions 1
+  #        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic client-alert --replication-factor 1 --partitions 1
+  #
+  #        echo -e 'Successfully created the following topics'
+  #        kafka-topics --bootstrap-server kafka:9092 --list
+  #        "
   
   # database mongodb.
   mongo:

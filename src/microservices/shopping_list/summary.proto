@@ -1,22 +1,47 @@
 // version of protocol buffer used
 syntax = "proto3";
+import "product_storage.proto";
+import "shopping_list.proto";
 
 // package name for the buffer will be used later
 package summary;
-option go_package = "shopping_list.microservice/proto_generated";
-import "shopping_list.proto";
 
 // service which can be executed
 service Summary {
-  rpc WeekSummary(shopping_list.Product) returns (SummaryData);
-  rpc MonthSummary(shopping_list.Product) returns (SummaryData);
+  rpc WeekSummary(product_storage.Pantry) returns (SummaryData);
+  rpc MonthSummary(product_storage.Pantry) returns (SummaryData);
+  rpc TotalSummary(product_storage.Pantry) returns (SummaryData);
 }
 
+/*
+message SummaryItem {
+//  string itemName = 1;
+//  shopping_list.Unit unit = 2;
+//  shopping_list.ProductType type = 3;
+  string mostUsedProduct = 1;
+  string mostBoughtProduct = 2;
+  int32 totalQuantity = 4;
+  int32 timesUsed = 5;
+  int32 timesBought = 6; // Quante volte è stato comprato in settimana/mese
+  int32 numberExpired = 7; // Quanti sono scaduti
+  int32 pantrySize = 8; // Quanti ne rimangono ora
+}
+*/
+
 message SummaryData {
-  int64 itemId = 1;
-  int32 bought = 2;
-  int32 used = 3;
-  int32 rebought_times = 4; // Quante volte è stato comprato in settimana/mese
-  int32 number_expired = 5; // Quanti sono scaduti
-  int32 remaining = 6; // Quanti ne rimangono ora
+  Period reference = 1;
+  string mostUsedProduct = 2;
+  string mostBoughtProduct = 3;
+  int32 totalQuantity = 4;
+  int32 timesUsed = 5;
+  int32 timesBought = 6; // Quante volte è stato comprato in settimana/mese
+  int32 numberExpired = 7; // Quanti sono scaduti
+  int32 currentPantrySize = 8;
+//  repeated SummaryItem items = 2;
+}
+
+enum Period {
+  Weekly = 0;
+  Monthly = 1;
+  Total = 2;
 }
