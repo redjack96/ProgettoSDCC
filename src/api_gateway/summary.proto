@@ -3,15 +3,22 @@ syntax = "proto3";
 import "product_storage.proto";
 import "shopping_list.proto";
 
+option java_multiple_files = true;
+option java_package = "com.sdcc.shoppinglist.summary";
+option java_outer_classname = "SummaryProto";
+option objc_class_prefix = "SUM";
+
 // package name for the buffer will be used later
 package summary;
 
 // service which can be executed
 service Summary {
-  rpc WeekSummary(product_storage.Pantry) returns (SummaryData);
-  rpc MonthSummary(product_storage.Pantry) returns (SummaryData);
-  rpc TotalSummary(product_storage.Pantry) returns (SummaryData);
+  rpc WeekSummary(SummaryRequest) returns (SummaryData);
+  rpc MonthSummary(SummaryRequest) returns (SummaryData);
+  rpc TotalSummary(SummaryRequest) returns (SummaryData);
 }
+
+message SummaryRequest {}
 
 /*
 message SummaryItem {

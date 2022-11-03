@@ -2,31 +2,36 @@ package com.sdcc.shoppinglist.server;
 
 import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.summary.SummaryGrpc;
+import com.sdcc.shoppinglist.summary.SummaryRequest;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import product_storage.ProductStorageOuterClass;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Receives notifications from the other microservices polling a Kafka broker
+ * Produces a summary with some infos of the Distributed Storage
  */
 public class SummaryServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(SummaryServer.class);
-    public static final int PORT = 50051;
+    public static final int PORT = 8006;
 
     private Server server;
 
     private void start() throws IOException {
-        this.server = ServerBuilder.forPort(PORT)
+        SocketAddress address = new InetSocketAddress("summary", PORT);
+        this.server = NettyServerBuilder.forAddress(address)
                 .addService(new SummaryImpl())
                 .build()
                 .start();
-        LOGGER.info("Server started, listening on %d".formatted(PORT));
+        LOGGER.info("Server started, listening on %d".formatted(server.getPort()));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.err.println("*** shutting down gRPC server since JVM is shutting down");
             try {
@@ -58,8 +63,8 @@ public class SummaryServer {
 
     static class SummaryImpl extends SummaryGrpc.SummaryImplBase{
         @Override
-        public void weekSummary(ProductStorageOuterClass.Pantry request, StreamObserver<SummaryData> responseObserver) {
-            LOGGER.info("Java Received: %s products".formatted(request.getProductsCount()));
+        public void weekSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
+            LOGGER.info("Java Received: %s products".formatted(request));
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();
@@ -68,8 +73,8 @@ public class SummaryServer {
         }
 
         @Override
-        public void monthSummary(ProductStorageOuterClass.Pantry request, StreamObserver<SummaryData> responseObserver) {
-            LOGGER.info("Java Received: %s products".formatted(request.getProductsCount()));
+        public void monthSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
+            LOGGER.info("Java Received: %s products".formatted(request));
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();
@@ -78,8 +83,8 @@ public class SummaryServer {
         }
 
         @Override
-        public void totalSummary(ProductStorageOuterClass.Pantry request, StreamObserver<SummaryData> responseObserver) {
-            LOGGER.info("Java Received: %s products".formatted(request.getProductsCount()));
+        public void totalSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
+            LOGGER.info("Java Received: %s products".formatted(request));
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();

@@ -9,7 +9,7 @@ use tonic::transport::{Channel, Uri};
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
-use api_gateway::shopping_list::{ItemName, PantryMessage, Product};
+use api_gateway::shopping_list::{ItemName, PantryMessage, SummaryRequest, Product};
 use api_gateway::shopping_list::ProductRemove;
 use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
@@ -22,6 +22,7 @@ use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use prost_types::Timestamp;
 use api_gateway::shopping_list::product_storage_client::ProductStorageClient;
+use api_gateway::shopping_list::summary_client::SummaryClient;
 
 fn unit_from_str(input: &str) -> Unit {
     match input {
@@ -66,6 +67,10 @@ async fn greet(name: web::Path<String>) -> impl Responder {
     format!("Hello {name}!")
 }
 
+
+/**
+SHOPPING LIST API
+*/
 #[post("/addProduct/{name}/{quantity}/{unit}/{type}/{expiry}")]
 async fn add_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
@@ -295,6 +300,10 @@ async fn buy_products_in_cart() -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
+
+/**
+PRODUCT STORAGE APIS
+ */
 #[post("/addProductToStorage/{name}/{quantity}/{unit}/{type}/{expiry}")]
 async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
@@ -484,6 +493,80 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
     HttpResponse::Ok().body(response_str)
 }
 
+/**
+SUMMARY API
+*/
+#[get("/getWeekSummary")]
+async fn get_week_summary() -> impl Responder {
+    let configs = get_properties();
+    let channel = try_get_channel(&configs.summary_address, configs.summary_port).await;
+    println!("Channel to summary created");
+    // Create a gRPC client for ProductStorage
+    let mut client = SummaryClient::new(channel);
+    println!("gRPC client created");
+
+    let request = tonic::Request::new(SummaryRequest {});
+    println!("{:?}", request);
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.week_summary(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+
+    let response_str = format!("Response received: {:#?}", response);
+    HttpResponse::Ok().body(response_str)
+}
+
+
+#[get("/getMonthSummary")]
+async fn get_month_summary() -> impl Responder {
+    let configs = get_properties();
+    let channel = try_get_channel(&configs.summary_address, configs.summary_port).await;
+    println!("Channel to summary created");
+    // Create a gRPC client for ProductStorage
+    let mut client = SummaryClient::new(channel);
+    println!("gRPC client created");
+
+    let request = tonic::Request::new(SummaryRequest {});
+    println!("{:?}", request);
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.month_summary(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+
+    let response_str = format!("Response received: {:#?}", response);
+    HttpResponse::Ok().body(response_str)
+}
+
+
+#[get("/getTotalSummary")]
+async fn get_total_summary() -> impl Responder {
+    let configs = get_properties();
+    let channel = try_get_channel(&configs.summary_address, configs.summary_port).await;
+    println!("Channel to summary created");
+    // Create a gRPC client for ProductStorage
+    let mut client = SummaryClient::new(channel);
+    println!("gRPC client created");
+
+    let request = tonic::Request::new(SummaryRequest {});
+    println!("{:?}", request);
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.total_summary(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+
+    let response_str = format!("Response received: {:#?}", response);
+    HttpResponse::Ok().body(response_str)
+}
+
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -509,6 +592,9 @@ async fn main() -> std::io::Result<()> {
             .service(update_product_in_storage)
             .service(get_pantry)
             .service(use_product_in_pantry)
+            .service(get_week_summary)
+            .service(get_month_summary)
+            .service(get_total_summary)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await

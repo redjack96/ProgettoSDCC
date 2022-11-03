@@ -159,6 +159,12 @@
 			<artifactId>grpc-stub</artifactId>
 			<version>${grpc.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.grpc/grpc-netty -->
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-netty</artifactId>
+			<version>${grpc.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java-util</artifactId>
