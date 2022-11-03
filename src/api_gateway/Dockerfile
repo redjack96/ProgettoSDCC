@@ -1,14 +1,14 @@
 # Stage 1 - we prepare the dependencies to install and build
-FROM rust:latest as planner
+FROM lukemathwalker/cargo-chef as planner
 WORKDIR /api_gateway
-RUN cargo install cargo-chef
+
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 # Stage 2 - we build (cook) our dependencies with cargo-chef
-FROM rust:latest as cacher
+FROM lukemathwalker/cargo-chef as cacher
 WORKDIR /api_gateway
-RUN cargo install cargo-chef
+
 COPY --from=planner /api_gateway/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 

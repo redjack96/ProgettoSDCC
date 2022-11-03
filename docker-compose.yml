@@ -95,6 +95,7 @@ services:
   # KAFKA + ZOOKEEPER ---------------------------------------------------------------
   zookeeper:
     image: 'bitnami/zookeeper:latest'
+    container_name: zookeeper
     ports:
       - '2181:2181'
     environment:
@@ -122,24 +123,6 @@ services:
       - KAFKA_CFG_LOG4J_LOGGERS="kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
     depends_on:
       - zookeeper
-
-  #  init-kafka:
-  #      image: confluentinc/cp-kafka:latest
-  #      depends_on:
-  #        - kafka
-  #      entrypoint: ['/bin/sh', '-c' ]
-  #      command: |
-  #        "
-  #        # blocks until kafka is reachable
-  #        kafka-topics --bootstrap-server kafka:9092 --list
-  #
-  #        echo -e 'Creating kafka topics'
-  #        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic notification --replication-factor 1 --partitions 1
-  #        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic client-alert --replication-factor 1 --partitions 1
-  #
-  #        echo -e 'Successfully created the following topics'
-  #        kafka-topics --bootstrap-server kafka:9092 --list
-  #        "
   
   # database mongodb.
   mongo:

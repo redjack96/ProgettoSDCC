@@ -1,21 +1,22 @@
 mod properties;
 mod database;
+extern crate serde;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
-use std::any::Any;
 use std::collections::HashMap;
 use tokio::time::sleep;
 use std::cmp::max;
 use chrono::{TimeZone, Utc};
-extern crate serde;
-extern crate serde_json;
-#[macro_use] extern crate serde_derive;
+use tokio::sync::Mutex;
 // use kafka::Error;
 // use kafka::producer::{DefaultPartitioner, Producer, Record, RequiredAcks};
-use crate::database::{Database, QueryType};
+use crate::database::{Database, DEFAULT_EXPIRATION, QueryType};
 use tonic::{transport::Server, Request, Status, Response};
 // HELP: nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use product_storage::shopping_list::product_storage_server::{ProductStorage, ProductStorageServer};
-use product_storage::shopping_list::{ProductList, ItemName, PantryMessage, ListId, UsedItem, Item, Pantry};
+use product_storage::shopping_list::{ProductList, ItemName, PantryMessage, ListId, UsedItem, Item, Pantry, Product};
 use crate::properties::get_properties;
 use rskafka::{
     client::{
@@ -25,10 +26,10 @@ use rskafka::{
     record::Record,
     time::OffsetDateTime,
 };
-use std::collections::BTreeMap;
+
 use std::string::ToString;
 use std::time::Duration;
-use rskafka::client::controller::ControllerClient;
+use lazy_static::lazy_static;
 use rskafka::client::partition::PartitionClient;
 use crate::database::QueryType::{SelectConsumed, SelectExpired};
 use crate::Notify::{Consumed, Expired};
@@ -37,10 +38,11 @@ use crate::Notify::{Consumed, Expired};
 #[derive(Default)]
 pub struct ProductStorageImpl {}
 
+// enum for notification microservice
 #[derive(Clone, Copy)]
 pub enum Notify {
     Consumed,
-    Expired
+    Expired,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -57,7 +59,33 @@ pub struct ProductItem {
     pub buy_date: i64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LogEntry {
+    log_timestamp: i64,
+    transaction_type: String,
+    product_name: String,
+    quantity: i32,
+    unit: String,
+    product_type: String,
+    expiration_date: i64,
+}
+
 impl ProductItem {
+    fn from_product(p: &Product) -> Self {
+        ProductItem {
+            name: p.clone().product_name,
+            item_type: p.r#type,
+            unit: p.unit,
+            quantity: p.quantity,
+            expiration: p.expiration.clone().map_or(DEFAULT_EXPIRATION, |e| e.seconds),
+            last_used: 0,
+            use_number: 0,
+            total_used_number: 0,
+            times_is_bought: 1,
+            buy_date: Utc::now().timestamp(),
+        }
+    }
+
     fn to_item(&self) -> Item {
         // let date_time = prost_types::Timestamp::from();
         println!("Converting to item");
@@ -78,10 +106,19 @@ impl ProductItem {
             times_is_bought: self.times_is_bought,
         }
     }
+
 }
 
 // const KAFKA_RETRIES: i32 = 5;
 const KAFKA_TOPIC: &str = "notification";
+const SUMMARY_KEY: u8 = 2;
+const EXPIRED: &str = "expired";
+const CONSUMED: &str = "consumed";
+const LOGS: &str = "logs";
+
+lazy_static!{
+    static ref KAFKA_CLIENT_HASH_MAP: Mutex<HashMap<String, PartitionClient>> = Mutex::new(HashMap::new());
+}
 
 fn unit_to_str(unit: i32) -> String {
     let u = match unit {
@@ -121,7 +158,29 @@ impl ProductStorage for ProductStorageImpl {
         // Buy date is added to the incoming items
         // Those items must be added to the database
         println!("Adding elements received to db");
-        add_products_to_db(product_list);
+        let ts = Utc::now().timestamp();
+
+        add_products_to_db(&product_list);
+
+        let mut vec_log_entry: Vec<LogEntry> = vec![];
+        for prod in product_list.products {
+            let log_entry = LogEntry {
+                log_timestamp: ts.clone(),
+                transaction_type: "add_bought_products_to_pantry".to_string(),
+                product_name: prod.product_name,
+                quantity: prod.quantity, // added quantity
+                unit: unit_to_str(prod.unit),
+                product_type: prod_type_to_str(prod.r#type),
+                expiration_date: prod.expiration.map(|e| e.seconds).unwrap_or(DEFAULT_EXPIRATION),
+            };
+            vec_log_entry.push(log_entry);
+        }
+        let kafka_client_map = KAFKA_CLIENT_HASH_MAP.lock().await;
+        let partition_client = kafka_client_map.get(LOGS).expect("Impossible to get logs partition client");
+        produce_logs_to_kafka(partition_client, vec_log_entry).await;
+
+        println!("Sent log to kafka for summary");
+
         Ok(tonic::Response::new(product_storage::shopping_list::Response { msg }))
         // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
         // In teoria questo METODO va sempre a buon fine, ma ricordiamo che è asincrono
@@ -172,27 +231,19 @@ impl ProductStorage for ProductStorageImpl {
 }
 
 // used by add_bought_products_to_pantry
-fn add_products_to_db(product_list: ProductList) {
-    println!("ListId: {:?}, ListName: {}, Number of products: {}", product_list.id.unwrap_or(ListId { list_id: 0 }).list_id, product_list.name, product_list.products.len());
-    let products = product_list.products;
-    for elem in products {
-        let item = ProductItem {
-            name: elem.product_name,
-            item_type: elem.r#type,
-            unit: elem.unit,
-            quantity: elem.quantity,
-            expiration: elem.expiration.unwrap().seconds,
-            last_used: 0,
-            use_number: 0,
-            total_used_number: 0,
-            times_is_bought: 1,
-            buy_date: Utc::now().timestamp(),
-        };
+fn add_products_to_db(product_list: &ProductList) {
+    println!("ListId: {:?}, ListName: {}, Number of products: {}",
+             product_list.clone().id.unwrap_or(ListId { list_id: 0 }).list_id,
+             product_list.name,
+             product_list.products.len());
+
+    for elem in product_list.clone().products {
+        let item = ProductItem::from_product(&elem);
         let db = Database::new();
 
         // TODO: First check if element with same name already present in db
         let query = db.prepare_product_statement(Some(&item), QueryType::Select,
-                                                 Some(0), Some(0), Some(0)
+                                                 Some(0), Some(0), Some(0),
         );
         let items = db.execute_select_query(query.as_str());
         let query;
@@ -204,7 +255,7 @@ fn add_products_to_db(product_list: ProductList) {
                                                  Some(items.get(0).unwrap().times_is_bought));
         } else {
             query = db.prepare_product_statement(Some(&item), QueryType::InsertNew,
-                                                 Some(0), Some(0), Some(0)
+                                                 Some(0), Some(0), Some(0),
             );
         }
 
@@ -232,7 +283,7 @@ fn add_single_product_to_db(elem: Item) {
 
     // build a select query. TODO: watch out for SQL injection!
     let query = db.prepare_product_statement(Some(&item), QueryType::Select,
-                                             Some(0), Some(0), Some(0)
+                                             Some(0), Some(0), Some(0),
     );
     // First check if element with same name already present in db
     let items = db.execute_select_query(query.as_str());
@@ -242,12 +293,12 @@ fn add_single_product_to_db(elem: Item) {
         query = db.prepare_product_statement(Some(&item), QueryType::UpdateExisting,
                                              Some(items.get(0).unwrap().quantity),
                                              Some(items.get(0).unwrap().expiration),
-                                             Some(items.get(0).unwrap().times_is_bought)
+                                             Some(items.get(0).unwrap().times_is_bought),
         );
     } else {
         // simply adds the new item
         query = db.prepare_product_statement(Some(&item), QueryType::InsertNew,
-                                             Some(0), Some(0), Some(0)
+                                             Some(0), Some(0), Some(0),
         );
     }
 
@@ -292,7 +343,7 @@ fn use_product_in_db(elem: UsedItem) -> String {
         let used_number = prod.total_used_number; // numero di prodotti usati in totale (ho usato 103 pacchetti di pasta finora)
         let use_number = prod.use_number; // numero di volte che il prodotto viene usato (es. l'ho usato 3 volte)
         let query = format!("UPDATE OR IGNORE Products SET quantity='{}',last_used='{}',total_used_number='{}',use_number='{}' WHERE name='{}' AND item_type='{}' AND unit='{}';",
-                             new_quantity, Utc::now().timestamp(), used_number + elem.quantity, use_number + 1, elem.name, elem.item_type, elem.unit);
+                            new_quantity, Utc::now().timestamp(), used_number + elem.quantity, use_number + 1, elem.name, elem.item_type, elem.unit);
         db.execute_insert_update_or_delete(&query);
         format!("Used product {} in pantry. Remaining: {}", elem.name, new_quantity)
     } else {
@@ -322,13 +373,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let grpc_server = Server::builder()
         .add_service(ProductStorageServer::new(service)) // Qua si possono aggiungere altri service se vuoi!!!
         .serve(addr.parse().unwrap()); // inizia a servire a questo indirizzo!
+
     // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
-    // grpc_server.await.unwrap();
     let x = tokio::join!(grpc_server, async_kafka_producer());
     x.0.unwrap();
     println!("Server listening on {}", addr);
     // Restituisce una tupla vuota dentro un Result Ok!
-    // handle.join().unwrap().await;
+
     Ok(())
 }
 
@@ -336,12 +387,12 @@ async fn async_kafka_producer() {
     println!("Establishing connection to Kafka broker...");
     // setup client
     let connection = "kafka:9092".to_owned();
-    let topics: Vec<String> = Vec::from(["expired".to_string(), "consumed".to_string()]); //TODO forse si può fare meglio
+    let topics: Vec<String> = vec![EXPIRED.to_string(), CONSUMED.to_string(), LOGS.to_string()];
     let client = ClientBuilder::new(vec![connection]).build().await.unwrap();
 
     // create needed topics
     let controller_client = client.controller_client().unwrap();
-    let mut partitions: HashMap<String, PartitionClient> = HashMap::new();
+
     for topic in topics {
         let status = topic.to_string();
         match controller_client.create_topic(
@@ -360,7 +411,7 @@ async fn async_kafka_producer() {
                 0,  // partition
             )
             .unwrap();
-        partitions.insert(status, partition_client);
+        KAFKA_CLIENT_HASH_MAP.lock().await.insert(status, partition_client);
     }
     println!("Connection to Kafka established.");
 
@@ -371,23 +422,24 @@ async fn async_kafka_producer() {
         let expired = check_for_expired().await;
         let consumed = check_for_consumed().await;
         let mut partition;
+        let partition_guard = KAFKA_CLIENT_HASH_MAP.lock().await;
         if !expired.is_empty() {
             println!("There are {} expired products in pantry.", expired.len());
-            partition = partitions.get("expired").expect("Impossible to get expired topic partition client.");
+            partition = partition_guard.get(EXPIRED).expect("Impossible to get expired topic partition client.");
             produce_to_kafka(&partition, Expired, expired).await;
         }
         if !consumed.is_empty() {
-            partition = partitions.get("consumed").expect("Impossible to get consumed topic partition client.");
+            partition = partition_guard.get(CONSUMED).expect("Impossible to get consumed topic partition client.");
             println!("There are {} consumed products in pantry.", consumed.len());
             produce_to_kafka(&partition, Consumed, consumed).await;
         }
     }
 }
 
-async fn check_for_expired() -> Vec<ProductItem>{
+async fn check_for_expired() -> Vec<ProductItem> {
     let db = Database::new();
     let query = db.prepare_product_statement(None, SelectExpired,
-                                 None, None, None);
+                                             None, None, None);
     db.execute_select_query(&query)
 }
 
@@ -408,9 +460,7 @@ async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, pr
         let record = Record {
             key: Some(vec![notify_to_int(notify)]),
             value: Some(serialized_product.into()),
-            headers: BTreeMap::from([
-                ("foo".to_owned(), "bar".into()),
-            ]),
+            headers: Default::default(),
             timestamp: OffsetDateTime::now_utc(),
         };
 
@@ -420,59 +470,25 @@ async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, pr
     }
 }
 
+///
+/// Implements Summary Microservice kafka decoupled communication
+/// # Arguments
+///
+/// * `partition_client`:
+/// * `log_entry_vec`:
+///
+/// returns: () Nothing
+async fn produce_logs_to_kafka(partition_client: &PartitionClient, log_entry_vec: Vec<LogEntry>) {
+    for log_entry in log_entry_vec {
+        let serialized_entry = serde_json::to_string(&log_entry).unwrap_or("{}".to_string()); // empty json object
+        let record = Record {
+            key: Some(vec![SUMMARY_KEY]),
+            value: Some(serialized_entry.into()),
+            headers: Default::default(),
+            timestamp: OffsetDateTime::now_utc(),
+        };
 
-
-#[allow(dead_code)]
-fn kafka_consume() {
-    // consume data
-    // let (records, high_watermark) = partition_client
-    //     .fetch_records(
-    //         0,  // offset
-    //         1..1_000_000,  // min..max bytes
-    //         1_000,  // max wait time
-    //     )
-    //     .await
-    //     .unwrap();
-    //
-    // println!("I got it the record {:#?}", records);
-}
-
-#[allow(dead_code)]
-fn kafka_rust_not_working() {
-    // let mut producer: kafka::Result<Producer<DefaultPartitioner>> = Err(kafka::Error::NoHostReachable);
-    // while producer.is_err() {
-    //     sleep(Duration::from_secs(1));
-    //     println!("Thread: waiting for kafka to build Producer");
-    //     producer = Producer::from_hosts(vec!("kafka:9092".to_owned()))
-    //         .with_
-    //         .with_ack_timeout(Duration::from_secs(1))
-    //         .with_required_acks(RequiredAcks::One)
-    //         .create();
-    // }
-    // let mut producer = producer.unwrap(); // here it cannot panic!
-    // println!("Thread: created producer");
-    // // loop {
-    // sleep(Duration::from_secs(5));
-    // println!("Thread: writing things");
-    // let mut buf = String::with_capacity(2);
-    // let mut retries = KAFKA_RETRIES;
-    // for i in 0..10 {
-    //     let _ = write!(&mut buf, "{}", i); // some computation of the message data to be sent
-    //     let mut send_result = producer.send(&Record::from_value(KAFKA_TOPIC, buf.as_bytes())
-    //         .with_partition(0));
-    //     // we retry
-    //     while send_result.is_err() && retries > 0 {
-    //         sleep(Duration::from_secs(1));
-    //         send_result = producer.send(&Record::from_value(KAFKA_TOPIC, buf.as_bytes())
-    //             .with_partition(0));
-    //         retries -= 1;
-    //     }
-    //     if send_result.is_err() {
-    //         panic!("Failed to send topic to kafka");
-    //     } else {
-    //         println!("Sent successfully!");
-    //     }
-    //     retries = KAFKA_RETRIES;
-    //     buf.clear();
-    // }
+        partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
+    }
+    println!("Logs sent to Kafka. ");
 }

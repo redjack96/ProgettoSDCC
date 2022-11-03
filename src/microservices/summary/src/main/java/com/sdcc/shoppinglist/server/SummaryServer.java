@@ -4,13 +4,11 @@ import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.summary.SummaryGrpc;
 import com.sdcc.shoppinglist.summary.SummaryRequest;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import product_storage.ProductStorageOuterClass;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -20,10 +18,14 @@ import java.util.concurrent.TimeUnit;
  * Produces a summary with some infos of the Distributed Storage
  */
 public class SummaryServer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SummaryServer.class);
+    private static final Logger LOGGER = Logger.getLogger(SummaryServer.class.getSimpleName());
     public static final int PORT = 8006;
 
     private Server server;
+
+    public SummaryServer() {
+        LOGGER.setLevel(Level.INFO);
+    }
 
     private void start() throws IOException {
         SocketAddress address = new InetSocketAddress("summary", PORT);
@@ -58,6 +60,8 @@ public class SummaryServer {
     public static void main(String[] args) throws IOException, InterruptedException{
         final var server = new SummaryServer();
         server.start();
+        final KafkaSummaryConsumer kst = new KafkaSummaryConsumer();
+        new Thread(kst).start();
         server.blockUntilShutdown();
     }
 

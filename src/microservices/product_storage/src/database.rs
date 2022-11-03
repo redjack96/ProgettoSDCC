@@ -2,6 +2,8 @@ use sqlite3::{Connection};
 use chrono::{TimeZone, Utc};
 use crate::ProductItem;
 
+pub const DEFAULT_EXPIRATION : i64 = 253370764800;
+
 #[derive(PartialEq, Eq)]
 pub enum QueryType {
     Select,
@@ -134,7 +136,7 @@ impl Database {
             let quantity = row.get(3)
                 .map_or(0, |v| v.as_integer().unwrap_or(0));
             let expiration_ts = row.get(4)
-                .map_or(253370764800, |v| v.as_integer().unwrap_or(253370764800)); // per non renderlo la scadenza minima, se non sai qual è
+                .map_or(DEFAULT_EXPIRATION, |v| v.as_integer().unwrap_or(DEFAULT_EXPIRATION)); // per non renderlo la scadenza minima, se non sai qual è
             let expiration = Utc.timestamp(expiration_ts, 0);
             let last_used = row.get(5)
                 .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
