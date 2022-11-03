@@ -1,4 +1,4 @@
-# S.D.C.C. Shopping List
+# S.D.C.C. Shopping List 
 Smart Distributed Capable & Consumption-Aware Shopping list. 
 A smart automated shopping list, built with microservices.
 
@@ -13,7 +13,7 @@ This project is made of 6 microservices:
 5. **NotificationsService**: sends e-mail or push notifications when an item is about to expire or a recipe can be done. (Java)
 6. **SummaryService**: computes the summary statistics about shopped, used and expired item last week or last month. (Java)
 
-TODO:_ ShoppingListService and ProductStorageService communication is decoupled with the usage of Kafka Publish Subscribe Framework.
+TODO: NotificationService and ProductStorageService communication is decoupled with the usage of Kafka Publish Subscribe Framework.
 
 TODO: The following pattern are implemented:
 
