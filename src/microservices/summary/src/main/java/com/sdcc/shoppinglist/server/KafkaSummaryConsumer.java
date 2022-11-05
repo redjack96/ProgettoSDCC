@@ -1,5 +1,6 @@
 package com.sdcc.shoppinglist.server;
 
+import com.influxdb.client.InfluxDBClient;
 import com.sdcc.shoppinglist.serde.JsonDeserializer;
 import com.sdcc.shoppinglist.utils.LogEntry;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -12,11 +13,15 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class KafkaSummaryConsumer implements Runnable{
+public class KafkaSummaryConsumer implements Runnable {
     private static final Logger log = Logger.getLogger(KafkaSummaryConsumer.class.getSimpleName());
+    private InfluxDBClient client;
+    private InfluxSink influx;
 
-    public KafkaSummaryConsumer(){
+    public KafkaSummaryConsumer(InfluxSink influx){
         log.setLevel(Level.INFO);
+        this.client = influx.getClient();
+        this.influx = influx;
     }
 
     @Override
@@ -45,6 +50,17 @@ public class KafkaSummaryConsumer implements Runnable{
                         String topic = longStringConsumerRecord.topic();
                         LogEntry payload = longStringConsumerRecord.value();
                         log.log(Level.INFO, "Found logs!!! Topic:"+topic+" - Record:"+payload);
+                        // adding log entry to influxDB
+                        log.log(Level.INFO, "Adding log entry to the influxDB database");
+                        try {
+                            InfluxThread influxThread = new InfluxThread(payload, influx);
+                            Thread t = new Thread(influxThread);
+                            t.start();
+                            t.join();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        log.log(Level.INFO, "Added log entry to the influxDB database");
                     });
                 }
                 consumer.commitAsync();

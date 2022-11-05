@@ -1,12 +1,16 @@
 package com.sdcc.shoppinglist.server;
 
+import com.influxdb.client.InfluxDBClient;
 import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.summary.SummaryGrpc;
 import com.sdcc.shoppinglist.summary.SummaryRequest;
+import com.sdcc.shoppinglist.utils.LogEntry;
+import com.sdcc.shoppinglist.utils.TimeWindow;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.IOException;
@@ -20,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class SummaryServer {
     private static final Logger LOGGER = Logger.getLogger(SummaryServer.class.getSimpleName());
     public static final int PORT = 8006;
-
+    private static InfluxSink influx;
     private Server server;
 
     public SummaryServer() {
@@ -48,6 +52,7 @@ public class SummaryServer {
     private void stop() throws InterruptedException {
         if (server != null) {
             server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+            influx.getClient().close();
         }
     }
 
@@ -60,7 +65,15 @@ public class SummaryServer {
     public static void main(String[] args) throws IOException, InterruptedException{
         final var server = new SummaryServer();
         server.start();
-        final KafkaSummaryConsumer kst = new KafkaSummaryConsumer();
+        // Connecting to InfluxDB
+        System.out.println("Trying connection to influxDB");
+        influx = InfluxSink.getInstance(
+                "http://influxdb:8086",
+                "admin",
+                "password",
+                "token");
+        System.out.println("Connected to influxDB");
+        final KafkaSummaryConsumer kst = new KafkaSummaryConsumer(influx);
         new Thread(kst).start();
         server.blockUntilShutdown();
     }
@@ -69,6 +82,8 @@ public class SummaryServer {
         @Override
         public void weekSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
+            // Get last week data from influx db
+            List<LogEntry> logs = influx.getLogEntryFromInflux(TimeWindow.Weekly);
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();
@@ -79,6 +94,7 @@ public class SummaryServer {
         @Override
         public void monthSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
+            List<LogEntry> logs = influx.getLogEntryFromInflux(TimeWindow.Monthly);
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();
@@ -89,6 +105,9 @@ public class SummaryServer {
         @Override
         public void totalSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
+            LOGGER.info("Getting log entries from influxdb...");
+            List<LogEntry> logs = influx.getLogEntryFromInflux(TimeWindow.Total);
+            LOGGER.info("Retrieved log entries from influxdb.");
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();

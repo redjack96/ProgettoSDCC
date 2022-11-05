@@ -1,37 +1,35 @@
-# Stage 1 - we prepare the dependencies to install and build
-FROM lukemathwalker/cargo-chef as planner
-WORKDIR /api_gateway
-
-COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
-
-# Stage 2 - we build (cook) our dependencies with cargo-chef
-FROM lukemathwalker/cargo-chef as cacher
-WORKDIR /api_gateway
-
-COPY --from=planner /api_gateway/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
-
-# Stage 3 - compile only our app
+# Here we do a multi-build dockerfile to reduce final container size
+# first we start from rust image and install our app
 FROM rust:latest as builder
+
+RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
+# create a new empty shell project
+RUN USER=root cargo new api_gateway
 WORKDIR /api_gateway
-# Copy sources
-COPY . .
-# Copy dependencies from cacher Stage
-COPY --from=cacher /api_gateway/target target
-COPY --from=cacher /usr/local/cargo /usr/local/cargo
-RUN apt-get update && apt-get install -y protobuf-compiler
-# Build (only) the app
+
+# copy over your manifests
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+COPY ./src/lib.rs ./src/lib.rs
+COPY ./shopping_list.proto ./shopping_list.proto
+COPY ./product_storage.proto ./product_storage.proto
+COPY ./recipes.proto ./recipes.proto
+COPY ./consumptions.proto ./consumptions.proto
+COPY ./notifications.proto ./notifications.proto
+COPY ./summary.proto ./summary.proto
+COPY build.rs ./build.rs
+
+# this build step will cache your dependencies
+RUN cargo build --release
+RUN rm src/*.rs
+
+# copy your source tree
+COPY ./src ./src
+
+
+# build for release
+RUN rm ./target/release/deps/api_client*
 RUN cargo build --bin api_client --release
 
-# Use google distroless image to have smaller docker image size
-FROM ubuntu
-
-WORKDIR /api_gateway
-RUN apt-get update && apt-get install libcurl4 libcurl4-openssl-dev -y
-
-# Copy app from builder
-COPY --from=builder /api_gateway/target/release/api_client api_client
-
 # set the startup command to run your binary
-CMD ["./api_client"]
+CMD ["./target/release/api_client"]
