@@ -10,8 +10,8 @@ import com.sdcc.shoppinglist.utils.TimeWindow;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,58 +54,107 @@ public class InfluxSink {
                 .bucket(BUCKET)
                 .build();
         return InfluxDBClientFactory.create(options);
-//        return InfluxDBClientFactory.create(url, username, password.toCharArray());
     }
 
     public void addLogEntryToInflux(LogEntry entry) {
         WriteApiBlocking writeApi = client.getWriteApiBlocking();
         Point point = Point.measurement("logs")
-//                .addTag("entry-number", "log1")
-                .addField("ts", entry.log_timestamp())
+                .addTag("entry-record", entry.product_name()+"-"+entry.unit()+"-"+entry.product_type())
                 .addField("transactionType", entry.transaction_type())
                 .addField("prodName", entry.product_name())
                 .addField("prodType", entry.product_type())
                 .addField("prodUnit", entry.unit())
                 .addField("prodQuantity", entry.quantity())
                 .addField("prodExpiration", entry.expiration_date())
-                .time(Instant.now(), WritePrecision.MS);
+                .time(Instant.ofEpochMilli(entry.log_timestamp()), WritePrecision.MS);
         log.log(Level.INFO, "Writing point...");
         writeApi.writePoint(BUCKET, ORG, point);
         log.log(Level.INFO, "Point written.");
 
     }
 
-    public List<LogEntry> getLogEntryFromInflux(TimeWindow time) {
-
-        List<LogEntry> entries = new ArrayList<>();
-        String query;
+    public List<LogEntry> getLogEntriesFromInflux(TimeWindow time) {
+        long unixTimeNow = System.currentTimeMillis() / 1000L;
+        long unixTimeStart;
+        long timeDiff;
         QueryApi queryApi = client.getQueryApi();
+        List<LogEntry> entries = new ArrayList<>();
+        String query = "";
         switch (time) {
             case Weekly -> {
-                // TODO time: Week
+                // time: Week
+                timeDiff = 1000L *60*60*24*7;
+                unixTimeStart = unixTimeNow - timeDiff;
+                query = "from(bucket:\""+BUCKET+"\""+") " +
+                        "|> range(start: "+unixTimeStart+")";
+//                        "|> filter(fn: (r) => r[\"_field\"] == \"quantity\")"
+//                        "|> group(columns: [\"prodName\",\"prodType\",\"prodUnit\", \"prodExpiration\", \"transactionType\"])";
             }
             case Monthly -> {
-                // TODO time: Month
+                // time: Month
+                timeDiff = 1000L *60*60*24*31;
+                unixTimeStart = unixTimeNow - timeDiff;
+                query = "from(bucket:\""+BUCKET+"\""+") " +
+                        "|> range(start: "+unixTimeStart+")";
+//                        "|> filter(fn: (r) => r[\"_field\"] == \"quantity\")"
+//                        "|> group(columns: [\"prodName\",\"prodType\",\"prodUnit\", \"prodExpiration\", \"transactionType\"])";
             }
             case Total -> {
+                unixTimeStart = 0;
                 query = "from(bucket:\""+BUCKET+"\""+") " +
-                        "|> range(start: 0)";
-                System.out.println(query);
-                List<FluxTable> tables = queryApi.query(query);
-                log.log(Level.INFO, "Query executed.");
-                for (FluxTable table: tables) {
-                    List<FluxRecord> records = table.getRecords();
-                    for (FluxRecord record: records) {
-                        System.out.println("measurements: "+record.getMeasurement());
-                        System.out.println("row: "+record.getRow());
-                        System.out.println("field: "+record.getField());
-                    }
-                }
+                        "|> range(start: "+unixTimeStart+")";
+//                        "|> filter(fn: (r) => r[\"_field\"] == \"quantity\")"
+//                        "|> group(columns: [\"prodName\",\"prodType\",\"prodUnit\", \"prodExpiration\", \"transactionType\"])";
                 // time: total
+            }
+        }
+        System.out.println(query);
+        List<FluxTable> tables = queryApi.query(query);
+        log.log(Level.INFO, "Query executed.");
 
+        int i = 0;
+        String prodName = "", transType = "", prodType = "", prodUnit = "";
+        int prodQuantity = 0, prodExpiration = 0;
+        long ts = 0;
+        for (FluxTable table: tables) {
+            i++;
+            List<FluxRecord> records = table.getRecords();
+            for (FluxRecord record: records) {
+                ts = Objects.requireNonNull(record.getTime()).toEpochMilli();
+                if (Objects.equals(record.getField(), "prodName")) {
+                    prodName = String.valueOf(record.getValueByIndex(5));
+                } else if (Objects.equals(record.getField(), "prodQuantity")) {
+                    prodQuantity = Integer.parseInt(String.valueOf(record.getValueByIndex(5)));
+                } else if (Objects.equals(record.getField(), "prodUnit")) {
+                    prodUnit = String.valueOf(record.getValueByIndex(5));
+                } else if (Objects.equals(record.getField(), "prodType")) {
+                    prodType = String.valueOf(record.getValueByIndex(5));
+                } else if (Objects.equals(record.getField(), "prodExpiration")) {
+                    prodExpiration = Integer.parseInt(String.valueOf(record.getValueByIndex(5)));
+                } else if (Objects.equals(record.getField(), "transactionType")) {
+                    transType = String.valueOf(record.getValueByIndex(5));
+                }
+            }
+            if (i%6 == 0) {
+//                System.out.println(transType+"-"+prodName+"-"+prodType+"-"+prodUnit+"-"+prodQuantity+"-"+prodExpiration);
+                LogEntry entry = new LogEntry(ts,
+                        transType,
+                        prodName,
+                        prodQuantity,
+                        prodUnit,
+                        prodType,
+                        prodExpiration);
+                entries.add(entry);
+                prodName = "";
+                transType = "";
+                prodType = "";
+                prodUnit = "";
+                prodQuantity = 0;
+                prodExpiration = 0;
+                ts = 0;
             }
         }
 
-        return null;
+        return entries;
     }
 }

@@ -1,6 +1,5 @@
 package com.sdcc.shoppinglist.server;
 
-import com.influxdb.client.InfluxDBClient;
 import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.summary.SummaryGrpc;
 import com.sdcc.shoppinglist.summary.SummaryRequest;
@@ -82,8 +81,10 @@ public class SummaryServer {
         @Override
         public void weekSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
+            LOGGER.info("Getting log entries from influxdb...");
             // Get last week data from influx db
-            List<LogEntry> logs = influx.getLogEntryFromInflux(TimeWindow.Weekly);
+            List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
+            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: "+logs);
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();
@@ -94,7 +95,10 @@ public class SummaryServer {
         @Override
         public void monthSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
-            List<LogEntry> logs = influx.getLogEntryFromInflux(TimeWindow.Monthly);
+            LOGGER.info("Getting log entries from influxdb...");
+            // Get last month data from influx db
+            List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Monthly);
+            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: "+logs);
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();
@@ -106,8 +110,9 @@ public class SummaryServer {
         public void totalSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
             LOGGER.info("Getting log entries from influxdb...");
-            List<LogEntry> logs = influx.getLogEntryFromInflux(TimeWindow.Total);
-            LOGGER.info("Retrieved log entries from influxdb.");
+            // Get total data from influx db
+            List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Total);
+            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: "+logs);
             SummaryData reply = SummaryData.newBuilder()
                     //.setNomeCampo(..)
                     .build();
