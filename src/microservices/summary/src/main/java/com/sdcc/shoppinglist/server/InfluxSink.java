@@ -10,6 +10,7 @@ import com.sdcc.shoppinglist.utils.TimeWindow;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -20,6 +21,8 @@ public class InfluxSink {
     private static InfluxSink instance = null;
     private static final String BUCKET = "krakend";
     private static final String ORG =  "myorg";
+    private static final long WEEK_DIFF = 60*60*24*7;
+    private static final long MONTH_DIFF = 60*60*24*31;
     private String url;
     private String username;
     private String password;
@@ -76,36 +79,29 @@ public class InfluxSink {
     public List<LogEntry> getLogEntriesFromInflux(TimeWindow time) {
         long unixTimeNow = System.currentTimeMillis() / 1000L;
         long unixTimeStart;
-        long timeDiff;
         QueryApi queryApi = client.getQueryApi();
         List<LogEntry> entries = new ArrayList<>();
         String query = "";
         switch (time) {
             case Weekly -> {
                 // time: Week
-                timeDiff = 1000L *60*60*24*7;
-                unixTimeStart = unixTimeNow - timeDiff;
+                unixTimeStart = unixTimeNow - WEEK_DIFF;
                 query = "from(bucket:\""+BUCKET+"\""+") " +
-                        "|> range(start: "+unixTimeStart+")";
-//                        "|> filter(fn: (r) => r[\"_field\"] == \"quantity\")"
-//                        "|> group(columns: [\"prodName\",\"prodType\",\"prodUnit\", \"prodExpiration\", \"transactionType\"])";
+                        "|> range(start: 0)"+
+                        "|> filter(fn: (r) => r._time >= time(v: "+unixTimeStart+"))";
             }
             case Monthly -> {
                 // time: Month
-                timeDiff = 1000L *60*60*24*31;
-                unixTimeStart = unixTimeNow - timeDiff;
+                unixTimeStart = unixTimeNow - MONTH_DIFF;
                 query = "from(bucket:\""+BUCKET+"\""+") " +
-                        "|> range(start: "+unixTimeStart+")";
-//                        "|> filter(fn: (r) => r[\"_field\"] == \"quantity\")"
-//                        "|> group(columns: [\"prodName\",\"prodType\",\"prodUnit\", \"prodExpiration\", \"transactionType\"])";
+                        "|> range(start: 0)"+
+                        "|> filter(fn: (r) => r._time >= time(v: "+unixTimeStart+"))";
             }
             case Total -> {
+                // time: total
                 unixTimeStart = 0;
                 query = "from(bucket:\""+BUCKET+"\""+") " +
                         "|> range(start: "+unixTimeStart+")";
-//                        "|> filter(fn: (r) => r[\"_field\"] == \"quantity\")"
-//                        "|> group(columns: [\"prodName\",\"prodType\",\"prodUnit\", \"prodExpiration\", \"transactionType\"])";
-                // time: total
             }
         }
         System.out.println(query);

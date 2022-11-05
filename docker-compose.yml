@@ -31,7 +31,9 @@ services:
   #      - recipes
   #      - consumptions
   #      - summary
+
   # --- APP-MICROSERVICES
+
   shopping_list:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
@@ -41,6 +43,7 @@ services:
       - "./src/proto:/usr/src/shopping_list/proto"
     depends_on:
       - mongo
+
   product_storage:
     image: "product_storage"
     container_name: "ProductStorageService"
@@ -55,6 +58,7 @@ services:
       - "./config.properties:/product_storage/config.properties"
       - "./src/proto:/product_storage/proto"
       - "./src/microservices/product_storage/test.db:/product_storage/test.db"
+
   notifications:
     image: "notifications"
     container_name: "NotificationsService"
@@ -75,6 +79,8 @@ services:
     volumes:
       - "./src/proto:/summary/proto"
       - "./config.properties:/summary/src/main/resources/config.properties"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
     depends_on:
       - influxdb
         
