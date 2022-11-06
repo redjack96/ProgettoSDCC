@@ -38,11 +38,9 @@ message SummaryData {
   Period reference = 1;
   string mostUsedProduct = 2;
   string mostBoughtProduct = 3;
-  int32 totalQuantity = 4;
-  int32 timesUsed = 5;
-  int32 timesBought = 6; // Quante volte è stato comprato in settimana/mese
-  int32 numberExpired = 7; // Quanti sono scaduti
-  int32 currentPantrySize = 8;
+  int32 timesUsed = 4;
+  int32 timesBought = 5; // Quante volte è stato comprato in settimana/mese
+  int32 numberExpired = 6; // Quanti sono scaduti
 //  repeated SummaryItem items = 2;
 }
 

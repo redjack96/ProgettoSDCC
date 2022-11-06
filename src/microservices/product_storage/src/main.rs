@@ -159,9 +159,8 @@ impl ProductStorage for ProductStorageImpl {
         // Those items must be added to the database
         println!("Adding elements received to db");
         let ts = Utc::now().timestamp();
-
         add_products_to_db(&product_list);
-
+        // Send log to Kafka for summary
         let mut vec_log_entry: Vec<LogEntry> = vec![];
         for prod in product_list.products {
             let log_entry = LogEntry {
@@ -178,10 +177,9 @@ impl ProductStorage for ProductStorageImpl {
         let kafka_client_map = KAFKA_CLIENT_HASH_MAP.lock().await;
         let partition_client = kafka_client_map.get(LOGS).expect("Impossible to get logs partition client");
         produce_logs_to_kafka(partition_client, vec_log_entry).await;
-
         println!("Sent log to kafka for summary");
 
-        Ok(tonic::Response::new(product_storage::shopping_list::Response { msg }))
+        Ok(Response::new(product_storage::shopping_list::Response { msg }))
         // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
         // In teoria questo METODO va sempre a buon fine, ma ricordiamo che è asincrono
     }
@@ -190,11 +188,27 @@ impl ProductStorage for ProductStorageImpl {
         let msg = format!("Item Added to pantry: {}, quantity: {}", request.get_ref().item_name, request.get_ref().quantity);
         let item = request.into_inner();
         println!("Adding single item to db");
-        add_single_product_to_db(item);
+        add_single_product_to_db(&item);
+        // Send log to Kafka for summary
+        let ts = Utc::now().timestamp();
+        let log_entry = LogEntry {
+            log_timestamp: ts,
+            transaction_type: "add_product_to_pantry".to_string(),
+            product_name: item.item_name,
+            quantity: item.quantity, // added quantity
+            unit: unit_to_str(item.unit),
+            product_type: prod_type_to_str(item.r#type),
+            expiration_date: item.expiration.map(|e| e.seconds).unwrap_or(DEFAULT_EXPIRATION),
+        };
+        let kafka_client_map = KAFKA_CLIENT_HASH_MAP.lock().await;
+        let partition_client = kafka_client_map.get(LOGS).expect("Impossible to get logs partition client");
+        produce_logs_to_kafka(partition_client, vec![log_entry]).await;
+        println!("Sent log to kafka for summary");
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
     async fn drop_product_from_pantry(&self, request: Request<ItemName>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
+        // TODO aggiungere collegamento a kafka per sommario
         let msg = format!("Item manually deleted from pantry: {}", request.get_ref().name);
         let item = request.into_inner();
         println!("Removing item from db");
@@ -203,6 +217,7 @@ impl ProductStorage for ProductStorageImpl {
     }
 
     async fn update_product_in_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
+        // TODO aggiungere collegamento a kafka per sommario
         let prod = request.into_inner();
         let msg = format!("Item manually updated in pantry: {}, quantity: {} {} ({}), expiration: {}",
                           prod.item_name, prod.quantity, unit_to_str(prod.unit), prod_type_to_str(prod.r#type),
@@ -213,6 +228,7 @@ impl ProductStorage for ProductStorageImpl {
     }
 
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
+        // TODO aggiungere collegamento a kafka per sommario
         let prod = request.into_inner();
         println!("prod_unit: {}", prod.unit);
         let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);
@@ -265,14 +281,15 @@ fn add_products_to_db(product_list: &ProductList) {
 }
 
 // used by add_product_to_pantry
-fn add_single_product_to_db(elem: Item) {
+fn add_single_product_to_db(elem: &Item) {
+    let item = elem.clone();
     println!("add single product: {}, quantity {} {}, type {}", elem.item_name, elem.quantity, unit_to_str(elem.unit), prod_type_to_str(elem.r#type));
     let item = ProductItem {
-        name: elem.item_name,
-        item_type: elem.r#type,
-        unit: elem.unit,
-        quantity: elem.quantity,
-        expiration: elem.expiration.map(|t| t.seconds).unwrap_or(0),
+        name: item.item_name,
+        item_type: item.r#type,
+        unit: item.unit,
+        quantity: item.quantity,
+        expiration: item.expiration.map(|t| t.seconds).unwrap_or(0),
         last_used: 0,
         use_number: 0,
         total_used_number: 0,
