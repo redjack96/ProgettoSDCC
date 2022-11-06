@@ -18,8 +18,6 @@ services:
     ports:
       - "3000:3000"
     command: sh -c "npm run start"
-    environment:
-      - CHOKIDAR_USEPOLLING=true # needed for the react hot reload
     depends_on:
       - api_gateway
       - shopping_list

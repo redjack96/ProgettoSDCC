@@ -3,6 +3,7 @@ import React from 'react'
 import './App.css';
 
 export function App() {
+    console.log("Prova hot reload 10");
     return (
         <Container>
             <Row>
