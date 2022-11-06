@@ -1,0 +1,5 @@
+api_gateway/target
+frontend/node_modules
+microservices/product_storage/target
+microservices/notifications/target
+microservices/summary/target

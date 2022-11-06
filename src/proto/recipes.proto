@@ -3,4 +3,4 @@ syntax = "proto3";
 
 // package name for the buffer will be used later
 package recipes;
-option go_package = "shopping_list.microservice/proto_generated";
+option go_package = ".;proto_generated";

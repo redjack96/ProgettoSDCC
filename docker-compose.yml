@@ -56,10 +56,11 @@ services:
   shopping_list:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
-    build: "src/microservices/shopping_list"
+    build:
+      dockerfile: "../docker/Dockerfile.shoppinglist"
+      context: "src"
     volumes:
       - "./config.properties:/usr/src/shopping_list/config.properties"
-      - "./src/proto:/usr/src/shopping_list/proto"
     depends_on:
       - mongo
 
@@ -103,13 +104,15 @@ services:
     depends_on:
       - influxdb
         
-    #  recipes:
-    #    image: recipes
-    #    container_name: "RecipesService"
-    #    build: "src/microservices/recipes"
-    #    volumes:
-    #      - "./config.properties:/usr/src/recipes"
-    #      - "./src/proto:/usr/src/recipes/proto"
+  recipes:
+    image: "recipes"
+    container_name: "RecipesService"
+    build:
+      dockerfile: "../docker/Dockerfile.recipes"
+      context: "src"
+    volumes:
+      - "./config.properties:/usr/src/recipes/config.properties"
+
     #  consumptions:
     #    image: consumptions
     #    container_name: "ConsumptionService"

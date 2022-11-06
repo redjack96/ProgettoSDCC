@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+
+FROM golang:latest
+WORKDIR /usr/src/recipes
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --assume-yes protobuf-compiler
+RUN mkdir "generated"
+
+# WATCH OUT: the context is the src/ folder !!!
+COPY microservices/recipes .
+COPY proto ./proto
+
+# Get dependencies, will also be cached if you don't change mod/sum
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+RUN protoc --proto_path proto --go_out generated --go-grpc_out generated proto/*.proto
+RUN go get -d ./...
+RUN export PATH="$PATH:$(go env GOPATH)/bin"
+# TODO: adesso compila ed esegue: finché programmiamo va bene, ma poi quando si rilascia è troppo pesante. Al rilascio, usare una multibuild (e.g. un altro FROM) per evitare di compilare ed eseguire ogni volta
+CMD ["go", "run", "main/recipes.go"]
