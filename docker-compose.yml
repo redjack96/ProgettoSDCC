@@ -97,9 +97,10 @@ services:
   summary:
     image: summary
     container_name: "SummaryService"
-    build: "src/microservices/summary"
+    build:
+      dockerfile: "../docker/Dockerfile.summary"
+      context: "src"
     volumes:
-      - "./src/proto:/summary/proto"
       - "./config.properties:/summary/src/main/resources/config.properties"
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
