@@ -4,9 +4,7 @@ import com.sdcc.shoppinglist.summary.Period;
 import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.utils.structure.Tuple2;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SummaryBuilder {
@@ -36,20 +34,29 @@ public class SummaryBuilder {
     }
 
     public String calculateMostBoughtProduct(List<LogEntry> entries) {
-        //TODO
-        return "";
-//        entries.stream()
-//                .filter(entry -> Objects.equals(entry.transaction_type(), "add_bought_products_to_pantry"))
-//                .map(entry -> new Tuple2<>(entry.product_name(), 1))
-//                .reduce((tuple1, tuple2) -> {
-//                    if (tuple1.getKey().equals(tuple2.getKey()))
-//                        return new Tuple2<>(tuple1.getKey(), tuple1.getValue() + tuple2.getValue());
-//                });
+        // FIXME
+        Map<String, Integer> add = entries.stream()
+                .filter(entry -> entry.transaction_type().contains("add"))
+                .map(entry -> new Tuple2<>(entry.product_name(), 1)) // trasforma tutto in tuple (nome, 1)
+                .collect(Collectors.groupingBy(Tuple2::getKey, Collectors.summingInt(Tuple2::getValue))); // somma elementi raggruppando per chiave
+
+        if (add.isEmpty()) return "";
+
+        // recupera chiave corrispondente al valore massimo
+        return Collections.max(add.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
     }
 
     public String calculateMostUsedProduct(List<LogEntry> entries) {
-        //TODO
-        return "";
+        //FIXME
+        Map<String, Integer> add = entries.stream()
+                .filter(entry -> entry.transaction_type().contains("use"))
+                .map(entry -> new Tuple2<>(entry.product_name(), 1)) // trasforma tutto in tuple (nome, 1)
+                .collect(Collectors.groupingBy(Tuple2::getKey, Collectors.summingInt(Tuple2::getValue))); // somma elementi raggruppando per chiave
+
+        if (add.isEmpty()) return "";
+
+        // recupera chiave corrispondente al valore massimo
+        return Collections.max(add.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
     }
 
     public SummaryData mapToSummary(List<LogEntry> entries, Period timeWindow) {

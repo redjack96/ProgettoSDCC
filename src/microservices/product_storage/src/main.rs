@@ -190,8 +190,9 @@ impl ProductStorage for ProductStorageImpl {
         println!("Adding single item to db");
         add_single_product_to_db(&item);
         // Send log to Kafka for summary
+        let ts = Utc::now().timestamp();
         let log_entry = LogEntry {
-            log_timestamp: ts.clone(),
+            log_timestamp: ts,
             transaction_type: "add_product_to_pantry".to_string(),
             product_name: item.item_name,
             quantity: item.quantity, // added quantity
