@@ -9,33 +9,37 @@ services:
   # OUR MICROSERVICES ----------------------------------------------------------------------------------
   # --- FRONT-END ONLY FOR RAPID DEVELOPMENT
   # TODO: SOLO QUI, BASTA CAMBIARE IL CODICE JS E L'APP SI AGGIORNERA' AUTOMATICAMENTE!
-  frontend_dev:
-    image: "node:19-alpine"
-    container_name: "frontend_dev"
-    working_dir: /app
-    volumes:
-      - "./src/frontend:/app"
+#  frontend_dev:
+#    image: "node:19-alpine"
+#    container_name: "frontend_dev"
+#    working_dir: /app
+#    volumes:
+#      - "./src/frontend:/app"
+#    ports:
+#      - "3000:3000"
+#    command: sh -c "npm run start"
+#    depends_on:
+#      - api_gateway
+#      - shopping_list
+
+  frontend:
+    image: "web_ui"
+    container_name: "SDCCShoppingList"
+    build: "src/frontend"
     ports:
       - "3000:3000"
-    command: sh -c "npm run start"
-    depends_on:
-      - api_gateway
-      - shopping_list
-
-  #  frontend:
-  #    image: "web_ui"
-  #    container_name: "SDCCShoppingList"
-  #    build: "src/frontend"
-  #    ports:
-  #      - "3000:3000"
+    # only for development
+#    volumes:
+#      - "./src/frontend:/app"
   # --- API-GATEWAY
   api_gateway:
     image: "api_gateway"
     container_name: "ApiGateway"
-    build: "src/api_gateway"
+    build:
+      dockerfile: "../docker/Dockerfile.apigateway"
+      context: "src"
     volumes:
       - "./config.properties:/api_gateway/config.properties"
-      - "./src/proto:/api_gateway/proto"
     expose:
       - "8007"
     ports:
@@ -53,10 +57,11 @@ services:
   shopping_list:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
-    build: "src/microservices/shopping_list"
+    build:
+      dockerfile: "../docker/Dockerfile.shoppinglist"
+      context: "src"
     volumes:
       - "./config.properties:/usr/src/shopping_list/config.properties"
-      - "./src/proto:/usr/src/shopping_list/proto"
     depends_on:
       - mongo
 
@@ -65,14 +70,15 @@ services:
     container_name: "ProductStorageService"
     depends_on:
       - kafka
-    build: "src/microservices/product_storage"
+    build:
+      dockerfile: "../docker/Dockerfile.productstorage"
+      context: "src"
     environment:
       TOPIC: notification
       ENVIRONMENT: local
       INTERNAL_KAFKA_ADDR: 'kafka:9092'
     volumes:
       - "./config.properties:/product_storage/config.properties"
-      - "./src/proto:/product_storage/proto"
       - "./src/microservices/product_storage/test.db:/product_storage/test.db"
 
   notifications:
@@ -91,22 +97,25 @@ services:
   summary:
     image: summary
     container_name: "SummaryService"
-    build: "src/microservices/summary"
+    build:
+      dockerfile: "../docker/Dockerfile.summary"
+      context: "src"
     volumes:
-      - "./src/proto:/summary/proto"
       - "./config.properties:/summary/src/main/resources/config.properties"
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
     depends_on:
       - influxdb
         
-    #  recipes:
-    #    image: recipes
-    #    container_name: "RecipesService"
-    #    build: "src/microservices/recipes"
-    #    volumes:
-    #      - "./config.properties:/usr/src/recipes"
-    #      - "./src/proto:/usr/src/recipes/proto"
+  recipes:
+    image: "recipes"
+    container_name: "RecipesService"
+    build:
+      dockerfile: "../docker/Dockerfile.recipes"
+      context: "src"
+    volumes:
+      - "./config.properties:/usr/src/recipes/config.properties"
+
     #  consumptions:
     #    image: consumptions
     #    container_name: "ConsumptionService"

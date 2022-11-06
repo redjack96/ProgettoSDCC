@@ -13,8 +13,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net"
-	pb "shopping_list.microservice/generated/shopping_list.microservice/proto_generated"
-	props "shopping_list.microservice/main/util"
+	pb "shoppinglist.microservice/generated"
+	props "shoppinglist.microservice/main/util"
 	"strconv"
 	"time"
 )
@@ -322,7 +322,7 @@ func queryDB(operation DBOperation) (interface{}, error) {
 
 // Run in the server/ directory
 // go run .\server.go
-// PREREQUISITE in this folder!!: protoc --go_out generated --go-grpc_out generated *.proto
+// PREREQUISITE in this folder!!: protoc --proto_path ../../proto --go_out generated --go-grpc_out generated ../../proto/*.proto
 func main() {
 	// Retrieve the properties from the file
 	properties, _ := props.GetProperties()

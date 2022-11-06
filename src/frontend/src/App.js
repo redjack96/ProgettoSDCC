@@ -5,7 +5,7 @@ import Navbar from './Navigation/Navbar.js';
 import {AddButton, DeleteButton} from "./Widgets/Button";
 
 export function App() {
-    console.log("Prova hot reload 10");
+    console.log("Prova hot reload 13");
     return (
         <div>
             <div>

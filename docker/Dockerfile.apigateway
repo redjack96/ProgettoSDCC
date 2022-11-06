@@ -1,0 +1,38 @@
+# Here we do a multi-build dockerfile to reduce final container size
+# first we start from rust image and install our app
+FROM rust:latest as builder
+
+RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
+# TODO: installare anche sudo apt-get install -y libclang-dev
+# TODO: installare anche sudo apt install libssl-dev
+
+# create a new empty shell project
+RUN USER=root cargo new api_gateway
+WORKDIR /api_gateway
+
+# copy over your manifests
+# watch out: the build context is from src/ directory!!!
+COPY api_gateway/Cargo.lock ./Cargo.lock
+COPY api_gateway/Cargo.toml ./Cargo.toml
+COPY api_gateway/src/lib.rs ./src/lib.rs
+COPY api_gateway/build.rs ./build.rs
+COPY proto/shopping_list.proto ./shopping_list.proto
+COPY proto/product_storage.proto ./product_storage.proto
+COPY proto/recipes.proto ./recipes.proto
+COPY proto/consumptions.proto ./consumptions.proto
+COPY proto/notifications.proto ./notifications.proto
+COPY proto/summary.proto ./summary.proto
+
+# this build step will cache your dependencies
+RUN cargo build --release
+RUN rm src/*.rs
+
+# copy your source tree (watch out the build context is /src)
+COPY api_gateway/src ./src
+
+# build for release
+RUN rm ./target/release/deps/api_gateway*
+RUN cargo build --bin api_client --release
+
+# set the startup command to run your binary
+CMD ["./target/release/api_client"]

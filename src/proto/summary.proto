@@ -5,7 +5,7 @@ option java_multiple_files = true;
 option java_package = "com.sdcc.shoppinglist.summary";
 option java_outer_classname = "SummaryProto";
 option objc_class_prefix = "SUM";
-option go_package = "shopping_list.microservice/proto_generated";
+option go_package = ".;proto_generated";
 
 // package name for the buffer will be used later
 package summary;

@@ -1,0 +1,37 @@
+# Here we do a multi-build dockerfile to reduce final container size
+# first we start from rust image and install our app
+FROM rust:latest as builder
+
+RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
+# TODO: installare anche sudo apt-get install -y libclang-dev
+# TODO: installare anche sudo apt install libssl-dev
+
+# create a new empty shell project
+RUN USER=root cargo new product_storage
+WORKDIR /product_storage
+
+# copy over your manifests
+COPY microservices/product_storage/Cargo.lock ./Cargo.lock
+COPY microservices/product_storage/Cargo.toml ./Cargo.toml
+COPY microservices/product_storage/src/lib.rs ./src/lib.rs
+COPY microservices/product_storage/build.rs ./build.rs
+COPY proto/shopping_list.proto ./shopping_list.proto
+COPY proto/product_storage.proto ./product_storage.proto
+COPY proto/recipes.proto ./recipes.proto
+COPY proto/consumptions.proto ./consumptions.proto
+COPY proto/notifications.proto ./notifications.proto
+COPY proto/summary.proto ./summary.proto
+
+# this build step will cache your dependencies
+RUN cargo build --release
+RUN rm src/*.rs
+
+# copy your source tree
+COPY microservices/product_storage/src ./src
+
+# build for release
+RUN rm ./target/release/deps/product_storage*
+RUN cargo build --bin product_storage --release
+
+# set the startup command to run your binary
+CMD ["./target/release/product_storage"]
