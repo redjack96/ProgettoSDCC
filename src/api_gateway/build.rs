@@ -1,3 +1,9 @@
+use std::path::Path;
+
+fn is_running_in_container() -> bool {
+    Path::new("/.dockerenv").exists()
+}
+
 fn main() {
     let proto_file_1 = "shopping_list.proto";
     let proto_file_2 = "product_storage.proto";

@@ -35,10 +35,11 @@ services:
   api_gateway:
     image: "api_gateway"
     container_name: "ApiGateway"
-    build: "src/api_gateway"
+    build:
+      dockerfile: "../docker/Dockerfile.apigateway"
+      context: "src"
     volumes:
       - "./config.properties:/api_gateway/config.properties"
-      - "./src/proto:/api_gateway/proto"
     expose:
       - "8007"
     ports:
@@ -69,14 +70,15 @@ services:
     container_name: "ProductStorageService"
     depends_on:
       - kafka
-    build: "src/microservices/product_storage"
+    build:
+      dockerfile: "../docker/Dockerfile.productstorage"
+      context: "src"
     environment:
       TOPIC: notification
       ENVIRONMENT: local
       INTERNAL_KAFKA_ADDR: 'kafka:9092'
     volumes:
       - "./config.properties:/product_storage/config.properties"
-      - "./src/proto:/product_storage/proto"
       - "./src/microservices/product_storage/test.db:/product_storage/test.db"
 
   notifications:
