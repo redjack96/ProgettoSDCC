@@ -1,0 +1,42 @@
+row {
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.col {
+    margin-right: 10px;
+    margin-bottom: 30px;
+    max-width: 30%;
+    align-content: center;
+    align-items: center;
+}
+
+.center {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+}
+
+.card-body, .card-title, .card-text, .more-info  {
+    background-color: white;
+}
+
+.card-title {
+    font-family: BarlowBold;
+}
+.card {
+    box-shadow: 2px 2px 20px #141e25;
+}
+
+.categories {
+    display: flex;
+}
+
+.categories h6 {
+    margin-right: 2%;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    transition: 0.5s;
+}

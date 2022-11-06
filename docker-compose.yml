@@ -7,7 +7,23 @@ version: '3.1'
 #    - ${PORT}:${PORT}
 services:
   # OUR MICROSERVICES ----------------------------------------------------------------------------------
-  # --- FRONT-END
+  # --- FRONT-END ONLY FOR RAPID DEVELOPMENT
+  # TODO: SOLO QUI, BASTA CAMBIARE IL CODICE JS E L'APP SI AGGIORNERA' AUTOMATICAMENTE!
+  frontend_dev:
+    image: "node:19-alpine"
+    container_name: "frontend_dev"
+    working_dir: /app
+    volumes:
+      - "./src/frontend:/app"
+    ports:
+      - "3000:3000"
+    command: sh -c "npm run start"
+    environment:
+      - CHOKIDAR_USEPOLLING=true # needed for the react hot reload
+    depends_on:
+      - api_gateway
+      - shopping_list
+
   #  frontend:
   #    image: "web_ui"
   #    container_name: "SDCCShoppingList"
@@ -22,11 +38,13 @@ services:
     volumes:
       - "./config.properties:/api_gateway/config.properties"
       - "./src/proto:/api_gateway/proto"
+    expose:
+      - "8007"
     ports:
       - "8007:8007"
-    depends_on:
-      - shopping_list
-      - product_storage
+#    depends_on:
+#      - shopping_list
+#      - product_storage
   #    - notifications
   #      - recipes
   #      - consumptions

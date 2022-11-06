@@ -18,8 +18,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SummaryClient interface {
-	WeekSummary(ctx context.Context, in *Product, opts ...grpc.CallOption) (*SummaryData, error)
-	MonthSummary(ctx context.Context, in *Product, opts ...grpc.CallOption) (*SummaryData, error)
+	WeekSummary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryData, error)
+	MonthSummary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryData, error)
+	TotalSummary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryData, error)
 }
 
 type summaryClient struct {
@@ -30,7 +31,7 @@ func NewSummaryClient(cc grpc.ClientConnInterface) SummaryClient {
 	return &summaryClient{cc}
 }
 
-func (c *summaryClient) WeekSummary(ctx context.Context, in *Product, opts ...grpc.CallOption) (*SummaryData, error) {
+func (c *summaryClient) WeekSummary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryData, error) {
 	out := new(SummaryData)
 	err := c.cc.Invoke(ctx, "/summary.Summary/WeekSummary", in, out, opts...)
 	if err != nil {
@@ -39,9 +40,18 @@ func (c *summaryClient) WeekSummary(ctx context.Context, in *Product, opts ...gr
 	return out, nil
 }
 
-func (c *summaryClient) MonthSummary(ctx context.Context, in *Product, opts ...grpc.CallOption) (*SummaryData, error) {
+func (c *summaryClient) MonthSummary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryData, error) {
 	out := new(SummaryData)
 	err := c.cc.Invoke(ctx, "/summary.Summary/MonthSummary", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *summaryClient) TotalSummary(ctx context.Context, in *SummaryRequest, opts ...grpc.CallOption) (*SummaryData, error) {
+	out := new(SummaryData)
+	err := c.cc.Invoke(ctx, "/summary.Summary/TotalSummary", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +62,9 @@ func (c *summaryClient) MonthSummary(ctx context.Context, in *Product, opts ...g
 // All implementations must embed UnimplementedSummaryServer
 // for forward compatibility
 type SummaryServer interface {
-	WeekSummary(context.Context, *Product) (*SummaryData, error)
-	MonthSummary(context.Context, *Product) (*SummaryData, error)
+	WeekSummary(context.Context, *SummaryRequest) (*SummaryData, error)
+	MonthSummary(context.Context, *SummaryRequest) (*SummaryData, error)
+	TotalSummary(context.Context, *SummaryRequest) (*SummaryData, error)
 	mustEmbedUnimplementedSummaryServer()
 }
 
@@ -61,11 +72,14 @@ type SummaryServer interface {
 type UnimplementedSummaryServer struct {
 }
 
-func (UnimplementedSummaryServer) WeekSummary(context.Context, *Product) (*SummaryData, error) {
+func (UnimplementedSummaryServer) WeekSummary(context.Context, *SummaryRequest) (*SummaryData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WeekSummary not implemented")
 }
-func (UnimplementedSummaryServer) MonthSummary(context.Context, *Product) (*SummaryData, error) {
+func (UnimplementedSummaryServer) MonthSummary(context.Context, *SummaryRequest) (*SummaryData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MonthSummary not implemented")
+}
+func (UnimplementedSummaryServer) TotalSummary(context.Context, *SummaryRequest) (*SummaryData, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalSummary not implemented")
 }
 func (UnimplementedSummaryServer) mustEmbedUnimplementedSummaryServer() {}
 
@@ -81,7 +95,7 @@ func RegisterSummaryServer(s grpc.ServiceRegistrar, srv SummaryServer) {
 }
 
 func _Summary_WeekSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Product)
+	in := new(SummaryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -93,13 +107,13 @@ func _Summary_WeekSummary_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/summary.Summary/WeekSummary",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SummaryServer).WeekSummary(ctx, req.(*Product))
+		return srv.(SummaryServer).WeekSummary(ctx, req.(*SummaryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Summary_MonthSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Product)
+	in := new(SummaryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -111,7 +125,25 @@ func _Summary_MonthSummary_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/summary.Summary/MonthSummary",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SummaryServer).MonthSummary(ctx, req.(*Product))
+		return srv.(SummaryServer).MonthSummary(ctx, req.(*SummaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Summary_TotalSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SummaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SummaryServer).TotalSummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/summary.Summary/TotalSummary",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SummaryServer).TotalSummary(ctx, req.(*SummaryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -130,6 +162,10 @@ var Summary_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MonthSummary",
 			Handler:    _Summary_MonthSummary_Handler,
+		},
+		{
+			MethodName: "TotalSummary",
+			Handler:    _Summary_TotalSummary_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
