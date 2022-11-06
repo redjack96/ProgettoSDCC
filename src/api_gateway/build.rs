@@ -8,6 +8,8 @@ fn main() {
 
     tonic_build::configure()
         .build_server(true)
+        .type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]")
+        .compile_well_known_types(true)
         .compile(&[
             proto_file_1,
             proto_file_2,

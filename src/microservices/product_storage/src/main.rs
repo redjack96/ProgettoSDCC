@@ -16,7 +16,7 @@ use crate::database::{Database, DEFAULT_EXPIRATION, QueryType};
 use tonic::{transport::Server, Request, Status, Response};
 // HELP: nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use product_storage::shopping_list::product_storage_server::{ProductStorage, ProductStorageServer};
-use product_storage::shopping_list::{ProductList, ItemName, PantryMessage, ListId, UsedItem, Item, Pantry, Product};
+use product_storage::shopping_list::{ProductList, ItemName, PantryMessage, ListId, UsedItem, Item, Pantry, Product, Timestamp};
 use crate::properties::get_properties;
 use rskafka::{
     client::{
@@ -87,9 +87,9 @@ impl ProductItem {
     }
 
     fn to_item(&self) -> Item {
-        // let date_time = prost_types::Timestamp::from();
+        // let date_time = api_gateway::shopping_list::Timestamp::from();
         println!("Converting to item");
-        let ts = prost_types::Timestamp {
+        let ts = Timestamp {
             seconds: self.expiration,
             nanos: 0,
         };
@@ -324,8 +324,8 @@ fn delete_product_from_db(elem: ItemName) {
 
 fn update_product_in_db(elem: Item) {
     let db = Database::new();
-    let query = format!("UPDATE OR IGNORE Products SET quantity='{}',expiration='{}' WHERE name='{}' AND item_type='{}' AND unit='{}';",
-                        elem.quantity, elem.expiration.unwrap_or_default(), elem.item_name, elem.r#type, elem.unit);
+    let query = format!("UPDATE OR IGNORE Products SET quantity='{}',expiration='{:?}' WHERE name='{}' AND item_type='{}' AND unit='{}';",
+                        elem.quantity, elem.expiration.map(|t| t.seconds).unwrap_or(0), elem.item_name, elem.r#type, elem.unit);
     // First check if element with same name already present in db
     db.execute_insert_update_or_delete(&query);
 }

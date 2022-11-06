@@ -3,6 +3,9 @@
 FROM rust:latest as builder
 
 RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
+# TODO: installare anche sudo apt-get install -y libclang-dev
+# TODO: installare anche sudo apt install libssl-dev
+
 # create a new empty shell project
 RUN USER=root cargo new api_gateway
 WORKDIR /api_gateway
@@ -26,9 +29,8 @@ RUN rm src/*.rs
 # copy your source tree
 COPY ./src ./src
 
-
 # build for release
-RUN rm ./target/release/deps/api_client*
+RUN rm ./target/release/deps/api_gateway*
 RUN cargo build --bin api_client --release
 
 # set the startup command to run your binary

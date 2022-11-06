@@ -155,7 +155,7 @@ func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*
 				Quantity:    curr.Lookup("quantity").Int32(),
 				AddedToCart: addedToCart,
 				CheckedOut:  checkedOut,
-				Expiration:  timestamppb.New(curr.Lookup("expiration").Time()),
+				Expiration:  props.ToOurTimestamp(timestamppb.New(curr.Lookup("expiration").Time())),
 			}
 			products = append(products, &prod)
 		}

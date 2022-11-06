@@ -72,3 +72,17 @@ Some useful mongo commands:
 - db.<collection-name>.insertOne({att1: <attr1>, ...}): insert one single element
 - db.<collection-name>.insertMany({...}, {...}): insert many elements
 - db.<collection-name>.find(): search for alla elements in a collection
+
+```js
+React.useEffect(() => {
+    fetch('http://localhost:8007')
+        .then(r => {
+            let x = r.json();
+            console.log(x);
+            console.log("ye, che bello!!!!");
+            return x;
+        })
+        .then(setItems)
+        .catch(e => console.log("Errore: " + e))
+}, []);
+```

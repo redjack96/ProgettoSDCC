@@ -20,9 +20,14 @@ use api_gateway::shopping_list::Item;
 use api_gateway::shopping_list::UsedItem;
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
-use prost_types::Timestamp;
+use serde::Serialize;
+use api_gateway::shopping_list::Timestamp;
 use api_gateway::shopping_list::product_storage_client::ProductStorageClient;
 use api_gateway::shopping_list::summary_client::SummaryClient;
+
+extern crate serde;
+extern crate serde_json;
+extern crate serde_derive;
 
 fn unit_from_str(input: &str) -> Unit {
     match input {
@@ -45,32 +50,66 @@ fn type_from_str(input: &str) -> ProductType {
     }
 }
 
+fn our_timestamp(their_timestamp: prost_types::Timestamp) -> Timestamp {
+    Timestamp {
+        seconds: their_timestamp.seconds,
+        nanos: their_timestamp.nanos,
+    }
+}
+
+fn json_response(json: serde_json::Value) -> HttpResponse {
+    HttpResponse::Ok()
+        .insert_header(("Access-Control-Allow-Origin", "*"))
+        .body(json.to_string())
+}
+
+fn str_response(str: String) -> HttpResponse {
+    HttpResponse::Ok()
+        .insert_header(("Access-Control-Allow-Origin", "*"))
+        .body(str)
+}
+
+fn to_json_response<T>(obj: T) -> HttpResponse where T : Serialize{
+    let string = serde_json::to_string_pretty(&obj).unwrap_or_default();
+    println!("{}", &string);
+    HttpResponse::Ok()
+        .insert_header(("Access-Control-Allow-Origin", "*"))
+        .body(string)
+}
+
 // TODO: rimuovere queste API di test
 #[get("/")]
 async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+    // HttpResponse::Ok()
+    //     .insert_header(("Access-Control-Allow-Origin", "*"))
+    //     .body("{\"name\":\"giacomo\"}")
+    json_response(serde_json::json!({
+        "name":"giacomo"
+    }))
 }
 
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+    json_response(serde_json::json!({
+        "echo" : req_body
+    }))
 }
 
 // FIXME: Qua invece di usare la #[macro] scriviamo route ... preferisco la macro
 async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
+    str_response("hey there".to_string())
 }
 
 #[get("/greet/{name}")]
 async fn greet(name: web::Path<String>) -> impl Responder {
     println!("Sent greetings to {name}");
-    format!("Hello {name}!")
+    str_response(format!("Hello {name}!"))
 }
 
 
 /**
 SHOPPING LIST API
-*/
+ */
 #[post("/addProduct/{name}/{quantity}/{unit}/{type}/{expiry}")]
 async fn add_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
@@ -93,7 +132,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
     let year = expiry_str.next().unwrap().parse::<i64>().unwrap();
     let month = expiry_str.next().unwrap().parse::<u8>().unwrap();
     let day = expiry_str.next().unwrap().parse::<u8>().unwrap();
-    let expiry_date = Timestamp::date(year, month, day).unwrap();
+    let expiry_date = prost_types::Timestamp::date(year, month, day).unwrap();
     let unit = unit_from_str(unit_str).into();
     let ptype = type_from_str(ptype_str).into();
     let request = tonic::Request::new(
@@ -104,7 +143,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
             quantity,
             added_to_cart: false,
             checked_out: false,
-            expiration: Some(expiry_date),
+            expiration: Some(our_timestamp(expiry_date)),
         },
     );
     println!("Request created");
@@ -113,9 +152,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 #[post("/removeProduct/{productName}")]
@@ -141,9 +178,7 @@ async fn remove_product(product_name: web::Path<String>) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 #[post("/updateProduct/{product_id}/{field}/{value}")]
@@ -173,22 +208,9 @@ async fn update_product(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
-async fn try_get_channel(address: &String, port: i32) -> Channel {
-    let mut channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap())
-        .connect()
-        .await;
-    while channel.is_err() {
-        println!("Waiting for shopping_list service!");
-        thread::sleep(Duration::from_millis(4000));
-        channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
-    }
-    channel.unwrap()
-}
 
 #[post("/addToCart/{productId}")]
 async fn add_to_cart(req: HttpRequest) -> impl Responder {
@@ -217,9 +239,7 @@ async fn add_to_cart(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 #[post("/removeFromCart/{productId}")]
@@ -249,9 +269,7 @@ async fn remove_from_cart(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 #[get("/getList")]
@@ -269,13 +287,11 @@ async fn get_shopping_list() -> impl Responder {
 
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.get_list(request)
+    let product_list = client.get_list(request)
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {:#?}", response); //:#? pretty prints!!!
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(product_list)
 }
 
 // rpc BuyAllProductsInCart(ProductList) returns (Response)
@@ -295,9 +311,7 @@ async fn buy_products_in_cart() -> impl Responder {
         .await
         .unwrap()
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 
@@ -326,7 +340,7 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     let year = expiry_str.next().unwrap().parse::<i64>().unwrap();
     let month = expiry_str.next().unwrap().parse::<u8>().unwrap();
     let day = expiry_str.next().unwrap().parse::<u8>().unwrap();
-    let expiry_date = Timestamp::date(year, month, day).unwrap();
+    let expiry_date = prost_types::Timestamp::date(year, month, day).unwrap();
     let unit = unit_from_str(unit_str).into();
     let ptype = type_from_str(ptype_str).into();
     let request = tonic::Request::new(
@@ -336,7 +350,7 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
             r#type: ptype,
             unit,
             quantity,
-            expiration: Some(expiry_date),
+            expiration: Some(our_timestamp(expiry_date)),
             last_used: 0,
             use_number: 0,
             total_used_number: 0,
@@ -349,9 +363,7 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 #[post("/dropProductFromStorage/{name}")]
@@ -376,9 +388,7 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 #[post("/updateProductInStorage/{name}/{quantity}/{unit}/{type}/{expiration}/{lastUsed}/{useNumber}/{totalUseNumber}/{timesIsBought}/{buyDate}")]
@@ -403,7 +413,7 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     let year = expiry_str.next().map(|y| y.parse::<i64>().unwrap_or(9999)).unwrap_or(9999);
     let month = expiry_str.next().map(|m| m.parse::<u8>().unwrap_or(12)).unwrap_or(12);
     let day = expiry_str.next().map(|d| d.parse::<u8>().unwrap_or(31)).unwrap_or(31);
-    let expiry_date = Timestamp::date(year, month, day).unwrap_or_default();
+    let expiry_date = prost_types::Timestamp::date(year, month, day).unwrap_or_default();
     let unit = unit_from_str(unit_str).into();
     let ptype = type_from_str(ptype_str).into();
     let request = tonic::Request::new(
@@ -413,7 +423,7 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
             r#type: ptype,
             unit,
             quantity,
-            expiration: Some(expiry_date),
+            expiration: Some(our_timestamp(expiry_date)),
             last_used: 0,
             use_number: 0,
             total_used_number: 0,
@@ -427,9 +437,7 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
-    let response_str = format!("Response received: {}", response.msg);
-    println!("{}", response_str);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 #[get("/getPantry")]
@@ -447,13 +455,12 @@ async fn get_pantry() -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.get_pantry(request)
+    let pantry = client.get_pantry(request)
         .await
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
 
-    let response_str = format!("Response received: {:#?}", response);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(pantry)
 }
 
 #[post("/useProductInPantry/{name}/{quantity}/{unit}/{type}")]
@@ -489,13 +496,12 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
 
-    let response_str = format!("Response received: {:#?}", response);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 /**
 SUMMARY API
-*/
+ */
 #[get("/getWeekSummary")]
 async fn get_week_summary() -> impl Responder {
     let configs = get_properties();
@@ -515,8 +521,7 @@ async fn get_week_summary() -> impl Responder {
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
 
-    let response_str = format!("Response received: {:#?}", response);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 
@@ -539,8 +544,7 @@ async fn get_month_summary() -> impl Responder {
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
 
-    let response_str = format!("Response received: {:#?}", response);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
 
 
@@ -563,9 +567,21 @@ async fn get_total_summary() -> impl Responder {
         .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
         .into_inner();
 
-    let response_str = format!("Response received: {:#?}", response);
-    HttpResponse::Ok().body(response_str)
+    to_json_response(response)
 }
+
+async fn try_get_channel(address: &String, port: i32) -> Channel {
+    let mut channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap())
+        .connect()
+        .await;
+    while channel.is_err() {
+        println!("Waiting for shopping_list service!");
+        thread::sleep(Duration::from_millis(4000));
+        channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
+    }
+    channel.unwrap()
+}
+
 
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]

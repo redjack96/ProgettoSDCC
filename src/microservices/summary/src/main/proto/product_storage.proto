@@ -1,7 +1,6 @@
 // version of protocol buffer used
 syntax = "proto3";
 import "shopping_list.proto";
-import "google/protobuf/timestamp.proto";
 
 // package name for the buffer will be used later
 package product_storage;
@@ -36,7 +35,7 @@ message Item {
   shopping_list.ProductType type = 3;
   shopping_list.Unit unit = 4;
   int32 quantity = 5;
-  google.protobuf.Timestamp expiration = 6;
+  shopping_list.Timestamp expiration = 6;
   int64 lastUsed = 7;
   int32 useNumber = 8; // times the item is used
   int32 totalUsedNumber = 9; // times
