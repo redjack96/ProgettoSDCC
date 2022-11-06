@@ -167,6 +167,7 @@ async fn remove_product(product_name: web::Path<String>) -> impl Responder {
     println!("gRPC client created");
     // Creo una Request del crate tonic
     let string_name = product_name.into_inner().to_string();
+    println!("{}", string_name);
     let request = tonic::Request::new(
         ProductRemove {
             product_name: string_name

@@ -1,4 +1,4 @@
-import {Container, Row, Col, Form, InputGroup, Alert} from 'react-bootstrap';
+import {Container, Button, Row, Col, Form, InputGroup, Alert} from 'react-bootstrap';
 import React from 'react'
 import './App.css';
 import Navbar from './Navigation/Navbar.js';
@@ -38,7 +38,7 @@ function Item(props) {
                         </div>
                         {/*<button type="submit" name="viewinfo" className="btn btn-primary" value="${btninfoid}">More Info...</button>*/}
                         <AddButton />
-                        <DeleteButton name={props.item_name}/>
+                        <DeleteButton name={props.item_name} onClick={props.onItemRemoval}/>
                     </div>
             </div>
         </div>
@@ -51,6 +51,40 @@ function ShoppingListCard() {
         name: "",
         products: []
     });
+
+    const onItemRemoval = React.useCallback(
+        item => {
+            console.log("so qua")
+            console.log(item)
+            const i = items.products.findIndex(value => value.product_name === item)
+            // const index = items.findIndex(i => i.id === item.id);
+            setItems({
+                id: 0,
+                name: "",
+                products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
+            });
+        },
+        [items],
+    );
+
+    const onNewItem = React.useCallback(
+        newItem => {
+            setItems([...items, newItem]);
+        },
+        [items],
+    );
+
+    const onItemUpdate = React.useCallback(
+        item => {
+            const index = items.findIndex(i => i.id === item.id);
+            setItems([
+                ...items.slice(0, index),
+                item,
+                ...items.slice(index + 1),
+            ]);
+        },
+        [items],
+    );
 
     React.useEffect(() => {
         fetch('http://localhost:8007/getList')
@@ -69,13 +103,62 @@ function ShoppingListCard() {
     for (let i=0; i< items.products.length; i++){
         let product = items.products[i];
         rows.push(
-            <Item key={i} item_name={product.product_name} quantity={product.quantity} type={product.type}/>,
+            <Item key={i} item_name={product.product_name} quantity={product.quantity} type={product.type} onItemUpdate={onItemUpdate} onItemRemoval={onItemRemoval}/>,
         )
     }
 
     return (
         <div>
+            {/*<AddItemForm onNewItem={onNewItem} />*/}
+            {/*{rows.length === 0 && (*/}
+            {/*    <p className="text-center">Nessun prodotto! Aggiungine uno quando vuoi.</p>*/}
+            {/*)}*/}
             {rows}
         </div>
     );
 }
+
+// function AddItemForm({ onNewItem }) {
+//     const [newItem, setNewItem] = React.useState('');
+//     const [submitting, setSubmitting] = React.useState(false);
+//
+//     const submitNewItem = e => {
+//         e.preventDefault();
+//         setSubmitting(true);
+//         fetch('http://localhost:8007/', {
+//             method: 'POST',
+//             body: JSON.stringify({ name: newItem }),
+//             headers: { 'Content-Type': 'application/json' },
+//         })
+//             .then(r => r.json())
+//             .then(item => {
+//                 onNewItem(item);
+//                 setSubmitting(false);
+//                 setNewItem('');
+//             });
+//     };
+//
+//     return (
+//         <Form onSubmit={submitNewItem}>
+//             <InputGroup className="mb-3">
+//                 <Form.Control
+//                     value={newItem}
+//                     onChange={e => setNewItem(e.target.value)}
+//                     type="text"
+//                     placeholder="Nuovo Oggetto"
+//                     aria-describedby="basic-addon1"
+//                 />
+//                 <InputGroup.Append>
+//                     <Button
+//                         type="submit"
+//                         variant="success"
+//                         disabled={!newItem.length}
+//                         className={submitting ? 'disabled' : ''}
+//                     >
+//                         {submitting ? 'Adding...' : 'Aggiungi.'}
+//                     </Button>
+//                 </InputGroup.Append>
+//             </InputGroup>
+//         </Form>
+//     );
+// }

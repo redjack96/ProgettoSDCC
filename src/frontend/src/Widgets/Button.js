@@ -42,10 +42,13 @@ export function AddButton() {
 function deleteFromList(props) {
     // return new Promise((resolve) => setTimeout(resolve, 2000));
     let name = props.name;
-    return fetch('http://localhost:8007/removeProduct/'+{name})
+    console.log("Questo è quello che voglio eliminare:"+name)
+    return fetch('http://localhost:8007/removeProduct/'+name, {
+        method: "POST"
+    })
         .then(value => {
             let x = value.json();
-            console.log("Elemento aggiunto al carrello")
+            console.log("Elemento eliminato dalla shopping list.")
             return x;
         })
         .catch(reason => console.log("Errore: "+reason))
@@ -58,12 +61,15 @@ export function DeleteButton(props) {
         if (isDeleting) {
             console.log(props.name);
             deleteFromList(props).then(() => {
-                setDeleting(false)
+                setDeleting(false);
             });
         }
     }, [isDeleting])
 
-    const handleClick = () => setDeleting(true);
+    const handleClick = () => {
+        setDeleting(true);
+        props.onClick(props.name);
+    }
 
     return (
         <Button
