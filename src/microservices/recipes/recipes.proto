@@ -1,0 +1,14 @@
+// version of protocol buffer used
+syntax = "proto3";
+
+option go_package = "recipes.microservice/proto_generated";
+import "product_storage.proto";
+import "shopping_list.proto";
+// package name for the buffer will be used later
+package recipes;
+
+// service which can be executed
+// Important: each method can have only one input and one output!!!
+service ShoppingList {
+  rpc GetDoableRecipe(product_storage.Item) returns (shopping_list.Response);
+}
