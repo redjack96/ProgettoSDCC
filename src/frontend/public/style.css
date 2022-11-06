@@ -243,3 +243,31 @@ label.star:before {
 	border: 2px solid lightgrey;
   	border-radius: 5px;
 }
+
+button.save-animation {
+    animation: saveAnimation 450ms ease forwards;
+}@keyframes saveAnimation {
+     0% { width: 200px; }
+     100% { width: 0px;, background: #fff;}
+ }
+
+ button.save-animation::after {
+     content: "";
+     box-sizing: border-box;
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     width: 20px;
+     height: 20px;
+     margin-top: -10px;
+     margin-left: -10px;
+     border-radius: 50%;
+     border: 2px solid transparent;
+     border-top-color: #07d;
+     border-bottom-color: #07d;
+     animation: spinner 0.8s ease infinite;
+ }
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}

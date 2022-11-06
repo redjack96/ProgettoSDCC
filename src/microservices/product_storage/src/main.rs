@@ -208,7 +208,6 @@ impl ProductStorage for ProductStorageImpl {
     }
 
     async fn drop_product_from_pantry(&self, request: Request<ItemName>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
-        // TODO aggiungere collegamento a kafka per sommario
         let msg = format!("Item manually deleted from pantry: {}", request.get_ref().name);
         let item = request.into_inner();
         println!("Removing item from db");
@@ -227,7 +226,6 @@ impl ProductStorage for ProductStorageImpl {
     }
 
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
-        // FIXME aggiungere collegamento a kafka per sommario
         let prod = request.into_inner();
         println!("prod_unit: {}", prod.unit);
         let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);

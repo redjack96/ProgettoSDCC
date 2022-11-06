@@ -1,17 +1,22 @@
-import {Container, Row, Col, Form, InputGroup, Button} from 'react-bootstrap';
+import {Container, Row, Col, Form, InputGroup, Alert} from 'react-bootstrap';
 import React from 'react'
 import './App.css';
+import Navbar from './Navigation/Navbar.js';
+import {AddButton, DeleteButton} from "./Widgets/Button";
 
 export function App() {
     console.log("Prova hot reload 10");
     return (
-        <Container>
+        <div>
+            <div>
+                <Navbar/>
+            </div>
             <Row>
                 <Col md={{offset: 3, span: 6}}>
                     <ShoppingListCard/>
                 </Col>
             </Row>
-        </Container>
+        </div>
     );
 }
 
@@ -32,6 +37,8 @@ function Item(props) {
                             <h6>Type: {props.type}</h6>
                         </div>
                         {/*<button type="submit" name="viewinfo" className="btn btn-primary" value="${btninfoid}">More Info...</button>*/}
+                        <AddButton />
+                        <DeleteButton name={props.item_name}/>
                     </div>
             </div>
         </div>
@@ -61,7 +68,9 @@ function ShoppingListCard() {
 
     for (let i=0; i< items.products.length; i++){
         let product = items.products[i];
-        rows.push(<Item key={i} item_name={product.product_name} quantity={product.quantity} type={product.type}/>)
+        rows.push(
+            <Item key={i} item_name={product.product_name} quantity={product.quantity} type={product.type}/>,
+        )
     }
 
     return (
