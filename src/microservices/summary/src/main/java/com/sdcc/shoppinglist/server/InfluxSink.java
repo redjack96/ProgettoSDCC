@@ -62,7 +62,11 @@ public class InfluxSink {
     public void addLogEntryToInflux(LogEntry entry) {
         WriteApiBlocking writeApi = client.getWriteApiBlocking();
         Point point = Point.measurement("logs")
-                .addTag("entry-record", entry.product_name()+"-"+entry.unit()+"-"+entry.product_type())
+                .addTag("entry-record",
+                        entry.product_name()+"-"
+                        +entry.unit()+"-"
+                        +entry.product_type()+"-"
+                        +System.currentTimeMillis())
                 .addField("transactionType", entry.transaction_type())
                 .addField("prodName", entry.product_name())
                 .addField("prodType", entry.product_type())
@@ -110,8 +114,8 @@ public class InfluxSink {
 
         int i = 0;
         String prodName = "", transType = "", prodType = "", prodUnit = "";
-        int prodQuantity = 0, prodExpiration = 0;
-        long ts = 0;
+        int prodQuantity = 0;
+        long ts = 0, prodExpiration = 0;
         for (FluxTable table: tables) {
             i++;
             List<FluxRecord> records = table.getRecords();
@@ -126,7 +130,7 @@ public class InfluxSink {
                 } else if (Objects.equals(record.getField(), "prodType")) {
                     prodType = String.valueOf(record.getValueByIndex(5));
                 } else if (Objects.equals(record.getField(), "prodExpiration")) {
-                    prodExpiration = Integer.parseInt(String.valueOf(record.getValueByIndex(5)));
+                    prodExpiration = Long.parseLong(String.valueOf(record.getValueByIndex(5)));
                 } else if (Objects.equals(record.getField(), "transactionType")) {
                     transType = String.valueOf(record.getValueByIndex(5));
                 }

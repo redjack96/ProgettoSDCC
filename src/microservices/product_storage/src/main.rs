@@ -217,7 +217,6 @@ impl ProductStorage for ProductStorageImpl {
     }
 
     async fn update_product_in_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
-        // TODO aggiungere collegamento a kafka per sommario
         let prod = request.into_inner();
         let msg = format!("Item manually updated in pantry: {}, quantity: {} {} ({}), expiration: {}",
                           prod.item_name, prod.quantity, unit_to_str(prod.unit), prod_type_to_str(prod.r#type),
@@ -228,12 +227,27 @@ impl ProductStorage for ProductStorageImpl {
     }
 
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
-        // TODO aggiungere collegamento a kafka per sommario
+        // FIXME aggiungere collegamento a kafka per sommario
         let prod = request.into_inner();
         println!("prod_unit: {}", prod.unit);
         let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);
         println!("Using item from db");
-        use_product_in_db(prod);
+        use_product_in_db(&prod);
+        // Send log to Kafka for summary
+        let ts = Utc::now().timestamp();
+        let log_entry = LogEntry {
+            log_timestamp: ts,
+            transaction_type: "use_product_in_pantry".to_string(),
+            product_name: prod.name,
+            quantity: prod.quantity, // added quantity
+            unit: unit_to_str(prod.unit),
+            product_type: prod_type_to_str(prod.item_type),
+            expiration_date: DEFAULT_EXPIRATION,
+        };
+        let kafka_client_map = KAFKA_CLIENT_HASH_MAP.lock().await;
+        let partition_client = kafka_client_map.get(LOGS).expect("Impossible to get logs partition client");
+        produce_logs_to_kafka(partition_client, vec![log_entry]).await;
+        println!("Sent log to kafka for summary");
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
@@ -347,7 +361,7 @@ fn update_product_in_db(elem: Item) {
     db.execute_insert_update_or_delete(&query);
 }
 
-fn use_product_in_db(elem: UsedItem) -> String {
+fn use_product_in_db(elem: &UsedItem) -> String {
     let db = Database::new();
     // first we need to get current number of product
     let select = format!("SELECT * FROM Products WHERE name='{}' AND unit='{}' AND item_type='{}';", elem.name, elem.unit, elem.item_type);
