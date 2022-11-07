@@ -3,7 +3,7 @@ syntax = "proto3";
 
 // package name for the buffer will be used later
 package recipes;
-option go_package = ".;proto_generated";
+option go_package = "shopping_list.microservice/proto_generated";
 
 // Services that can be executed
 service Recipes {
@@ -24,9 +24,11 @@ message Ingredient {
 }
 
 message Recipe {
-  string title = 1;
-  repeated Ingredient usedIngredients = 2; // ingredients in pantry that can be used
-  repeated Ingredient missedIngredients = 3; // ingredients missing to complete recipe
+  string id = 1;
+  string title = 2;
+  string url = 3;
+  repeated Ingredient usedIngredients = 4; // ingredients in pantry that can be used
+  repeated Ingredient missedIngredients = 5; // ingredients missing to complete recipe
 }
 
 message EmptyRequest {}

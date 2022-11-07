@@ -24,9 +24,11 @@ message Ingredient {
 }
 
 message Recipe {
-  string title = 1;
-  repeated Ingredient usedIngredients = 2; // ingredients in pantry that can be used
-  repeated Ingredient missedIngredients = 3; // ingredients missing to complete recipe
+  string id = 1;
+  string title = 2;
+  string url = 3;
+  repeated Ingredient usedIngredients = 4; // ingredients in pantry that can be used
+  repeated Ingredient missedIngredients = 5; // ingredients missing to complete recipe
 }
 
 message EmptyRequest {}
