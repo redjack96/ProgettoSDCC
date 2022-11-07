@@ -194,5 +194,14 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET: krakend
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: token
 
+  cassandra:
+    image: bitnami/cassandra:latest
+    container_name: cassandra
+    ports:
+      - '9042:9042'
+#      - '9042:7000' alternativa
+    environment:
+      - CASSANDRA_TRANSPORT_PORT_NUMBER=7000
+
 volumes:
   influxdb-storage:

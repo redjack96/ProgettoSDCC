@@ -21,6 +21,7 @@ export function App() {
 }
 
 function Item(props) {
+    console.log("in item name:"+props.item_name)
     return (
         <div className="col center">
             <div className="card">
