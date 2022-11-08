@@ -47,7 +47,7 @@ function ShoppingListCard() {
 
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
-        if (!loading){
+        if (!loading) {
             console.log("reloading list from server");
             setLoading(true);
             fetch('http://localhost:8007/getList')
@@ -76,19 +76,16 @@ function ShoppingListCard() {
     // This removes only from the array state "items.products"
     const onItemRemoval = React.useCallback(
         item => {
-            console.log("so qua")
-            console.log("Before:\n" + JSON.stringify(items))
-            const i = items.products.findIndex(value => value.product_name === item)
+            const i = items.products.findIndex(value => value.product_name === item.product_name)
+            console.log("index = " + i);
             // const index = items.findIndex(i => i.id === item.id);
             setItems({
-                id: 0,
-                name: "",
+                ...items,
                 products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
             });
-            console.log("After:\n" + JSON.stringify(items))
             setLoading(false);
         },
-        [],
+        [items.products],
     );
 
 
@@ -103,7 +100,7 @@ function ShoppingListCard() {
             ]);
             setLoading(false);
         },
-        [items],
+        [items.products],
     );
 
     return (
@@ -183,10 +180,14 @@ function AddItemForm({onNewItem}) {
     )
 }
 
-// this component contains the item information and shows them to the user
-// item: it is the item object to display
-// onItemUpdate: the callback to call when updating the itemDisplay
-// onItemRemoval: the callback to call when removing the itemDisplay
+/**
+ * This component contains the item information and shows them to the user
+ * @param item: it is the item OBJECT to display
+ * @param onItemUpdate: the callback to call when updating the itemDisplay
+ * @param onItemRemoval: the callback to call when removing the itemDisplay
+ * @returns {JSX.Element}
+ * @constructor
+ */
 function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when clicking the addToCart button. TODO: This button must be also hidden when clicked and the remove from cart shown.!
     const addToCart = () => {
@@ -209,9 +210,11 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when removing an item
     const removeItem = () => {
         // TODO: qua andrebbe aggiunto anche unit e type.
-        fetch(`localhost:8007/removeProduct/${item.product_name}`)
-            .then(() => onItemRemoval(item))
-    }
+        let x = `localhost:8007/removeProduct/${item.product_name}`;
+        console.log(x);
+        fetch(x, {method: 'POST'})
+            .then(() => onItemRemoval(item));
+    };
 
     console.log("item is added to cart? " + item.added_to_cart);
     return (
@@ -219,10 +222,19 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
             <div className="card">
                 {/*<img src="../res/images/Avenue-of-the-Baobobs-Madagascar 2.png" className="card-img-top" alt="product-image"/>*/}
                 <div className="card-body">
-                    <ItemInfo product_name={item.product_name} quantity={item.quantity} type={item.type}/>
+                    <ItemInfo item={item}/>
                     {/*<button type="submit" name="viewinfo" className="btn btn-primary" value="${btninfoid}">More Info...</button>*/}
                     {/*<AddButton/>*/}
-                    <DeleteButton name={item.item_name} onClick={onItemRemoval}/>
+                    <Col xs={1} className="text-center remove">
+                        <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={removeItem}
+                            aria-label="Rimuovi il prodotto"
+                        >
+                            Rimuovi
+                        </Button>
+                    </Col>
                 </div>
             </div>
         </div>
@@ -266,15 +278,15 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     );
 }
 
-function ItemInfo({product_name, quantity, type}) {
+function ItemInfo({item}) {
     return (
         <Container>
-            <h4 className="card-title">{product_name}</h4>
+            <h4 className="card-title">{item.product_name}</h4>
             <div className="locations">
-                <h6>Quantity: {quantity}</h6>
+                <h6>Quantity: {item.quantity}</h6>
             </div>
             <div className="categories">
-                <h6>Type: {type}</h6>
+                <h6>Type: {item.type}</h6>
             </div>
         </Container>
     )

@@ -56,23 +56,30 @@ function deleteFromList(name) {
 export function DeleteButton(props) {
     const [isDeleting, setDeleting] = useState(false);
 
+    // no load, this will be called, needed to change isDeleting state
     useEffect(() => {
         if (isDeleting) {
-            console.log("Rimuovo dalla grafica: " + props.name);
-            deleteFromList(props.name).then(() => {
-                setDeleting(false);
-            });
+            console.log("Rimuovo dalla grafica: " + props.item.product_name);
+            setDeleting(false);
+            // deleteFromList(item.product_name).then(() => {
+            //     setDeleting(false);
+            // });
         }
-    }, [isDeleting])
+    }, [isDeleting, props.item])
 
-    const handleClick = () => {
+    // this is the handler for the button
+    const handleClick = e => {
+        e.preventDefault();
         setDeleting(true);
+        console.log("delete: " + e.target.value);
+        console.log("delete: " + props.onClick);
         // qua chiama la onItemRemoval!!!
-        props.onClick(props.name);
+        props.onClick(e.target.value);
     }
 
     return (
         <Button
+            value={props.item.product_name}
             variant="danger"
             disabled={isDeleting}
             onClick={!isDeleting ? handleClick : null}
