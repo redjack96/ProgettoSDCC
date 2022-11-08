@@ -77,7 +77,7 @@ function ShoppingListCard() {
     const onItemRemoval = React.useCallback(
         item => {
             const i = items.products.findIndex(value => value.product_name === item.product_name)
-            console.log("index = " + i);
+            console.log("index to remove = " + i);
             // const index = items.findIndex(i => i.id === item.id);
             setItems({
                 ...items,
@@ -192,7 +192,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when clicking the addToCart button. TODO: This button must be also hidden when clicked and the remove from cart shown.!
     const addToCart = () => {
         // Watch out! Here we use the ` NOT ' !!!
-        fetch(`localhost:8007/addToCart/${item.product_name}/${item.unit}/${item.type}`, {method: 'POST'})
+        fetch(`http://localhost:8007/addToCart/${item.product_name}/${item.unit}/${item.type}`, {method: 'POST'})
             .then(r => r.json())
             // here it will receive the json object given in input?
             .then(() => onItemUpdate(item)) // FIXME: qua ho modificato rispetto a then(onItemUpdate) perché la risposta che riceviamo dall'API non e' un oggetto, ma un messaggio
@@ -200,7 +200,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when clicking the removeFromCart button
     const removeFromCart = () => {
         // Watch out! Here we use the ` NOT ' !!!
-        fetch(`localhost:8007/removeFromCart/${item.product_name}/${item.unit}/${item.type}`, {method: 'POST'})
+        fetch(`http://localhost:8007/removeFromCart/${item.product_name}/${item.unit}/${item.type}`, {method: 'POST'})
             .then(r => r.json())
             // here it will receive the json object given in input?
             .then(() => onItemUpdate(item)) // TODO: forse bisogna farsi restituire l'item da rust e non un messaggio per dire ok fatto!
@@ -210,10 +210,13 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when removing an item
     const removeItem = () => {
         // TODO: qua andrebbe aggiunto anche unit e type.
-        let x = `localhost:8007/removeProduct/${item.product_name}`;
-        console.log(x);
-        fetch(x, {method: 'POST'})
-            .then(() => onItemRemoval(item));
+        fetch(`http://localhost:8007/removeProduct/${item.product_name}`, {method: 'POST'})
+            .then(r => {
+                console.log(r.json());
+                return r;
+            })
+            .then(() => onItemRemoval(item))
+            .catch((err) => console.log(err));
     };
 
     console.log("item is added to cart? " + item.added_to_cart);
