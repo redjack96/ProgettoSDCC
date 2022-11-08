@@ -22,12 +22,12 @@ services:
 #      - api_gateway
 #      - shopping_list
 
-  frontend:
-    image: "web_ui"
-    container_name: "SDCCShoppingList"
-    build: "src/frontend"
-    ports:
-      - "3000:3000"
+#  frontend:
+#    image: "web_ui"
+#    container_name: "SDCCShoppingList"
+#    build: "src/frontend"
+#    ports:
+#      - "3000:3000"
     # only for development
 #    volumes:
 #      - "./src/frontend:/app"
@@ -106,7 +106,7 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
     depends_on:
       - influxdb
-        
+
   recipes:
     image: "recipes"
     container_name: "RecipesService"
@@ -115,6 +115,11 @@ services:
       context: "src"
     volumes:
       - "./config.properties:/usr/src/recipes/config.properties"
+    depends_on:
+      - redis
+#    networks: forse si possono specificare molteplici reti?
+#      vpcbr:
+#        ipv4_address: 192.168.119.1
 
     #  consumptions:
     #    image: consumptions
@@ -194,5 +199,40 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET: krakend
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: token
 
+  redis:
+    image: redis:latest
+    container_name: redis-cache
+    ports:
+      - '6379:6379'
+
+#  cassandra:
+#    build:
+#      dockerfile: "./docker/Dockerfile.cassandra"
+#      context: "."
+#    container_name: cassandra
+#    ports:
+#      - '7000:7000'
+#      - '9042:9042'
+#    volumes:
+#      - 'cassandra_data:/appdata'
+#    environment:
+#      - CASSANDRA_SEEDS=cassandra
+#      - CASSANDRA_PASSWORD_SEEDER=yes
+#      - CASSANDRA_PASSWORD=cassandra
+#    networks:
+#      vpcbr:
+#        ipv4_address: 192.168.119.2
+
 volumes:
   influxdb-storage:
+  cassandra_data:
+    driver: local
+
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/16
+          gateway: 192.168.0.1

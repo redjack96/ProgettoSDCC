@@ -8,8 +8,10 @@ use tonic::transport::{Channel, Uri};
 // sintassi per gli use grpc
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
+
 // nome_progetto::package_file_proto::NomeMessage
 use api_gateway::shopping_list::{ItemName, PantryMessage, SummaryRequest, Product};
+use api_gateway::shopping_list::EmptyRequest;
 use api_gateway::shopping_list::ProductRemove;
 use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
@@ -24,6 +26,7 @@ use serde::Serialize;
 use api_gateway::shopping_list::Timestamp;
 use api_gateway::shopping_list::product_storage_client::ProductStorageClient;
 use api_gateway::shopping_list::summary_client::SummaryClient;
+use api_gateway::shopping_list::recipes_client::RecipesClient;
 
 extern crate serde;
 extern crate serde_json;
@@ -571,12 +574,38 @@ async fn get_total_summary() -> impl Responder {
     to_json_response(response)
 }
 
+/**
+RECIPES APIS
+ */
+
+#[get("/getRecipes")]
+async fn get_recipes_from_pantry() -> impl Responder {
+    let configs = get_properties();
+    let channel = try_get_channel(&configs.recipes_address, configs.recipes_port).await;
+    println!("Channel to recipes created");
+    // Create a gRPC client for ProductStorage
+    let mut client = RecipesClient::new(channel);
+    println!("gRPC client created");
+
+    let request = tonic::Request::new(EmptyRequest {});
+    println!("{:?}", request);
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.get_recipes_from_pantry(request)
+        .await
+        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .into_inner();
+
+    to_json_response(response)
+}
+
 async fn try_get_channel(address: &String, port: i32) -> Channel {
     let mut channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap())
         .connect()
         .await;
     while channel.is_err() {
-        println!("Waiting for shopping_list service!");
+        println!("Waiting for service!");
         thread::sleep(Duration::from_millis(4000));
         channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
     }
@@ -612,6 +641,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_week_summary)
             .service(get_month_summary)
             .service(get_total_summary)
+            .service(get_recipes_from_pantry)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await
