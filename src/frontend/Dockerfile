@@ -4,5 +4,5 @@ RUN apk add --no-cache python3 g++ make
 WORKDIR /app
 COPY . .
 RUN npm install
-CMD ["npm", "start"]
+CMD npm start
 # CMD ["npm", "run", "dev"] NON VA L'Hot reload

@@ -39,9 +39,8 @@ export function AddButton() {
     );
 }
 
-function deleteFromList(props) {
+function deleteFromList(name) {
     // return new Promise((resolve) => setTimeout(resolve, 2000));
-    let name = props.name;
     console.log("Questo è quello che voglio eliminare:"+name)
     return fetch('http://localhost:8007/removeProduct/'+name, {
         method: "POST"
@@ -59,8 +58,8 @@ export function DeleteButton(props) {
 
     useEffect(() => {
         if (isDeleting) {
-            console.log(props.name);
-            deleteFromList(props).then(() => {
+            console.log("Rimuovo dalla grafica: " + props.name);
+            deleteFromList(props.name).then(() => {
                 setDeleting(false);
             });
         }
@@ -68,6 +67,7 @@ export function DeleteButton(props) {
 
     const handleClick = () => {
         setDeleting(true);
+        // qua chiama la onItemRemoval!!!
         props.onClick(props.name);
     }
 

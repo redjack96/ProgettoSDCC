@@ -13,3 +13,7 @@ root.render(
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
+
+// TODO: importante, per eseguire fuori da docker con hot reload, usa:
+
+// npm start --host 0.0.0.0 --port 3000 --disableHostCheck true
