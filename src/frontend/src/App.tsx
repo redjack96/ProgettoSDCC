@@ -5,20 +5,82 @@ import Navbar from './Navigation/Navbar';
 import images from './Images/images.js';
 import {AddButton, DeleteButton} from "./Widgets/Button";
 
-const Unit = {
-    Bottle: 'Bottle',
-    Kg: 'Kg',
-    Grams: 'Grams',
-    Packet: 'Packet'
+enum Unit {
+    Bottle,
+    Packet,
+    Kg,
+    Grams,
 }
 
-const ProductType = {
-    Meat: 'Meat',
-    Fish: 'Fish',
-    Fruit: 'Fruit',
-    Vegetable: 'Vegetable',
-    Drink: 'Drink',
-    Other: 'Other'
+enum ProductType {
+    Meat,
+    Fish,
+    Fruit,
+    Vegetable,
+    Drink,
+    Other,
+}
+
+class Item {
+    constructor(itemName: string, quantity: number, unit: Unit, type: ProductType, expiration: Timestamp) {
+        this.product_name = itemName;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.type = type;
+        this.expiration = expiration;
+        this.checked_out = false;
+        this.added_to_cart = false;
+    }
+
+    added_to_cart: boolean;
+    checked_out: boolean;
+    expiration: Timestamp;
+    product_name: string;
+    quantity: number;
+    type: ProductType;
+    unit: Unit;
+
+    addToCart() {
+        this.added_to_cart = true;
+    }
+
+    removeFromCart() {
+        this.added_to_cart = false;
+    }
+
+    static default(): Item {
+        return new Item("Unknown", 0, Unit.Packet, ProductType.Other, Timestamp.default());
+    }
+}
+
+namespace Unit {
+    export function toString(unit: Unit): string {
+        return Unit[unit];
+    }
+
+    export function parse(unitString: string): Unit {
+        console.log(Unit[unitString]);
+        return Unit[unitString];
+    }
+
+    export function parseFromInt(unitInt: number): string {
+        return Unit[unitInt];
+    }
+}
+
+namespace ProductType {
+    export function toString(type: ProductType): string {
+        return ProductType[type];
+    }
+
+    export function parse(type: string): ProductType {
+        console.log(ProductType[type]);
+        return ProductType[type];
+    }
+
+    export function parseFromInt(productInt: number): string {
+        return ProductType[productInt];
+    }
 }
 
 export function App() {
@@ -41,6 +103,15 @@ export function App() {
 
 // Defining our Timestamp class
 class Timestamp {
+    constructor(seconds: number, nanos?: number) {
+        this.seconds = seconds;
+        if (nanos === undefined) {
+            this.nanos = 0;
+        } else {
+            this.nanos = nanos;
+        }
+    }
+
     seconds: number;
     nanos: number;
 
@@ -50,6 +121,26 @@ class Timestamp {
 
     getNanos() {
         return this.nanos;
+    }
+
+    getShowString(): string {
+        let date = new Date(this.getSeconds() * 1000);
+        return date.toDateString()
+    }
+
+
+    getOrderedDateString(): string {
+        return "9999-12-31"
+    }
+
+    static default() {
+        return new Timestamp(0, 0);
+    }
+
+    static from(expiration: string) {
+        console.log(expiration);
+        let d = Date.parse(expiration);
+        return new Timestamp(d.valueOf() / 1000, 0);
     }
 }
 
@@ -79,12 +170,14 @@ function ShoppingListCard() {
 
     // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
     const onNewItem = React.useCallback(
-        newItem => {
-            setItems({
-                ...items,
-                products: [...items.products, newItem]
-            });
-            setLoading(false);
+        (newItem : Item) => {
+            if (loading){
+                setItems({
+                    ...items,
+                    products: [...items.products, newItem]
+                });
+                setLoading(false);
+            }
         },
         [items.products],
     );
@@ -104,6 +197,7 @@ function ShoppingListCard() {
         [items.products],
     );
 
+    console.log(items.products);
 
     const onItemUpdate = React.useCallback(
         item => {
@@ -145,11 +239,13 @@ function ShoppingListCard() {
 // The parameter is a function callback, called when the add button si clicked.
 function AddItemForm({onNewItem}) {
     // this state is the new item written in the textbox
-    const [newItem, setNewItem] = React.useState('');
+    // const [item, setItem] = React.useState(Item.default())
+    const [itemName, setItemName] = React.useState('');
     const [quantity, setQuantity] = React.useState(1);
     const [type, setType] = React.useState(ProductType.Other);
     const [unit, setUnit] = React.useState(Unit.Packet);
-    const [expiration, setExpiration] = React.useState('9999-12-31'); // OTHERS
+    const [expiration, setExpiration] = React.useState('9999-12-31'); // FIXME: forse qua ci vuole un numero, non una stringa.
+    const [addedToCart, setAddedToCart] = React.useState(false);
     // this state is the status of this component. If it is submitting, the item is being added. If not it is already added.
     const [submitting, setSubmitting] = React.useState(false);
 
@@ -159,17 +255,19 @@ function AddItemForm({onNewItem}) {
         e.preventDefault();
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-        console.log('http://localhost:8007/addProduct/' + newItem.trim() + '/' + quantity + '/' + unit + '/' + type + '/' + expiration);
-        fetch('http://localhost:8007/addProduct/' + newItem.trim() + '/' + quantity + '/' + unit + '/' + type + '/' + expiration, {method: 'POST'})
+        // TODO: convertire timestamp in stringa yyyy-mm-dd
+        let request = 'http://localhost:8007/addProduct/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
+        console.log(request);
+        fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
                 // we call the callback passed as a parameter (!) to this component. We give it the item name to add. For us, it will be an object
-                onNewItem(newItem.trim());
-                console.log("added " + newItem.trim());
+                onNewItem(new Item(itemName, quantity, unit, type, Timestamp.from(expiration)));
+                console.log("added " + itemName.trim());
                 // we are done submitting the item
                 setSubmitting(false);
                 // we update the state of "newItem" to an empty string, to clean the text field.
-                setNewItem('');
+                setItemName('');
             })
     }
 
@@ -234,8 +332,8 @@ function AddItemForm({onNewItem}) {
                     <Form.Group as={Col} controlId="formGridName">
                         <Form.Label>Product Name</Form.Label>
                         <Form.Control
-                            value={newItem.trim()}
-                            onChange={e => setNewItem(e.target.value)}
+                            value={itemName.trim()}
+                            onChange={e => setItemName(e.target.value)}
                             type="text"
                             placeholder="New Item"
                             aria-describedby="basic-addon1"
@@ -245,7 +343,10 @@ function AddItemForm({onNewItem}) {
                         <Form.Label>Expiration Date</Form.Label>
                         <Form.Control
                             value={expiration}
-                            onChange={e => setExpiration(e.target.value)}
+                            onChange={e => {
+                                console.log(e.target.value);
+                                return setExpiration(e.target.value);
+                            }}
                             type="date"
                         />
                     </Form.Group>
@@ -263,17 +364,20 @@ function AddItemForm({onNewItem}) {
                     </Form.Group>
                     <Form.Group as={Col} controlId="formSelectUnit">
                         <Form.Label>Unit</Form.Label>
-                        <Form.Control as="select" onChange={e => setUnit(parseToUnit(e.target.value))}>
+                        {/*<Form.Control as="select" onChange={e => setUnit(parseToUnit(e.target.value))}>*/}
+                        <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))}> {/*FIXME: non va bene*/}
                             <option>Select unit...</option>
+                            <option>Bottle</option>
+                            <option>Packet</option>
                             <option>Kg</option>
                             <option>Grams</option>
-                            <option>Packet</option>
-                            <option>Bottle</option>
                         </Form.Control>
                     </Form.Group>
                     <Form.Group as={Col} controlId="formSelectType">
                         <Form.Label>Type</Form.Label>
-                        <Form.Control as="select" onChange={e => setType(parseToType(e.target.value))}>
+                        {/*Il value è della select*/}
+                        {/*<Form.Control as="select" onChange={e => setType(parseToType(e.target.value))}>*/}
+                        <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))}>
                             <option>Select product type...</option>
                             <option>Vegetable</option>
                             <option>Fruit</option>
@@ -287,7 +391,7 @@ function AddItemForm({onNewItem}) {
                 <Button
                     type="submit"
                     variant="success"
-                    disabled={!newItem.trim().length}
+                    disabled={!itemName.trim().length}
                     className={submitting ? 'disabled' : ''}
                 >
                     {submitting ? 'Adding...' : 'Aggiungi.'}
@@ -373,7 +477,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
 }
 
 function ItemInfo({item}) {
-    const parseFromType = typeInt => {
+    const imageFromType = typeInt => {
         switch (typeInt) {
             case 0: {
                 console.log("Meat");
@@ -403,34 +507,18 @@ function ItemInfo({item}) {
             }
         }
     }
-
-    const parseFromUnit = unitInt => {
-        switch (unitInt) {
-            case 0: {
-                console.log("Bottle");
-                return Unit.Bottle;
-            }
-            case 1: {
-                console.log("Packet");
-                return Unit.Packet;
-            }
-
-            case 2: {
-                console.log("Kg");
-                return Unit.Kg;
-            }
-
-            case 3: {
-                console.log("Grams");
-                return Unit.Grams;
-            }
-        }
-    }
-
-    const extractDate = timestamp => {
-        let ts = Object.assign(new Timestamp(), timestamp).getSeconds();
-        let date = new Date(ts);
-        return date.toDateString()
+    const extractAndReformatDateToShow = (expiration: Timestamp) => {
+        console.log(expiration);
+        let timestamp = new Timestamp(expiration.seconds);
+        // Timestamp(sec, nsec) -> Date -> DateString (dd-mm-yyyy)
+        console.log(timestamp);
+        console.log(timestamp.getShowString());
+        // let ts =  new Timestamp(timestamp);
+        // console.log(ts);
+        // let date = new Date(ts.getSeconds());
+        // console.log(date);
+        // console.log(date.toDateString());
+        return timestamp.getShowString();
     }
 
     return (
@@ -445,15 +533,15 @@ function ItemInfo({item}) {
                     </Row>
                     <Row>
                         <h6 className="font-weight-bold">Unit:</h6>
-                        <h6>&nbsp;&nbsp;{parseFromUnit(item.unit)}</h6> {/*&nbsp; inserisce uno spazio*/}
+                        <h6>&nbsp;&nbsp;{Unit.parseFromInt(item.unit)}</h6> {/*&nbsp; inserisce uno spazio*/}
                     </Row>
                     <Row>
                         <h6 className="font-weight-bold">Expiration:</h6>
-                        <h6>&nbsp;&nbsp;{extractDate(item.expiration)}</h6> {/*&nbsp; inserisce uno spazio*/}
+                        <h6>&nbsp;&nbsp;{extractAndReformatDateToShow(item.expiration)}</h6> {/*&nbsp; inserisce uno spazio*/}
                     </Row>
                 </Col>
                 <Col xs={3}>
-                    <img src={parseFromType(item.type)} alt="type image"/>
+                    <Image src={imageFromType(item.type)} alt="type image" aria-label={item.type}/>
                 </Col>
             </Row>
         </Container>
