@@ -20,7 +20,8 @@ import (
 
 var rediCli *redis.Client
 var ctx context.Context
-var session *gocql.Session
+
+//var session *gocql.Session
 
 type GeneralInfo struct {
 	Id                int          `json:"id,omitempty"`
@@ -30,7 +31,7 @@ type GeneralInfo struct {
 	Likes             int          `json:"likes,omitempty"`
 }
 
-type UrlInfo struct {
+type UrlInfo struct { // contains the url of the recipe
 	Url string `json:"spoonacularSourceUrl,omitempty"`
 }
 
@@ -44,6 +45,7 @@ type serverRecipes struct {
 }
 
 func (s *serverRecipes) GetRecipesFromIngredients(ctx context.Context, ingredients *pb.IngredientsList) (*pb.RecipeList, error) {
+	// TODO
 	recipes := make([]*pb.Recipe, 0)
 
 	x := &pb.RecipeList{
@@ -52,17 +54,18 @@ func (s *serverRecipes) GetRecipesFromIngredients(ctx context.Context, ingredien
 	return x, nil
 }
 
-func (s *serverRecipes) GetRecipesFromPantry(ctx context.Context, request *pb.EmptyRequest) (*pb.RecipeList, error) {
+func (s *serverRecipes) GetRecipesFromPantry(_ context.Context, _ *pb.EmptyRequest) (*pb.RecipeList, error) {
 	// Call GetPantry of StorageService to retrieve available products
 	conn, err := grpc.Dial("ProductStorageService:8002", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalln("Error connecting to ProductStorageService", err)
+		return nil, err
 	}
 	client := pb.NewProductStorageClient(conn)
 	pantry, err := client.GetPantry(context.Background(), &pb.PantryMessage{})
 	log.Printf("pantry: %v", pantry)
 
-	// Get only available products from pantry
+	// Get only available and not expired products from pantry
 	products := pantry.GetProducts()
 	available := make([]*pb.Item, 0)
 	ts := time.Now()
@@ -128,7 +131,6 @@ func getFromAPI(apiURL string) []byte {
 	cached := getEntryFromRedis(apiURL)
 	if cached == "" {
 		// ask remote API
-		log.Println(apiURL)
 		response, err := http.Get(apiURL)
 		if err != nil {
 			fmt.Print(err.Error())

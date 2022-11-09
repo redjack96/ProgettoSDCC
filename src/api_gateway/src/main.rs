@@ -2,7 +2,6 @@ mod properties;
 
 use properties::get_properties;
 
-// use std::env::args;
 use tonic::transport::{Channel, Uri};
 // Vedi il server.rs per più spiegazioni sulla sintassi di Rust
 // sintassi per gli use grpc

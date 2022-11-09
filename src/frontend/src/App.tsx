@@ -1,7 +1,8 @@
-import {Container, Button, Row, Col, Form, InputGroup, Alert} from 'react-bootstrap';
+import {Container, Button, Row, Col, Form, InputGroup, Image, ButtonGroup} from 'react-bootstrap';
 import React from 'react'
 import './App.css';
 import Navbar from './Navigation/Navbar';
+import images from './Images/images.js';
 import {AddButton, DeleteButton} from "./Widgets/Button";
 
 const Unit = {
@@ -35,6 +36,21 @@ export function App() {
             </Container>
         </Container>
     );
+}
+
+
+// Defining our Timestamp class
+class Timestamp {
+    seconds: number;
+    nanos: number;
+
+    getSeconds() {
+        return this.seconds;
+    }
+
+    getNanos() {
+        return this.nanos;
+    }
 }
 
 function ShoppingListCard() {
@@ -143,7 +159,7 @@ function AddItemForm({onNewItem}) {
         e.preventDefault();
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-
+        console.log('http://localhost:8007/addProduct/' + newItem.trim() + '/' + quantity + '/' + unit + '/' + type + '/' + expiration);
         fetch('http://localhost:8007/addProduct/' + newItem.trim() + '/' + quantity + '/' + unit + '/' + type + '/' + expiration, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
@@ -157,19 +173,117 @@ function AddItemForm({onNewItem}) {
             })
     }
 
+    const parseToType = typeString => {
+        switch (typeString) {
+            case "Meat": {
+                console.log("Meat");
+                return ProductType.Meat;
+            }
+            case "Fish": {
+                console.log("Fish");
+                return ProductType.Fish;
+            }
+            case "Fruit": {
+                console.log("Fruit");
+                return ProductType.Fruit;
+            }
+            case "Vegetable": {
+                console.log("Veg");
+                return ProductType.Vegetable;
+            }
+            case "Drink": {
+                console.log("Drink");
+                return ProductType.Drink;
+            }
+            default: {
+                console.log("Other");
+                return ProductType.Other;
+            }
+
+        }
+    }
+
+    const parseToUnit = unitString => {
+        switch (unitString) {
+            case "Bottle": {
+                console.log("Bottle");
+                return Unit.Bottle;
+            }
+            case "Packet": {
+                console.log("Packet");
+                return Unit.Packet;
+            }
+            case "Kg": {
+                console.log("Kg");
+                return Unit.Kg;
+            }
+            case "Grams": {
+                console.log("Grams");
+                return Unit.Grams;
+            }
+        }
+    }
+
     // We return a Form with an input group that is a Control (textfield) plus a Button.
     // TODO: We will need to add also the quantity, type and expiration fields.
     return (
         <Form onSubmit={submitNewItem}>
             <InputGroup className="mb-3">{/* TODO: a cosa serve? */}
                 {/*This is needed to write the name of the product*/}
-                <Form.Control
-                    value={newItem.trim()}
-                    onChange={e => setNewItem(e.target.value)}
-                    type="text"
-                    placeholder="New Item"
-                    aria-describedby="basic-addon1"
-                />
+                <Row className="mb-3">
+                    <Form.Group as={Col} controlId="formGridName">
+                        <Form.Label>Product Name</Form.Label>
+                        <Form.Control
+                            value={newItem.trim()}
+                            onChange={e => setNewItem(e.target.value)}
+                            type="text"
+                            placeholder="New Item"
+                            aria-describedby="basic-addon1"
+                        />
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="formExpirationDate">
+                        <Form.Label>Expiration Date</Form.Label>
+                        <Form.Control
+                            value={expiration}
+                            onChange={e => setExpiration(e.target.value)}
+                            type="date"
+                        />
+                    </Form.Group>
+                </Row>
+                <Row className="mb-3">
+                    <Form.Group as={Col} controlId="formQuantity">
+                        <Form.Label>Quantity</Form.Label>
+                        <Form.Control
+                            value={quantity.valueOf()}
+                            onChange={e => setQuantity(parseInt(e.target.value))}
+                            type="text"
+                            placeholder="Quantity"
+                            aria-describedby="basic-addon1"
+                        />
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="formSelectUnit">
+                        <Form.Label>Unit</Form.Label>
+                        <Form.Control as="select" onChange={e => setUnit(parseToUnit(e.target.value))}>
+                            <option>Select unit...</option>
+                            <option>Kg</option>
+                            <option>Grams</option>
+                            <option>Packet</option>
+                            <option>Bottle</option>
+                        </Form.Control>
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="formSelectType">
+                        <Form.Label>Type</Form.Label>
+                        <Form.Control as="select" onChange={e => setType(parseToType(e.target.value))}>
+                            <option>Select product type...</option>
+                            <option>Vegetable</option>
+                            <option>Fruit</option>
+                            <option>Meat</option>
+                            <option>Drink</option>
+                            <option>Fish</option>
+                            <option>Other</option>
+                        </Form.Control>
+                    </Form.Group>
+                </Row>
                 <Button
                     type="submit"
                     variant="success"
@@ -222,6 +336,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
             .catch((err) => console.log(err));
     };
 
+
     console.log("item is added to cart? " + item.added_to_cart);
     return (
         <div className="col center">
@@ -231,16 +346,26 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
                     <ItemInfo item={item}/>
                     {/*<button type="submit" name="viewinfo" className="btn btn-primary" value="${btninfoid}">More Info...</button>*/}
                     {/*<AddButton/>*/}
-                    <Col xs={1} className="text-center remove">
-                        <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={removeItem}
-                            aria-label="Rimuovi il prodotto"
-                        >
-                            Rimuovi
-                        </Button>
-                    </Col>
+                    <Container>
+                        <ButtonGroup>
+                            <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={removeItem}
+                                aria-label="Rimuovi il prodotto"
+                            >
+                                Remove
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline-info"
+                                onClick={addToCart}
+                                aria-label="Add to cart"
+                            >
+                                Add to cart
+                            </Button>
+                        </ButtonGroup>
+                    </Container>
                 </div>
             </div>
         </div>
@@ -248,15 +373,89 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
 }
 
 function ItemInfo({item}) {
+    const parseFromType = typeInt => {
+        switch (typeInt) {
+            case 0: {
+                console.log("Meat");
+                return images.meat;
+            }
+            case 1: {
+                console.log("Fish");
+                return images.fish;
+            }
+
+            case 2: {
+                console.log("Fruit");
+                return images.fruit;
+            }
+
+            case 3: {
+                console.log("Veg");
+                return images.veggies;
+            }
+            case 4: {
+                console.log("Drink");
+                return images.drinks;
+            }
+            default: {
+                console.log("Other");
+                return images.other;
+            }
+        }
+    }
+
+    const parseFromUnit = unitInt => {
+        switch (unitInt) {
+            case 0: {
+                console.log("Bottle");
+                return Unit.Bottle;
+            }
+            case 1: {
+                console.log("Packet");
+                return Unit.Packet;
+            }
+
+            case 2: {
+                console.log("Kg");
+                return Unit.Kg;
+            }
+
+            case 3: {
+                console.log("Grams");
+                return Unit.Grams;
+            }
+        }
+    }
+
+    const extractDate = timestamp => {
+        let ts = Object.assign(new Timestamp(), timestamp).getSeconds();
+        let date = new Date(ts);
+        return date.toDateString()
+    }
+
     return (
         <Container>
-            <h4 className="card-title">{item.product_name}</h4>
-            <div className="locations">
-                <h6>Quantity: {item.quantity}</h6>
-            </div>
-            <div className="categories">
-                <h6>Type: {item.type}</h6>
-            </div>
+            <h4 className="card-title font-weight-bold">{item.product_name}</h4>
+            <hr/>
+            <Row className="card-body">
+                <Col>
+                    <Row>
+                        <h6 className="font-weight-bold">Quantity:</h6>
+                        <h6>&nbsp;&nbsp;{item.quantity}</h6> {/*&nbsp; inserisce uno spazio*/}
+                    </Row>
+                    <Row>
+                        <h6 className="font-weight-bold">Unit:</h6>
+                        <h6>&nbsp;&nbsp;{parseFromUnit(item.unit)}</h6> {/*&nbsp; inserisce uno spazio*/}
+                    </Row>
+                    <Row>
+                        <h6 className="font-weight-bold">Expiration:</h6>
+                        <h6>&nbsp;&nbsp;{extractDate(item.expiration)}</h6> {/*&nbsp; inserisce uno spazio*/}
+                    </Row>
+                </Col>
+                <Col xs={3}>
+                    <img src={parseFromType(item.type)} alt="type image"/>
+                </Col>
+            </Row>
         </Container>
     )
 }
