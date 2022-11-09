@@ -1,4 +1,4 @@
-import {Container, Button, Row, Col, Form, InputGroup, Image, ButtonGroup} from 'react-bootstrap';
+import {Container, Button, Row, Col, Form, InputGroup, Image, ButtonGroup, FormText} from 'react-bootstrap';
 import React from 'react'
 import './App.css';
 import Navbar from './Navigation/Navbar';
@@ -245,7 +245,6 @@ function AddItemForm({onNewItem}) {
     const [type, setType] = React.useState(ProductType.Other);
     const [unit, setUnit] = React.useState(Unit.Packet);
     const [expiration, setExpiration] = React.useState('9999-12-31'); // FIXME: forse qua ci vuole un numero, non una stringa.
-    const [addedToCart, setAddedToCart] = React.useState(false);
     // this state is the status of this component. If it is submitting, the item is being added. If not it is already added.
     const [submitting, setSubmitting] = React.useState(false);
 
@@ -270,58 +269,6 @@ function AddItemForm({onNewItem}) {
                 setItemName('');
             })
     }
-
-    const parseToType = typeString => {
-        switch (typeString) {
-            case "Meat": {
-                console.log("Meat");
-                return ProductType.Meat;
-            }
-            case "Fish": {
-                console.log("Fish");
-                return ProductType.Fish;
-            }
-            case "Fruit": {
-                console.log("Fruit");
-                return ProductType.Fruit;
-            }
-            case "Vegetable": {
-                console.log("Veg");
-                return ProductType.Vegetable;
-            }
-            case "Drink": {
-                console.log("Drink");
-                return ProductType.Drink;
-            }
-            default: {
-                console.log("Other");
-                return ProductType.Other;
-            }
-
-        }
-    }
-
-    const parseToUnit = unitString => {
-        switch (unitString) {
-            case "Bottle": {
-                console.log("Bottle");
-                return Unit.Bottle;
-            }
-            case "Packet": {
-                console.log("Packet");
-                return Unit.Packet;
-            }
-            case "Kg": {
-                console.log("Kg");
-                return Unit.Kg;
-            }
-            case "Grams": {
-                console.log("Grams");
-                return Unit.Grams;
-            }
-        }
-    }
-
     // We return a Form with an input group that is a Control (textfield) plus a Button.
     // TODO: We will need to add also the quantity, type and expiration fields.
     return (
@@ -413,7 +360,9 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when clicking the addToCart button. TODO: This button must be also hidden when clicked and the remove from cart shown.!
     const addToCart = () => {
         // Watch out! Here we use the ` NOT ' !!!
-        fetch(`http://localhost:8007/addToCart/${item.product_name}/${item.unit}/${item.type}`, {method: 'POST'})
+        let request = `http://localhost:8007/addToCart/${item.product_name}/${Unit.toString(item.unit)}/${ProductType.toString(item.type)}`;
+        console.log(request);
+        fetch(request, {method: 'POST'})
             .then(r => r.json())
             // here it will receive the json object given in input?
             .then(() => onItemUpdate(item)) // FIXME: qua ho modificato rispetto a then(onItemUpdate) perché la risposta che riceviamo dall'API non e' un oggetto, ma un messaggio
@@ -421,7 +370,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when clicking the removeFromCart button
     const removeFromCart = () => {
         // Watch out! Here we use the ` NOT ' !!!
-        fetch(`http://localhost:8007/removeFromCart/${item.product_name}/${item.unit}/${item.type}`, {method: 'POST'})
+        fetch(`http://localhost:8007/removeFromCart/${item.product_name}/${Unit.toString(item.unit)}/${ProductType.toString(item.type)}`, {method: 'POST'})
             .then(r => r.json())
             // here it will receive the json object given in input?
             .then(() => onItemUpdate(item)) // TODO: forse bisogna farsi restituire l'item da rust e non un messaggio per dire ok fatto!
@@ -468,7 +417,16 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
                             >
                                 Add to cart
                             </Button>
+                            <Button
+                                size="sm"
+                                variant="outline-info"
+                                onClick={removeFromCart}
+                                aria-label="Remove From Cart"
+                            >
+                                Remove from cart
+                            </Button>
                         </ButtonGroup>
+
                     </Container>
                 </div>
             </div>
@@ -538,6 +496,10 @@ function ItemInfo({item}) {
                     <Row>
                         <h6 className="font-weight-bold">Expiration:</h6>
                         <h6>&nbsp;&nbsp;{extractAndReformatDateToShow(item.expiration)}</h6> {/*&nbsp; inserisce uno spazio*/}
+                    </Row>
+                    <Row>
+                        <h6 className="font-weight-bold">Added to Cart:</h6>
+                        <h6>&nbsp;&nbsp;{item.added_to_cart ? 'Yes' : 'No'}</h6> {/*&nbsp; inserisce uno spazio*/}
                     </Row>
                 </Col>
                 <Col xs={3}>

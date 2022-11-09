@@ -27,6 +27,8 @@ const (
 	Update
 	Select
 	Buy
+	AddToCart
+	RemoveFromCart
 )
 
 type DBOperation struct {
@@ -34,6 +36,7 @@ type DBOperation struct {
 	product       *pb.Product
 	productRemove *pb.ProductRemove
 	productUpdate *pb.ProductUpdate
+	productKey    *pb.ProductKey
 }
 
 //func (p Product) ToString() string {
@@ -85,7 +88,7 @@ func (s *serverShoppingList) UpdateProductInList(ctx context.Context, productUpd
 	operation.productUpdate = productUpdate
 	qResult, err := queryDB(*operation)
 	if err != nil {
-		log.Fatalln("Error querying DB", err)
+		log.Fatalln("Error updating DB", err)
 	}
 	fmt.Println(qResult)
 	return &pb.Response{Msg: "ok - product updated"}, nil
@@ -96,37 +99,48 @@ func (s *serverShoppingList) UpdateProductInList(ctx context.Context, productUpd
 //  nel secondo caso: i prodotti checkati dovrebbero essere inviati direttamente in dispensa, tutti insieme. (questo dovrebbe esser fatto da productStorage, questo microservizio fa da client)
 
 // AddProductToCart sets the product as added to cart
-func (s *serverShoppingList) AddProductToCart(ctx context.Context, product *pb.ProductUpdate) (*pb.Response, error) {
-	log.Printf("Adding product to cart with id %s.", product.ProductId)
+func (s *serverShoppingList) AddProductToCart(ctx context.Context, productKey *pb.ProductKey) (*pb.Response, error) {
+	log.Printf("Adding product %s to cart.", productKey.ProductName)
 	operation := new(DBOperation)
-	operation.opType = Update
-	operation.productUpdate = product
+	operation.opType = AddToCart
+	operation.productKey = productKey
 	qResult, err := queryDB(*operation)
 	if err != nil {
 		log.Fatalln("Error querying DB", err)
 	}
 	fmt.Println(qResult)
-	// FIXME: mettere il nome dentro il message RPC
-	// FIXME: (opzionale) cambiare il metodo di aggiornamento da per id a per nome[, unità, tipo]
-	msg := fmt.Sprintf("ok - product %s added to cart", product.ProductId)
-	return &pb.Response{Msg: msg}, nil
+
+	if qResult.(int64) > 0 {
+		msg := fmt.Sprintf("ok - product %s added to cart", productKey.ProductName)
+		return &pb.Response{Msg: msg}, nil
+	} else {
+		msg := fmt.Sprintf("no product found with name %s type %s (%d) and unit %s (%d)",
+			productKey.ProductName,
+			pb.ProductType(productKey.ProductType).String(), pb.ProductType(productKey.ProductType),
+			pb.Unit(productKey.ProductUnit).String(), pb.Unit(productKey.ProductUnit))
+		return &pb.Response{Msg: msg}, nil
+	}
 }
 
 // RemoveProductFromCart sets the product as not added to cart yet
-func (s *serverShoppingList) RemoveProductFromCart(ctx context.Context, product *pb.ProductUpdate) (*pb.Response, error) {
-	log.Printf("Removing product to cart with id %s.", product.ProductId)
+func (s *serverShoppingList) RemoveProductFromCart(ctx context.Context, productKey *pb.ProductKey) (*pb.Response, error) {
+	log.Printf("Removing product %s from cart.", productKey.ProductName)
 	operation := new(DBOperation)
-	operation.opType = Update
-	operation.productUpdate = product
+	operation.opType = RemoveFromCart
+	operation.productKey = productKey
 	qResult, err := queryDB(*operation)
 	if err != nil {
 		log.Fatalln("Error querying DB", err)
 	}
 	fmt.Println(qResult)
-	// FIXME: mettere il nome dentro il message RPC
-	// FIXME: (opzionale) cambiare il metodo di aggiornamento da per id a per nome[, unità, tipo]
-	msg := fmt.Sprintf("ok - product %s removed from cart", product.ProductId)
-	return &pb.Response{Msg: msg}, nil
+
+	if qResult.(int64) > 0 {
+		msg := fmt.Sprintf("ok - product %s removed from cart", productKey.ProductName)
+		return &pb.Response{Msg: msg}, nil
+	} else {
+		msg := fmt.Sprintf("no product found with name %s type %s and unit %s", productKey.ProductName, pb.ProductType(productKey.ProductType).String(), pb.Unit(productKey.ProductUnit).String())
+		return &pb.Response{Msg: msg}, nil
+	}
 }
 
 func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*pb.ProductList, error) {
@@ -135,7 +149,7 @@ func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*
 		opType:        Select,
 		product:       nil,
 		productRemove: nil,
-		productUpdate: nil,
+		productKey:    nil,
 	}
 
 	// Get products collection
@@ -239,7 +253,8 @@ func queryDB(operation DBOperation) (interface{}, error) {
 
 	// complete operations
 	var res interface{}
-	if operation.opType == Insert {
+	switch operation.opType {
+	case Insert:
 		// add all products to a single interface
 		prod := operation.product
 		prodType := prod.Type
@@ -268,7 +283,7 @@ func queryDB(operation DBOperation) (interface{}, error) {
 			res = results.InsertedID
 		}
 		return res, err
-	} else if operation.opType == Remove {
+	case Remove:
 		prodName := operation.productRemove.ProductName
 		// remove specified elements from the collection
 		doc := bson.D{{"productName", prodName}}
@@ -277,7 +292,7 @@ func queryDB(operation DBOperation) (interface{}, error) {
 			res = result.DeletedCount
 		}
 		return res, err
-	} else if operation.opType == Update {
+	case Update:
 		idString := operation.productUpdate.ProductId
 		field := operation.productUpdate.Field
 		value := operation.productUpdate.Value
@@ -295,7 +310,7 @@ func queryDB(operation DBOperation) (interface{}, error) {
 			res = result.ModifiedCount
 		}
 		return res, err
-	} else if operation.opType == Select {
+	case Select:
 		// apply a filter
 		// filter := bson.D{{"inCart", bson.D{{"$eq", "true"}}}}
 		cursor, err := prodCollection.Find(
@@ -307,17 +322,71 @@ func queryDB(operation DBOperation) (interface{}, error) {
 		}
 		res = cursor
 		return res, err
-	} else {
+	case AddToCart:
+		// Buy product (delete all in cart)
+		var pName = operation.productKey.ProductName
+		var pType = operation.productKey.ProductType
+		var pUnit = operation.productKey.ProductUnit
+		// filter out the product based on its key (productName, type and unit)
+		filter := bson.M{"$and": []interface{}{
+			bson.M{"productName": pName},
+			bson.M{"type": pType},
+			bson.M{"unit": pUnit},
+		}}
+		update := bson.D{{"$set", bson.D{{"addedToCart", true}}}}
+		fmt.Println("setting addedToCart = true for the product " + pName)
+
+		result, err := prodCollection.UpdateOne(context.TODO(), filter, update)
+		if err != nil {
+			fmt.Println("Error in adding to cart the item")
+			return nil, err
+		}
+
+		res = result.ModifiedCount
+		if res == 0 {
+			fmt.Println("Product not found or already added to cart")
+		} else {
+			fmt.Println("Added product to cart: " + pName)
+		}
+		return res, nil
+	case RemoveFromCart:
+		// Buy product (delete all in cart)
+		var pName = operation.productKey.ProductName
+		var pType = operation.productKey.ProductType
+		var pUnit = operation.productKey.ProductUnit
+		// filter out the product based on its key (productName, type and unit)
+		filter := bson.M{"$and": []interface{}{
+			bson.M{"productName": pName},
+			bson.M{"type": pType},
+			bson.M{"unit": pUnit},
+		}}
+		update := bson.D{{"$set", bson.D{{"addedToCart", false}}}}
+		fmt.Println("setting addedToCart = false for the product " + pName)
+		result, err := prodCollection.UpdateOne(context.TODO(), filter, update)
+		if err != nil {
+			fmt.Println("Error in removing from cart the item")
+			return nil, err
+		}
+
+		res = result.ModifiedCount
+		if res == 0 {
+			fmt.Println("Product not found or already removed from cart")
+		} else {
+			fmt.Println("Removed product from cart: " + pName)
+		}
+		return res, err
+	case Buy:
 		// Buy product (delete all in cart)
 		fmt.Println("Deleting all products in cart...")
-		doc := bson.D{{"addedToCart", true}}
+		doc := bson.D{{"addedToCart", false}}
 		result, err := prodCollection.DeleteMany(context.TODO(), doc)
 		if err == nil {
 			res = result.DeletedCount
 		}
 		return res, err
+	default:
+		return res, nil
 	}
-	return res, nil
 }
 
 // Run in the server/ directory

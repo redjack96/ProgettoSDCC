@@ -12,8 +12,8 @@ service ShoppingList {
   rpc AddProductToList(Product) returns (Response);
   rpc RemoveProductFromList(ProductRemove) returns (Response);
   rpc UpdateProductInList(ProductUpdate) returns (Response);
-  rpc AddProductToCart(ProductUpdate) returns (Response);
-  rpc RemoveProductFromCart(ProductUpdate) returns (Response);
+  rpc AddProductToCart(ProductKey) returns (Response);
+  rpc RemoveProductFromCart(ProductKey) returns (Response);
   rpc GetList(GetListRequest) returns (ProductList);
   rpc BuyAllProductsInCart(BuyRequest) returns (Response);
 }
@@ -32,6 +32,12 @@ enum Unit {
   Packet = 1;
   Kg = 2;
   Grams = 3;
+}
+
+message ProductKey {
+  string productName = 1;
+  int32 productUnit = 2;
+  int32 productType = 3;
 }
 
 message ProductUpdate {

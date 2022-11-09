@@ -9,7 +9,7 @@ use tonic::transport::{Channel, Uri};
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 
 // nome_progetto::package_file_proto::NomeMessage
-use api_gateway::shopping_list::{ItemName, PantryMessage, SummaryRequest, Product};
+use api_gateway::shopping_list::{ItemName, PantryMessage, SummaryRequest, Product, ProductKey};
 use api_gateway::shopping_list::EmptyRequest;
 use api_gateway::shopping_list::ProductRemove;
 use api_gateway::shopping_list::ProductUpdate;
@@ -215,7 +215,7 @@ async fn update_product(req: HttpRequest) -> impl Responder {
 }
 
 
-#[post("/addToCart/{productId}")]
+#[post("/addToCart/{name}/{unit}/{type}")]
 async fn add_to_cart(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition to cart requested.");
@@ -226,14 +226,14 @@ async fn add_to_cart(req: HttpRequest) -> impl Responder {
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
-    let id = req.match_info().get("productId").unwrap().to_string();
-    let field = "addedToCart".to_string(); // TODO: stringa hardcoded
-    let value = true.to_string();
+    let name = req.match_info().get("name").unwrap_or("");
+    let unit = req.match_info().get("unit").unwrap_or("Packet");
+    let ptype = req.match_info().get("type").unwrap_or("Other");
     let request = tonic::Request::new(
-        ProductUpdate {
-            product_id: id,
-            field,
-            value,
+        ProductKey {
+            product_name: name.to_string(),
+            product_unit: unit_from_str(unit).into(),
+            product_type: type_from_str(ptype).into(),
         },
     );
     println!("Request created");
@@ -245,7 +245,7 @@ async fn add_to_cart(req: HttpRequest) -> impl Responder {
     to_json_response(response)
 }
 
-#[post("/removeFromCart/{productId}")]
+#[post("/removeFromCart/{name}/{unit}/{type}")]
 async fn remove_from_cart(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product removal from cart requested.");
@@ -256,14 +256,14 @@ async fn remove_from_cart(req: HttpRequest) -> impl Responder {
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
-    let id = req.match_info().get("productId").unwrap().to_string();
-    let field = "addedToCart".to_string(); // TODO: stringa Hardcoded
-    let value = false.to_string();
+    let name = req.match_info().get("name").unwrap_or("");
+    let unit = req.match_info().get("unit").unwrap_or("Packet");
+    let ptype = req.match_info().get("type").unwrap_or("Other");
     let request = tonic::Request::new(
-        ProductUpdate {
-            product_id: id,
-            field,
-            value,
+        ProductKey {
+            product_name: name.to_string(),
+            product_unit: unit_from_str(unit).into(),
+            product_type: type_from_str(ptype).into(),
         },
     );
     println!("Request created");
@@ -394,6 +394,7 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     to_json_response(response)
 }
 
+// FIXME: aggiornare solo un campo alla volta, dato nome, unit e type con campi: valore e campo... (forse)
 #[post("/updateProductInStorage/{name}/{quantity}/{unit}/{type}/{expiration}/{lastUsed}/{useNumber}/{totalUseNumber}/{timesIsBought}/{buyDate}")]
 async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
