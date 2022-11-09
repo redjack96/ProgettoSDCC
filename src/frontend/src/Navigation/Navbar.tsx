@@ -1,5 +1,5 @@
 import React from "react";
-import Storage from "../Services/Storage.js"
+// import {Storage} from "../Services/Storage"
 
 const Navbar = () => {
     return (
@@ -27,7 +27,7 @@ const Navbar = () => {
                         </a>
                     </li>
                     <li className="nav-item">
-                        <a className="nav-link" href="../Services/Storage.js">
+                        <a className="nav-link" href="../Services/Storage.tsx">
                             Storage
                         </a>
                     </li>

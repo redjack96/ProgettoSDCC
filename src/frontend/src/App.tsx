@@ -1,7 +1,7 @@
 import {Container, Button, Row, Col, Form, InputGroup, Alert} from 'react-bootstrap';
 import React from 'react'
 import './App.css';
-import Navbar from './Navigation/Navbar.js';
+import Navbar from './Navigation/Navbar';
 import {AddButton, DeleteButton} from "./Widgets/Button";
 
 const Unit = {
@@ -93,11 +93,14 @@ function ShoppingListCard() {
         item => {
             const index = items.products.findIndex(i => i.id === item.id);
             console.log("The index to update is" + index);
-            setItems([
-                ...items.products.slice(0, index),
-                item,
-                ...items.products.slice(index + 1),
-            ]);
+            setItems({
+                ...items,
+                products: [
+                    ...items.products.slice(0, index),
+                    item,
+                    ...items.products.slice(index + 1),
+                ]
+            });
             setLoading(false);
         },
         [items.products],
@@ -141,12 +144,12 @@ function AddItemForm({onNewItem}) {
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
 
-        fetch('http://localhost:8007/addProduct/' + newItem + '/' + quantity + '/' + unit + '/' + type + '/' + expiration, {method: 'POST'})
+        fetch('http://localhost:8007/addProduct/' + newItem.trim() + '/' + quantity + '/' + unit + '/' + type + '/' + expiration, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
                 // we call the callback passed as a parameter (!) to this component. We give it the item name to add. For us, it will be an object
-                onNewItem(newItem);
-                console.log("added " + newItem);
+                onNewItem(newItem.trim());
+                console.log("added " + newItem.trim());
                 // we are done submitting the item
                 setSubmitting(false);
                 // we update the state of "newItem" to an empty string, to clean the text field.
@@ -161,7 +164,7 @@ function AddItemForm({onNewItem}) {
             <InputGroup className="mb-3">{/* TODO: a cosa serve? */}
                 {/*This is needed to write the name of the product*/}
                 <Form.Control
-                    value={newItem}
+                    value={newItem.trim()}
                     onChange={e => setNewItem(e.target.value)}
                     type="text"
                     placeholder="New Item"
@@ -170,7 +173,7 @@ function AddItemForm({onNewItem}) {
                 <Button
                     type="submit"
                     variant="success"
-                    disabled={!newItem.length}
+                    disabled={!newItem.trim().length}
                     className={submitting ? 'disabled' : ''}
                 >
                     {submitting ? 'Adding...' : 'Aggiungi.'}
@@ -241,43 +244,6 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
                 </div>
             </div>
         </div>
-        /* <Container fluid className={`item ${item.added_to_cart && 'completed'}`}>
-             <Row>
-                 {/!*TODO: This is used for the [v] on added or removed from cart. Should be deleted*!/}
-                 <Col xs={1} className="text-center">
-                     <Button
-                         className="toggles"
-                         size="sm"
-                         variant="link"
-                         onClick={addToCart}
-                         aria-label={
-                             item.added_to_cart
-                                 ? 'Mark item as incomplete'
-                                 : 'Mark item as complete'
-                         }
-                     >
-                         <i
-                             className={`far ${
-                                 item.added_to_cart ? 'fa-check-square' : 'fa-square'
-                             }`}
-                         />
-                     </Button>
-                 </Col>
-                 <Col xs={10} className="name">
-                     {item.product_name}
-                 </Col>
-                 <Col xs={1} className="text-center remove">
-                     <Button
-                         size="sm"
-                         variant="link"
-                         onClick={removeItem}
-                         aria-label="Remove Item"
-                     >
-                         <i className="fa fa-trash text-danger" />
-                     </Button>
-                 </Col>
-             </Row>
-         </Container>*/
     );
 }
 
