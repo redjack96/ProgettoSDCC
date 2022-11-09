@@ -68,17 +68,25 @@ func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.P
 	return &pb.Response{Msg: "Ok - Product added"}, nil
 }
 
-func (s *serverShoppingList) RemoveProductFromList(ctx context.Context, productRemove *pb.ProductRemove) (*pb.Response, error) {
-	log.Printf("Removing product: %s", productRemove.ProductName)
+func (s *serverShoppingList) RemoveProductFromList(_ context.Context, productKey *pb.ProductKey) (*pb.Response, error) {
+	log.Printf("Removing product: %s", productKey.ProductName)
 	operation := new(DBOperation)
 	operation.opType = Remove
-	operation.productRemove = productRemove
+	operation.productKey = productKey
 	qResult, err := queryDB(*operation)
 	if err != nil {
 		log.Fatalln("Error querying DB", err)
 	}
 	fmt.Println(qResult)
-	return &pb.Response{Msg: "OK - Product removed"}, nil
+	if qResult.(int64) > 0 {
+		return &pb.Response{Msg: "OK - Product " + productKey.ProductName + " removed"}, nil
+	} else {
+		msg := fmt.Sprintf("no product found with name %s type %s (%d) and unit %s (%d)",
+			productKey.ProductName,
+			pb.ProductType(productKey.ProductType).String(), pb.ProductType(productKey.ProductType),
+			pb.Unit(productKey.ProductUnit).String(), pb.Unit(productKey.ProductUnit))
+		return &pb.Response{Msg: msg}, nil
+	}
 }
 
 func (s *serverShoppingList) UpdateProductInList(ctx context.Context, productUpdate *pb.ProductUpdate) (*pb.Response, error) {
@@ -284,10 +292,16 @@ func queryDB(operation DBOperation) (interface{}, error) {
 		}
 		return res, err
 	case Remove:
-		prodName := operation.productRemove.ProductName
+		prodName := operation.productKey.ProductName
+		prodType := operation.productKey.ProductType
+		prodUnit := operation.productKey.ProductUnit
 		// remove specified elements from the collection
-		doc := bson.D{{"productName", prodName}}
-		result, err := prodCollection.DeleteOne(context.TODO(), doc)
+		filter := bson.M{"$and": []interface{}{
+			bson.M{"productName": prodName},
+			bson.M{"type": prodType},
+			bson.M{"unit": prodUnit},
+		}}
+		result, err := prodCollection.DeleteMany(context.TODO(), filter)
 		if err == nil {
 			res = result.DeletedCount
 		}

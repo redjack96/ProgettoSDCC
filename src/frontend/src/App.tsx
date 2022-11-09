@@ -380,7 +380,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     // called when removing an item
     const removeItem = () => {
         // TODO: qua andrebbe aggiunto anche unit e type.
-        fetch(`http://localhost:8007/removeProduct/${item.product_name}`, {method: 'POST'})
+        fetch(`http://localhost:8007/removeProduct/${item.product_name}/${Unit.toString(item.unit)}/${ProductType.toString(item.type)}`, {method: 'POST'})
             .then(r => {
                 console.log(r.json());
                 return r;

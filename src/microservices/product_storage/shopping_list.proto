@@ -10,7 +10,7 @@ package shopping_list;
 // Important: each method can have only one input and one output!!!
 service ShoppingList {
   rpc AddProductToList(Product) returns (Response);
-  rpc RemoveProductFromList(ProductRemove) returns (Response);
+  rpc RemoveProductFromList(ProductKey) returns (Response);
   rpc UpdateProductInList(ProductUpdate) returns (Response);
   rpc AddProductToCart(ProductKey) returns (Response);
   rpc RemoveProductFromCart(ProductKey) returns (Response);

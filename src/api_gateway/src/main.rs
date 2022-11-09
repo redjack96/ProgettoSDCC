@@ -11,7 +11,6 @@ use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
 use api_gateway::shopping_list::{ItemName, PantryMessage, SummaryRequest, Product, ProductKey};
 use api_gateway::shopping_list::EmptyRequest;
-use api_gateway::shopping_list::ProductRemove;
 use api_gateway::shopping_list::ProductUpdate;
 use api_gateway::shopping_list::ProductType;
 use api_gateway::shopping_list::Unit;
@@ -157,8 +156,8 @@ async fn add_product(req: HttpRequest) -> impl Responder {
     to_json_response(response)
 }
 
-#[post("/removeProduct/{productName}")]
-async fn remove_product(product_name: web::Path<String>) -> impl Responder {
+#[post("/removeProduct/{name}/{unit}/{type}")]
+async fn remove_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product removal requested.");
     // Crea un canale per la connessione al server
@@ -168,11 +167,14 @@ async fn remove_product(product_name: web::Path<String>) -> impl Responder {
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
-    let string_name = product_name.into_inner().to_string();
-    println!("{}", string_name);
+    let name = req.match_info().get("name").unwrap_or("");
+    let unit = req.match_info().get("unit").unwrap_or("Packet");
+    let ptype = req.match_info().get("type").unwrap_or("Other");
     let request = tonic::Request::new(
-        ProductRemove {
-            product_name: string_name
+        ProductKey {
+            product_name: name.to_string(),
+            product_unit: unit_from_str(unit).into(),
+            product_type: type_from_str(ptype).into(),
         },
     );
     println!("Request created");
