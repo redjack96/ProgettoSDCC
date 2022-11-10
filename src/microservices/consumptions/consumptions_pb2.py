@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 import product_storage_pb2 as product__storage__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63onsumptions.proto\x12\testimator\x1a\x15product_storage.proto\"\x0e\n\x0c\x45mptyRequest\"@\n\x11PredictedDataList\x12+\n\tpredicted\x18\x01 \x03(\x0b\x32\x18.estimator.PredictedData\"\x8d\x01\n\rPredictedData\x12\x0c\n\x04week\x18\x01 \x01(\t\x12\x0f\n\x07product\x18\x02 \x01(\t\x12\x10\n\x08n_bought\x18\x03 \x01(\x05\x12\x11\n\tn_expired\x18\x04 \x01(\x05\x12\x0e\n\x06n_used\x18\x05 \x01(\x05\x12\x13\n\x0bn_remaining\x18\x06 \x01(\x05\x12\x13\n\x0b\x63onsumption\x18\x07 \x01(\x02\"\x1c\n\rTrainResponse\x12\x0b\n\x03msg\x18\x01 \x01(\t2\x8c\x01\n\tEstimator\x12@\n\x07Predict\x12\x17.estimator.EmptyRequest\x1a\x1c.estimator.PredictedDataList\x12=\n\nTrainModel\x12\x15.product_storage.Item\x1a\x18.estimator.TrainResponseB\x13Z\x11.;proto_generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63onsumptions.proto\x12\x0c\x63onsumptions\x1a\x15product_storage.proto\"\x10\n\x0ePredictRequest\"C\n\x11PredictedDataList\x12.\n\tpredicted\x18\x01 \x03(\x0b\x32\x1b.consumptions.PredictedData\"\x8d\x01\n\rPredictedData\x12\x0c\n\x04week\x18\x01 \x01(\t\x12\x0f\n\x07product\x18\x02 \x01(\t\x12\x10\n\x08n_bought\x18\x03 \x01(\x05\x12\x11\n\tn_expired\x18\x04 \x01(\x05\x12\x0e\n\x06n_used\x18\x05 \x01(\x05\x12\x13\n\x0bn_remaining\x18\x06 \x01(\x05\x12\x13\n\x0b\x63onsumption\x18\x07 \x01(\x02\"\x1c\n\rTrainResponse\x12\x0b\n\x03msg\x18\x01 \x01(\t2\x97\x01\n\tEstimator\x12H\n\x07Predict\x12\x1c.consumptions.PredictRequest\x1a\x1f.consumptions.PredictedDataList\x12@\n\nTrainModel\x12\x15.product_storage.Item\x1a\x1b.consumptions.TrainResponseB\x13Z\x11.;proto_generatedb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'consumptions_pb2', globals())
@@ -22,14 +22,14 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z\021.;proto_generated'
-  _EMPTYREQUEST._serialized_start=56
-  _EMPTYREQUEST._serialized_end=70
-  _PREDICTEDDATALIST._serialized_start=72
-  _PREDICTEDDATALIST._serialized_end=136
-  _PREDICTEDDATA._serialized_start=139
-  _PREDICTEDDATA._serialized_end=280
-  _TRAINRESPONSE._serialized_start=282
-  _TRAINRESPONSE._serialized_end=310
-  _ESTIMATOR._serialized_start=313
-  _ESTIMATOR._serialized_end=453
+  _PREDICTREQUEST._serialized_start=59
+  _PREDICTREQUEST._serialized_end=75
+  _PREDICTEDDATALIST._serialized_start=77
+  _PREDICTEDDATALIST._serialized_end=144
+  _PREDICTEDDATA._serialized_start=147
+  _PREDICTEDDATA._serialized_end=288
+  _TRAINRESPONSE._serialized_start=290
+  _TRAINRESPONSE._serialized_end=318
+  _ESTIMATOR._serialized_start=321
+  _ESTIMATOR._serialized_end=472
 # @@protoc_insertion_point(module_scope)

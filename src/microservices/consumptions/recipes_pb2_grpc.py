@@ -22,7 +22,7 @@ class RecipesStub(object):
                 )
         self.GetRecipesFromPantry = channel.unary_unary(
                 '/recipes.Recipes/GetRecipesFromPantry',
-                request_serializer=recipes__pb2.EmptyRequest.SerializeToString,
+                request_serializer=recipes__pb2.RecipesRequest.SerializeToString,
                 response_deserializer=recipes__pb2.RecipeList.FromString,
                 )
 
@@ -55,7 +55,7 @@ def add_RecipesServicer_to_server(servicer, server):
             ),
             'GetRecipesFromPantry': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRecipesFromPantry,
-                    request_deserializer=recipes__pb2.EmptyRequest.FromString,
+                    request_deserializer=recipes__pb2.RecipesRequest.FromString,
                     response_serializer=recipes__pb2.RecipeList.SerializeToString,
             ),
     }
@@ -98,7 +98,7 @@ class Recipes(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/recipes.Recipes/GetRecipesFromPantry',
-            recipes__pb2.EmptyRequest.SerializeToString,
+            recipes__pb2.RecipesRequest.SerializeToString,
             recipes__pb2.RecipeList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

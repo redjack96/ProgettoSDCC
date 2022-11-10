@@ -5,10 +5,6 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class EmptyRequest(_message.Message):
-    __slots__ = []
-    def __init__(self) -> None: ...
-
 class Ingredient(_message.Message):
     __slots__ = ["name"]
     NAME_FIELD_NUMBER: _ClassVar[int]
@@ -40,3 +36,7 @@ class RecipeList(_message.Message):
     RECIPES_FIELD_NUMBER: _ClassVar[int]
     recipes: _containers.RepeatedCompositeFieldContainer[Recipe]
     def __init__(self, recipes: _Optional[_Iterable[_Union[Recipe, _Mapping]]] = ...) -> None: ...
+
+class RecipesRequest(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...

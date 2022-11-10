@@ -17,12 +17,12 @@ class EstimatorStub(object):
             channel: A grpc.Channel.
         """
         self.Predict = channel.unary_unary(
-                '/estimator.Estimator/Predict',
-                request_serializer=consumptions__pb2.EmptyRequest.SerializeToString,
+                '/consumptions.Estimator/Predict',
+                request_serializer=consumptions__pb2.PredictRequest.SerializeToString,
                 response_deserializer=consumptions__pb2.PredictedDataList.FromString,
                 )
         self.TrainModel = channel.unary_unary(
-                '/estimator.Estimator/TrainModel',
+                '/consumptions.Estimator/TrainModel',
                 request_serializer=product__storage__pb2.Item.SerializeToString,
                 response_deserializer=consumptions__pb2.TrainResponse.FromString,
                 )
@@ -51,7 +51,7 @@ def add_EstimatorServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Predict': grpc.unary_unary_rpc_method_handler(
                     servicer.Predict,
-                    request_deserializer=consumptions__pb2.EmptyRequest.FromString,
+                    request_deserializer=consumptions__pb2.PredictRequest.FromString,
                     response_serializer=consumptions__pb2.PredictedDataList.SerializeToString,
             ),
             'TrainModel': grpc.unary_unary_rpc_method_handler(
@@ -61,7 +61,7 @@ def add_EstimatorServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'estimator.Estimator', rpc_method_handlers)
+            'consumptions.Estimator', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -81,8 +81,8 @@ class Estimator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/estimator.Estimator/Predict',
-            consumptions__pb2.EmptyRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/consumptions.Estimator/Predict',
+            consumptions__pb2.PredictRequest.SerializeToString,
             consumptions__pb2.PredictedDataList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -98,7 +98,7 @@ class Estimator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/estimator.Estimator/TrainModel',
+        return grpc.experimental.unary_unary(request, target, '/consumptions.Estimator/TrainModel',
             product__storage__pb2.Item.SerializeToString,
             consumptions__pb2.TrainResponse.FromString,
             options, channel_credentials,

@@ -8,18 +8,22 @@ use tonic::transport::{Channel, Uri};
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
-use api_gateway::shopping_list::{Product, ProductKey,ProductUpdate,ProductType,Unit,GetListRequest,BuyRequest,Timestamp};
-use api_gateway::product_storage::{ItemName, PantryMessage};
-use api_gateway::summary::SummaryRequest;
-use api_gateway::recipes::RecipesRequest;
+use api_gateway::shopping_list::{Product, ProductKey, ProductUpdate, ProductType, Unit, GetListRequest, BuyRequest, Timestamp, Response as OurResponse, ProductList};
+use api_gateway::product_storage::{ItemName, Pantry, PantryMessage};
+use api_gateway::summary::{SummaryData, SummaryRequest};
+use api_gateway::recipes::{RecipeList, RecipesRequest};
 use api_gateway::product_storage::{Item, UsedItem};
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 // use actix_web::web::Query;
 use serde::Serialize;
+use tonic::Response;
 use api_gateway::product_storage::product_storage_client::ProductStorageClient;
 use api_gateway::summary::summary_client::SummaryClient;
 use api_gateway::recipes::recipes_client::RecipesClient;
+use api_gateway::consumptions::estimator_client::EstimatorClient;
+use api_gateway::consumptions::{PredictedDataList, PredictRequest};
+
 extern crate serde;
 extern crate serde_json;
 extern crate serde_derive;
@@ -64,7 +68,7 @@ fn str_response(str: String) -> HttpResponse {
         .body(str)
 }
 
-fn to_json_response<T>(obj: T) -> HttpResponse where T : Serialize{
+fn to_json_response<T>(obj: T) -> HttpResponse where T: Serialize {
     let string = serde_json::to_string_pretty(&obj).unwrap_or_default();
     println!("{}", &string);
     HttpResponse::Ok()
@@ -112,9 +116,7 @@ async fn greet(name: web::Path<String>) -> impl Responder {
 }
 
 
-/**
-SHOPPING LIST API
- */
+/** SHOPPING LIST API **/
 #[post("/addProduct/{name}/{quantity}/{unit}/{type}/{expiry}")]
 async fn add_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
@@ -155,7 +157,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.add_product_to_list(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -185,7 +187,7 @@ async fn remove_product(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.remove_product_from_list(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -217,7 +219,7 @@ async fn update_product(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.update_product_in_list(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -248,7 +250,7 @@ async fn add_to_cart(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.add_product_to_cart(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -278,7 +280,7 @@ async fn remove_from_cart(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.remove_product_from_cart(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse{ msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -300,7 +302,11 @@ async fn get_shopping_list() -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let product_list = client.get_list(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(ProductList{
+            id: None,
+            name: "Empty List".to_string(),
+            products: vec![]
+        }))
         .into_inner();
     to_json_response(product_list)
 }
@@ -320,15 +326,13 @@ async fn buy_products_in_cart() -> impl Responder {
     // Sending request and waiting for response
     let response = client.buy_all_products_in_cart(request)
         .await
-        .unwrap()
+        .unwrap_or(Response::new(OurResponse{ msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
 
 
-/**
-PRODUCT STORAGE APIS
- */
+/** PRODUCT STORAGE APIS **/
 #[post("/addProductToStorage/{name}/{quantity}/{unit}/{type}/{expiry}")]
 async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
@@ -372,7 +376,7 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.add_product_to_pantry(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse{ msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -397,7 +401,7 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.drop_product_from_pantry(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -447,7 +451,7 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.update_product_in_pantry(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -469,7 +473,7 @@ async fn get_pantry() -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let pantry = client.get_pantry(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(Pantry { products: vec![] }))
         .into_inner();
 
     to_json_response(pantry)
@@ -505,15 +509,13 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.use_product_in_pantry(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
 
     to_json_response(response)
 }
 
-/**
-SUMMARY API
- */
+/** SUMMARY API **/
 #[get("/getWeekSummary")]
 async fn get_week_summary() -> impl Responder {
     let configs = get_properties();
@@ -530,7 +532,14 @@ async fn get_week_summary() -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.week_summary(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(SummaryData {
+            reference: 0,
+            most_used_product: "".to_string(),
+            most_bought_product: "".to_string(),
+            times_used: 0,
+            times_bought: 0,
+            number_expired: 0,
+        }))
         .into_inner();
 
     to_json_response(response)
@@ -553,7 +562,14 @@ async fn get_month_summary() -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.month_summary(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(SummaryData {
+            reference: 0,
+            most_used_product: "".to_string(),
+            most_bought_product: "".to_string(),
+            times_used: 0,
+            times_bought: 0,
+            number_expired: 0,
+        }))
         .into_inner();
 
     to_json_response(response)
@@ -576,16 +592,20 @@ async fn get_total_summary() -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.total_summary(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(SummaryData {
+            reference: 0,
+            most_used_product: "".to_string(),
+            most_bought_product: "".to_string(),
+            times_used: 0,
+            times_bought: 0,
+            number_expired: 0,
+        }))
         .into_inner();
 
     to_json_response(response)
 }
 
-/**
-RECIPES APIS
- */
-
+/** RECIPES APIS **/
 #[get("/getRecipes")]
 async fn get_recipes_from_pantry() -> impl Responder {
     let configs = get_properties();
@@ -602,11 +622,41 @@ async fn get_recipes_from_pantry() -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.get_recipes_from_pantry(request)
         .await
-        .unwrap() // TODO: CAPIRE BENE COSA FARE QUI, POTREBBE APPANICARSI
+        .unwrap_or(Response::new(RecipeList { recipes: vec![] }))
         .into_inner();
 
     to_json_response(response)
 }
+
+/** CONSUMPTIONS APIS **/
+
+// // runs an online training method with the newly added or used product from product storage
+// // this should be called by product storage!!
+// async fn train_model() -> impl Responder {
+//
+// }
+#[get("/predictConsumptions")]
+async fn predict() -> impl Responder {
+    let configs = get_properties();
+    let channel = try_get_channel(&configs.consumptions_address, configs.consumptions_port).await;
+    println!("Channel to consumptions created");
+    // Create a gRPC client for ProductStorage
+    let mut client = EstimatorClient::new(channel);
+    println!("gRPC client created");
+
+    let request = tonic::Request::new(PredictRequest {});
+    println!("{:?}", request);
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = client.predict(request)
+        .await
+        .expect("QUI C'E UN PROBLEMA!!!")
+        .into_inner();
+
+    to_json_response(response)
+}
+
 
 async fn try_get_channel(address: &String, port: i32) -> Channel {
     let mut channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap())
@@ -650,6 +700,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_month_summary)
             .service(get_total_summary)
             .service(get_recipes_from_pantry)
+            .service(predict)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
         .await
