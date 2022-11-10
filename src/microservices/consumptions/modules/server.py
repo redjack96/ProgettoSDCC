@@ -4,6 +4,7 @@ import grpc
 import consumptions_pb2
 import consumptions_pb2_grpc
 import modules.properties as p
+import os
 
 
 class Estimator(consumptions_pb2_grpc.EstimatorServicer):
@@ -17,10 +18,11 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
 
 
 def serve():
+    print(os.listdir("."))  # returns list
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     consumptions_pb2_grpc.add_EstimatorServicer_to_server(Estimator(), server)
-
-    print(f"Python server started at port {p.Props.ConsumptionsPort}")
-    server.add_insecure_port(f"[::]:{p.Props.ConsumptionsPort}")
+    properties = p.Props()
+    print(f"Python server started at port {properties.ConsumptionsPort}")
+    server.add_insecure_port("[::]:" + str(properties.ConsumptionsPort))
     server.start()
     server.wait_for_termination()
