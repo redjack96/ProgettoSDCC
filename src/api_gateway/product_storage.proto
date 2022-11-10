@@ -4,7 +4,7 @@ import "shopping_list.proto";
 
 // package name for the buffer will be used later
 package product_storage;
-option go_package = "shopping_list.microservice/proto_generated";
+option go_package = ".;proto_generated";
 // service which can be executed
 service ProductStorage {
   rpc AddBoughtProductsToPantry(shopping_list.ProductList) returns (shopping_list.Response); // TODO: aggiungere nel messaggio di output il numero di prodotti aggiunti

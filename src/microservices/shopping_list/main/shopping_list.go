@@ -408,6 +408,7 @@ func queryDB(operation DBOperation) (interface{}, error) {
 // go run .\server.go
 // PREREQUISITE in this folder!!: protoc --proto_path ../../proto --go_out generated --go-grpc_out generated ../../proto/*.proto
 func main() {
+	fmt.Println("Let's go shopping!")
 	// Retrieve the properties from the file
 	properties, _ := props.GetProperties()
 	fmt.Printf("Properties %+v\n", properties)

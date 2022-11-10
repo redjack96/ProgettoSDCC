@@ -8,7 +8,7 @@ option go_package = ".;proto_generated";
 // Services that can be executed
 service Recipes {
   rpc GetRecipesFromIngredients(IngredientsList) returns (RecipeList); //TODO
-  rpc GetRecipesFromPantry(EmptyRequest) returns (RecipeList); // need to redirect request to storage to get pantry
+  rpc GetRecipesFromPantry(RecipesRequest) returns (RecipeList); // need to redirect request to storage to get pantry
 }
 
 message IngredientsList {
@@ -31,4 +31,4 @@ message Recipe {
   repeated Ingredient missedIngredients = 5; // ingredients missing to complete recipe
 }
 
-message EmptyRequest {}
+message RecipesRequest {}

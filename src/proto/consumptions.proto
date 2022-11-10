@@ -2,7 +2,7 @@
 syntax = "proto3";
 
 // package name for the buffer will be used later
-package estimator;
+package consumptions;
 import "product_storage.proto";
 option go_package = ".;proto_generated";
 
@@ -10,13 +10,13 @@ option go_package = ".;proto_generated";
 service Estimator {
   // This function should receive and return a stream of object
 //  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
-  rpc Predict(EmptyRequest) returns (PredictedDataList);
+  rpc Predict(PredictRequest) returns (PredictedDataList);
   rpc TrainModel(product_storage.Item) returns (TrainResponse);
 }
 
 // argument
 
-message EmptyRequest {}
+message PredictRequest {}
 
 message PredictedDataList {
   repeated PredictedData predicted = 1;

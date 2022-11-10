@@ -19,7 +19,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EstimatorClient interface {
 	// This function should receive and return a stream of object
-	Predict(ctx context.Context, opts ...grpc.CallOption) (Estimator_PredictClient, error)
+	//  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
+	Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*PredictedDataList, error)
+	TrainModel(ctx context.Context, in *Item, opts ...grpc.CallOption) (*TrainResponse, error)
 }
 
 type estimatorClient struct {
@@ -30,35 +32,22 @@ func NewEstimatorClient(cc grpc.ClientConnInterface) EstimatorClient {
 	return &estimatorClient{cc}
 }
 
-func (c *estimatorClient) Predict(ctx context.Context, opts ...grpc.CallOption) (Estimator_PredictClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Estimator_ServiceDesc.Streams[0], "/consumptions.Estimator/Predict", opts...)
+func (c *estimatorClient) Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*PredictedDataList, error) {
+	out := new(PredictedDataList)
+	err := c.cc.Invoke(ctx, "/consumptions.Estimator/Predict", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &estimatorPredictClient{stream}
-	return x, nil
+	return out, nil
 }
 
-type Estimator_PredictClient interface {
-	Send(*BoughtProduct) error
-	Recv() (*BuyMore, error)
-	grpc.ClientStream
-}
-
-type estimatorPredictClient struct {
-	grpc.ClientStream
-}
-
-func (x *estimatorPredictClient) Send(m *BoughtProduct) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *estimatorPredictClient) Recv() (*BuyMore, error) {
-	m := new(BuyMore)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
+func (c *estimatorClient) TrainModel(ctx context.Context, in *Item, opts ...grpc.CallOption) (*TrainResponse, error) {
+	out := new(TrainResponse)
+	err := c.cc.Invoke(ctx, "/consumptions.Estimator/TrainModel", in, out, opts...)
+	if err != nil {
 		return nil, err
 	}
-	return m, nil
+	return out, nil
 }
 
 // EstimatorServer is the server API for Estimator service.
@@ -66,7 +55,9 @@ func (x *estimatorPredictClient) Recv() (*BuyMore, error) {
 // for forward compatibility
 type EstimatorServer interface {
 	// This function should receive and return a stream of object
-	Predict(Estimator_PredictServer) error
+	//  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
+	Predict(context.Context, *PredictRequest) (*PredictedDataList, error)
+	TrainModel(context.Context, *Item) (*TrainResponse, error)
 	mustEmbedUnimplementedEstimatorServer()
 }
 
@@ -74,8 +65,11 @@ type EstimatorServer interface {
 type UnimplementedEstimatorServer struct {
 }
 
-func (UnimplementedEstimatorServer) Predict(Estimator_PredictServer) error {
-	return status.Errorf(codes.Unimplemented, "method Predict not implemented")
+func (UnimplementedEstimatorServer) Predict(context.Context, *PredictRequest) (*PredictedDataList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Predict not implemented")
+}
+func (UnimplementedEstimatorServer) TrainModel(context.Context, *Item) (*TrainResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TrainModel not implemented")
 }
 func (UnimplementedEstimatorServer) mustEmbedUnimplementedEstimatorServer() {}
 
@@ -90,30 +84,40 @@ func RegisterEstimatorServer(s grpc.ServiceRegistrar, srv EstimatorServer) {
 	s.RegisterService(&Estimator_ServiceDesc, srv)
 }
 
-func _Estimator_Predict_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(EstimatorServer).Predict(&estimatorPredictServer{stream})
-}
-
-type Estimator_PredictServer interface {
-	Send(*BuyMore) error
-	Recv() (*BoughtProduct, error)
-	grpc.ServerStream
-}
-
-type estimatorPredictServer struct {
-	grpc.ServerStream
-}
-
-func (x *estimatorPredictServer) Send(m *BuyMore) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *estimatorPredictServer) Recv() (*BoughtProduct, error) {
-	m := new(BoughtProduct)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _Estimator_Predict_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PredictRequest)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(EstimatorServer).Predict(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/consumptions.Estimator/Predict",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EstimatorServer).Predict(ctx, req.(*PredictRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Estimator_TrainModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Item)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EstimatorServer).TrainModel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/consumptions.Estimator/TrainModel",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EstimatorServer).TrainModel(ctx, req.(*Item))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // Estimator_ServiceDesc is the grpc.ServiceDesc for Estimator service.
@@ -122,14 +126,16 @@ func (x *estimatorPredictServer) Recv() (*BoughtProduct, error) {
 var Estimator_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "consumptions.Estimator",
 	HandlerType: (*EstimatorServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "Predict",
-			Handler:       _Estimator_Predict_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
+			MethodName: "Predict",
+			Handler:    _Estimator_Predict_Handler,
+		},
+		{
+			MethodName: "TrainModel",
+			Handler:    _Estimator_TrainModel_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "consumptions.proto",
 }

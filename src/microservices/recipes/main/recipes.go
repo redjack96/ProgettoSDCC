@@ -54,7 +54,7 @@ func (s *serverRecipes) GetRecipesFromIngredients(ctx context.Context, ingredien
 	return x, nil
 }
 
-func (s *serverRecipes) GetRecipesFromPantry(_ context.Context, _ *pb.EmptyRequest) (*pb.RecipeList, error) {
+func (s *serverRecipes) GetRecipesFromPantry(_ context.Context, _ *pb.RecipesRequest) (*pb.RecipeList, error) {
 	// Call GetPantry of StorageService to retrieve available products
 	conn, err := grpc.Dial("ProductStorageService:8002", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

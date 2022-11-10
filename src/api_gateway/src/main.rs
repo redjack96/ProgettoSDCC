@@ -7,26 +7,19 @@ use tonic::transport::{Channel, Uri};
 // sintassi per gli use grpc
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
-
 // nome_progetto::package_file_proto::NomeMessage
-use api_gateway::shopping_list::{ItemName, PantryMessage, SummaryRequest, Product, ProductKey};
-use api_gateway::shopping_list::EmptyRequest;
-use api_gateway::shopping_list::ProductUpdate;
-use api_gateway::shopping_list::ProductType;
-use api_gateway::shopping_list::Unit;
-use api_gateway::shopping_list::GetListRequest;
-use api_gateway::shopping_list::BuyRequest;
-use api_gateway::shopping_list::Item;
-use api_gateway::shopping_list::UsedItem;
+use api_gateway::shopping_list::{Product, ProductKey,ProductUpdate,ProductType,Unit,GetListRequest,BuyRequest,Timestamp};
+use api_gateway::product_storage::{ItemName, PantryMessage};
+use api_gateway::summary::SummaryRequest;
+use api_gateway::recipes::RecipesRequest;
+use api_gateway::product_storage::{Item, UsedItem};
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 // use actix_web::web::Query;
 use serde::Serialize;
-use api_gateway::shopping_list::Timestamp;
-use api_gateway::shopping_list::product_storage_client::ProductStorageClient;
-use api_gateway::shopping_list::summary_client::SummaryClient;
-use api_gateway::shopping_list::recipes_client::RecipesClient;
-
+use api_gateway::product_storage::product_storage_client::ProductStorageClient;
+use api_gateway::summary::summary_client::SummaryClient;
+use api_gateway::recipes::recipes_client::RecipesClient;
 extern crate serde;
 extern crate serde_json;
 extern crate serde_derive;
@@ -602,7 +595,7 @@ async fn get_recipes_from_pantry() -> impl Responder {
     let mut client = RecipesClient::new(channel);
     println!("gRPC client created");
 
-    let request = tonic::Request::new(EmptyRequest {});
+    let request = tonic::Request::new(RecipesRequest {});
     println!("{:?}", request);
     println!("Request created");
 

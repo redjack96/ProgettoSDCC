@@ -22,6 +22,7 @@ COPY proto/recipes.proto ./recipes.proto
 COPY proto/consumptions.proto ./consumptions.proto
 COPY proto/notifications.proto ./notifications.proto
 COPY proto/summary.proto ./summary.proto
+# ho già provato a mettere dopo i proto... niente vanno messi qua
 
 # this build step will cache your dependencies
 RUN cargo build --release

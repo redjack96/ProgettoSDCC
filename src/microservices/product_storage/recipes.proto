@@ -3,4 +3,32 @@ syntax = "proto3";
 
 // package name for the buffer will be used later
 package recipes;
-option go_package = "shopping_list.microservice/proto_generated";
+option go_package = ".;proto_generated";
+
+// Services that can be executed
+service Recipes {
+  rpc GetRecipesFromIngredients(IngredientsList) returns (RecipeList); //TODO
+  rpc GetRecipesFromPantry(RecipesRequest) returns (RecipeList); // need to redirect request to storage to get pantry
+}
+
+message IngredientsList {
+  repeated Ingredient ingredientsList = 1;
+}
+
+message RecipeList {
+  repeated Recipe recipes = 1;
+}
+
+message Ingredient {
+  string name = 1;
+}
+
+message Recipe {
+  string id = 1;
+  string title = 2;
+  string url = 3;
+  repeated Ingredient usedIngredients = 4; // ingredients in pantry that can be used
+  repeated Ingredient missedIngredients = 5; // ingredients missing to complete recipe
+}
+
+message RecipesRequest {}

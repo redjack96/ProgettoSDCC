@@ -7,14 +7,22 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
 RUN mkdir "generated"
 
 # WATCH OUT: the context is the src/ folder !!!
-COPY microservices/recipes .
 COPY proto ./proto
+COPY microservices/recipes/go.mod go.mod
+COPY microservices/recipes/go.sum go.sum
 
 # Get dependencies, will also be cached if you don't change mod/sum
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 RUN protoc --proto_path proto --go_out generated --go-grpc_out generated proto/*.proto
-RUN go get -d ./...
+#RUN go get -d ./...
+RUN go mod tidy
+RUN go get github.com/go-redis/redis/v8
+RUN go get github.com/gocql/gocql
+
 RUN export PATH="$PATH:$(go env GOPATH)/bin"
+
+COPY microservices/recipes/main ./main
+# COPY microservices/recipes/generated ./generated
 # TODO: adesso compila ed esegue: finché programmiamo va bene, ma poi quando si rilascia è troppo pesante. Al rilascio, usare una multibuild (e.g. un altro FROM) per evitare di compilare ed eseguire ogni volta
 CMD ["go", "run", "main/recipes.go"]
