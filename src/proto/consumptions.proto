@@ -2,26 +2,50 @@
 syntax = "proto3";
 
 // package name for the buffer will be used later
-package consumptions;
+package estimator;
+import "product_storage.proto";
 option go_package = ".;proto_generated";
+
 // service which can be executed
 service Estimator {
   // This function should receive and return a stream of object
-  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
+//  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
+  rpc Predict(EmptyRequest) returns (PredictedDataList);
+  rpc TrainModel(product_storage.Item) returns (TrainResponse);
 }
 
 // argument
-message BoughtProduct {
-  int64 itemId = 1;
-  int32 quantity = 2;
-  string type = 3;
-  int32 buyDate = 4; // Date when this item was last bought
-  int32 useDate = 5; // Date of last use of the product
-  int32 firstExpiration = 6; // First expiration of product
-  bool usedInRecipy = 7; // true if used in a recipy (MS3)
+
+message EmptyRequest {}
+
+message PredictedDataList {
+  repeated PredictedData predicted = 1;
 }
 
-// return value
-message BuyMore {
-  bool shouldBuy = 1; //true if should be added to shopping list, now
+message PredictedData {
+  string week = 1;
+  string product = 2;
+  int32 n_bought = 3; // Grams
+  int32 n_expired = 4; // Grams
+  int32 n_used = 5; // Grams
+  int32 n_remaining = 6; // Grams
+  float consumption = 7;
 }
+
+message TrainResponse {
+  string msg = 1;
+}
+//message BoughtProduct {
+//  int64 itemId = 1;
+//  int32 quantity = 2;
+//  string type = 3;
+//  int32 buyDate = 4; // Date when this item was last bought
+//  int32 useDate = 5; // Date of last use of the product
+//  int32 firstExpiration = 6; // First expiration of product
+//  bool usedInRecipy = 7; // true if used in a recipy (MS3)
+//}
+//
+//// return value
+//message BuyMore {
+//  bool shouldBuy = 1; //true if should be added to shopping list, now
+//}

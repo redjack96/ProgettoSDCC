@@ -31,6 +31,8 @@ services:
     # only for development
 #    volumes:
 #      - "./src/frontend:/app"
+
+
   # --- API-GATEWAY
   api_gateway:
     image: "api_gateway"
@@ -53,7 +55,6 @@ services:
   #      - summary
 
   # --- APP-MICROSERVICES
-
   shopping_list:
     image: "shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
@@ -121,13 +122,14 @@ services:
 #      vpcbr:
 #        ipv4_address: 192.168.119.1
 
-    #  consumptions:
-    #    image: consumptions
-    #    container_name: "ConsumptionService"
-    #    build: "src/microservices/consumptions"
-    #    volumes:
-    #      - "./config.properties:/usr/src/consumptions"
-    #      - "./src/proto:/usr/src/consumptions/proto"
+  consumptions:
+    image: consumptions
+    container_name: "ConsumptionService"
+    build:
+      dockerfile: "../docker/Dockerfile.consumptions"
+      context: "src"
+    volumes:
+      - "./config.properties:/usr/src/consumptions/config.properties"
 
   # KAFKA + ZOOKEEPER ---------------------------------------------------------------
   zookeeper:
@@ -161,7 +163,7 @@ services:
     depends_on:
       - zookeeper
   
-  # database mongodb.
+  # DATABASES ------------------------------------------------------------------------
   mongo:
     image: mongo
     container_name: mongo
