@@ -20,7 +20,7 @@ use api_gateway::shopping_list::Item;
 use api_gateway::shopping_list::UsedItem;
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
-use actix_web::web::Query;
+// use actix_web::web::Query;
 use serde::Serialize;
 use api_gateway::shopping_list::Timestamp;
 use api_gateway::shopping_list::product_storage_client::ProductStorageClient;
@@ -79,15 +79,15 @@ fn to_json_response<T>(obj: T) -> HttpResponse where T : Serialize{
         .body(string)
 }
 
-#[derive(Deserialize)]
-struct ProductUpdateInfo {
-    product_name: String,
-    r#type: String,
-    unit: String,
-    quantity: Option<i32>,
-    added_to_cart: Option<bool>,
-    expiration: Option<Timestamp>,
-}
+// #[derive(Deserialize)]
+// struct ProductUpdateInfo {
+//     product_name: String,
+//     r#type: String,
+//     unit: String,
+//     quantity: Option<i32>,
+//     added_to_cart: Option<bool>,
+//     expiration: Option<Timestamp>,
+// }
 
 // TODO: rimuovere queste API di test
 #[get("/")]
@@ -198,9 +198,9 @@ async fn remove_product(req: HttpRequest) -> impl Responder {
 }
 
 // TODO FIXME: QUESTA API E' BUGGATA. CAMBIA TUTTO IN STRINGA
-#[post("/updateProduct")]
-async fn update_product(req: Query<ProductUpdateInfo>) -> impl Responder {
-    let product_update_info = req.into_inner(); // TODO: may panic!
+#[post("/updateProduct/{product_id}/{field}/{value}")]
+async fn update_product(req: HttpRequest) -> impl Responder {
+    // let product_update_info = req.into_inner(); // TODO: may panic!
     let configs = get_properties();
     println!("Product update requested.");
     // Crea un canale per la connessione al server
