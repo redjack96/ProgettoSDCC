@@ -6,14 +6,16 @@ import consumptions_pb2_grpc
 import modules.properties as p
 import os
 
+import product_storage_pb2
+
 
 class Estimator(consumptions_pb2_grpc.EstimatorServicer):
-    def Predict(self, request, context):
-        print("Received request with param: %s" % request.name)
-        return consumptions_pb2.PredictedDataList([])
+    def Predict(self, request: consumptions_pb2.PredictRequest, context):
+        print("Received predict request")
+        return consumptions_pb2.PredictedDataList(predicted=[])
 
-    def TrainModel(self, request, context):
-        print("Received request with param: %s" % request.name)
+    def TrainModel(self, item: product_storage_pb2.Item, context):
+        print("Received request with param: %s" % item.itemName)
         return consumptions_pb2.TrainResponse(msg="model trained")
 
 
