@@ -1,8 +1,9 @@
-import grpc
-import consumptions_pb2_grpc
-import consumptions_pb2
 from concurrent import futures
-import logging
+
+import grpc
+import consumptions_pb2
+import consumptions_pb2_grpc
+import modules.properties as p
 
 
 class Estimator(consumptions_pb2_grpc.EstimatorServicer):
@@ -18,7 +19,8 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     consumptions_pb2_grpc.add_EstimatorServicer_to_server(Estimator(), server)
-    print("Python server started at port 8004...")
-    server.add_insecure_port('[::]:8004')
+
+    print(f"Python server started at port {p.Props.ConsumptionsPort}")
+    server.add_insecure_port(f"[::]:{p.Props.ConsumptionsPort}")
     server.start()
     server.wait_for_termination()

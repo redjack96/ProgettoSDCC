@@ -57,6 +57,7 @@ type serverShoppingList struct {
 // AddProductToList is the function to be called remotely. It is a method of the server struct (class)
 func (s *serverShoppingList) AddProductToList(ctx context.Context, product *pb.Product) (*pb.Response, error) {
 	log.Printf("Received: %+v", product)
+	// Due prodotti uguali saranno aggiunti alla lista, per ora...
 	operation := new(DBOperation)
 	operation.opType = Insert
 	operation.product = product

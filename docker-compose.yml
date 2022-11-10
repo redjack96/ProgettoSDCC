@@ -129,7 +129,7 @@ services:
       dockerfile: "../docker/Dockerfile.consumptions"
       context: "src"
     volumes:
-      - "./config.properties:/usr/src/consumptions/config.properties"
+      - "./config.properties:/usr/src/consumptions/modules/config.properties"
 
   # KAFKA + ZOOKEEPER ---------------------------------------------------------------
   zookeeper:

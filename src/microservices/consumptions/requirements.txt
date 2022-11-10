@@ -3,3 +3,5 @@ numpy~=1.23.4
 pandas~=1.5.1
 grpcio-tools
 grpcio
+jproperties
+cassandra-driver
