@@ -7,8 +7,7 @@ COPY microservices/consumptions/requirements.txt requirements.txt
 COPY proto ./proto
 COPY microservices/consumptions .
 
-RUN apt-get update && apt-get install -y python3.9
 RUN pip3 install -r requirements.txt
-RUN python3 -m grpc_tools.protoc -I proto --python_out=generated --pyi_out=generated --grpc_python_out=generated proto/*.proto
+RUN python3 -m grpc_tools.protoc -I proto --python_out=. --pyi_out=. --grpc_python_out=. proto/*.proto
 
-CMD python3 ./__main__.py
+CMD python3 -u ./__main__.py
