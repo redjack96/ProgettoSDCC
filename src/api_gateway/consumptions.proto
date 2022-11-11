@@ -25,11 +25,7 @@ message PredictedDataList {
 message PredictedData {
   string week = 1;
   string product = 2;
-  int32 n_bought = 3; // Grams
-  int32 n_expired = 4; // Grams
-  int32 n_used = 5; // Grams
-  int32 n_remaining = 6; // Grams
-  float consumption = 7;
+  float consumption = 3;
 }
 
 message TrainResponse {
