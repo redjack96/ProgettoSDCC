@@ -4,6 +4,7 @@ FROM python:3.9
 WORKDIR /usr/src/consumptions
 
 COPY microservices/consumptions/requirements.txt requirements.txt
+COPY microservices/consumptions/consumi-storage.csv consumi-storage.csv
 
 RUN pip3 install -r requirements.txt
 COPY proto ./proto
