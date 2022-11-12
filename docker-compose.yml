@@ -125,11 +125,16 @@ services:
   consumptions:
     image: consumptions
     container_name: "ConsumptionService"
+    restart: always
     build:
       dockerfile: "../docker/Dockerfile.consumptions"
       context: "src"
     volumes:
       - "./config.properties:/usr/src/consumptions/config.properties"
+    depends_on:
+      - cassandra
+    networks:
+      cassandra-network:
 
   # KAFKA + ZOOKEEPER ---------------------------------------------------------------
   zookeeper:
@@ -207,21 +212,23 @@ services:
     ports:
       - '6379:6379'
 
-#  cassandra:
-#    build:
-#      dockerfile: "./docker/Dockerfile.cassandra"
-#      context: "."
-#    container_name: cassandra
-#    ports:
-#      - '7000:7000'
-#      - '9042:9042'
-#    volumes:
-#      - 'cassandra_data:/appdata'
-#    environment:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - '9042:9042'
+    volumes:
+      - 'cassandra_data:/appdata'
+    environment:
 #      - CASSANDRA_SEEDS=cassandra
 #      - CASSANDRA_PASSWORD_SEEDER=yes
 #      - CASSANDRA_PASSWORD=cassandra
-#    networks:
+      - CASSANDRA_START_RPC=true
+      - CASSANDRA_CLUSTER_NAME=CassandraCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=datacenter
+    networks:
+      cassandra-network:
 #      vpcbr:
 #        ipv4_address: 192.168.119.2
 
@@ -232,6 +239,7 @@ volumes:
 
 
 networks:
+  cassandra-network:
   vpcbr:
     driver: bridge
     ipam:
