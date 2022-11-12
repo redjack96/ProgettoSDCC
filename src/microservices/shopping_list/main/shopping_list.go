@@ -457,8 +457,8 @@ func queryDB(operation DBOperation) (interface{}, error) {
 	case Buy:
 		// Buy product (delete all in cart)
 		fmt.Println("Deleting all products in cart...")
-		doc := bson.D{{"addedToCart", false}}
-		result, err := prodCollection.DeleteMany(context.TODO(), doc)
+		filter := bson.D{{"addedToCart", true}} // removes all products added to cart
+		result, err := prodCollection.DeleteMany(context.TODO(), filter)
 		if err == nil {
 			res = result.DeletedCount
 		}

@@ -22,15 +22,15 @@ services:
 #      - api_gateway
 #      - shopping_list
 
-#  frontend:
-#    image: "web_ui"
-#    container_name: "SDCCShoppingList"
-#    build: "src/frontend"
-#    ports:
-#      - "3000:3000"
-    # only for development
-#    volumes:
-#      - "./src/frontend:/app"
+  frontend:
+    image: "web_ui"
+    container_name: "SDCCShoppingList"
+    build: "src/frontend"
+    ports:
+      - "3000:3000"
+     # only for development
+    volumes:
+      - "./src/frontend:/app"
 
 
   # --- API-GATEWAY
