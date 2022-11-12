@@ -1,14 +1,10 @@
 package com.sdcc.shoppinglist.server;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import com.sdcc.shoppinglist.utils.LogEntry;
 import com.sdcc.shoppinglist.utils.TimeWindow;
 import consumptions.Consumptions;
 import consumptions.EstimatorGrpc;
 import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.ZoneId;
@@ -51,94 +47,7 @@ public class ConsumptionsChronJob implements Runnable {
                 TimeUnit.SECONDS);
     }
 
-    public void executionFuture(){
-        LOGGER.info("Chron-job: Sending consumption week data!");
-        // Get the data
-        List<LogEntry> logEntriesFromInflux = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
-        // Create the channel
-        var channel = ManagedChannelBuilder.forTarget("consumptions:8004")// FIXME: hardcoded
-                .usePlaintext()
-                .build();
-        // Create the client
-        var client = EstimatorGrpc.newFutureStub(channel);
-
-        // convert LogEntry to Observations for consumptions microservice
-
-        // Build the request parameter
-        var trainRequest = Consumptions.TrainRequest.newBuilder()
-                .addAllObservations(convertLogsToObservations(logEntriesFromInflux))
-                .setCurrentDate(new Date().getTime())
-                .build();
-        LOGGER.info("Sending training request to consumptions service!");
-        // Sends the request
-        try {
-            var trainResponseFuture = client.trainModel(trainRequest);
-            LOGGER.info(trainResponseFuture.toString());
-            Futures.addCallback(trainResponseFuture, new FutureCallback<>() {
-                @Override
-                public void onSuccess(Consumptions.TrainResponse trainResponse) {
-                    LOGGER.info(trainResponseFuture.toString());
-                    LOGGER.info(trainResponse.getMsg());
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    LOGGER.info(trainResponseFuture.toString());
-                    LOGGER.severe(throwable.getMessage());
-                }
-            }, Executors.newScheduledThreadPool(1));
-            // Asynchronously waits the response
-            channel.shutdownNow().awaitTermination(15, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void executionAsync(){
-        LOGGER.info("Chron-job: Sending consumption week data!");
-        // Get the data
-        List<LogEntry> logEntriesFromInflux = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
-        // Create the channel
-        var channel = ManagedChannelBuilder.forTarget("consumptions:8004")// FIXME: hardcoded
-                .usePlaintext()
-                .build();
-        // Create the client
-        var client = EstimatorGrpc.newStub(channel);
-
-        // convert LogEntry to Observations for consumptions microservice
-
-        // Build the request parameter
-        var trainRequest = Consumptions.TrainRequest.newBuilder()
-                .addAllObservations(convertLogsToObservations(logEntriesFromInflux))
-                .setCurrentDate(new Date().getTime())
-                .build();
-        LOGGER.info("Sending training request to consumptions service!");
-        // Sends the request
-        try {
-            client.trainModel(trainRequest, new StreamObserver<>() {
-                @Override
-                public void onNext(Consumptions.TrainResponse trainResponse) {
-                    LOGGER.info("Received something");
-                }
-
-                @Override
-                public void onError(Throwable throwable) {
-                    LOGGER.severe("ERRORE: " + throwable);
-                }
-
-                @Override
-                public void onCompleted() {
-                    LOGGER.info("FINISHED consumptions");
-                }
-            });
-            // Asynchronously waits the response
-            channel.shutdownNow().awaitTermination(15, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void blockingExecution(){
+    public void blockingExecution() {
         LOGGER.info("Chron-job: Sending consumption week data!");
         // Get the data
         List<LogEntry> logEntriesFromInflux = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
@@ -170,8 +79,6 @@ public class ConsumptionsChronJob implements Runnable {
 
     @Override
     public void run() {
-        // executionFuture();
-//        executionAsync();
         blockingExecution();
     }
 
