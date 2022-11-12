@@ -10,6 +10,7 @@ fn main() {
         .build_server(true)
         .type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]")
         .compile_well_known_types(true)
+        .protoc_arg("--experimental_allow_proto3_optional")
         .compile(&[
             proto_file_1,
             proto_file_2,

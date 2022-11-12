@@ -3,8 +3,7 @@ import React from 'react'
 import './App.css';
 import Navbar from './Navigation/Navbar';
 import images from './Images/images.js';
-import BootstrapSwitchButton from "bootstrap-switch-button-react";
-import Checkbox from "./Widgets/Checkbox";
+// import Checkbox from "./Widgets/Checkbox";
 
 enum Unit {
     Bottle,

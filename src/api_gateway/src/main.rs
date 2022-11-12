@@ -15,14 +15,14 @@ use api_gateway::recipes::{RecipeList, RecipesRequest};
 use api_gateway::product_storage::{Item, UsedItem};
 use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
-// use actix_web::web::Query;
-use serde::Serialize;
+use actix_web::web::Query;
+use serde::{Serialize, Deserialize};
 use tonic::Response;
 use api_gateway::product_storage::product_storage_client::ProductStorageClient;
 use api_gateway::summary::summary_client::SummaryClient;
 use api_gateway::recipes::recipes_client::RecipesClient;
 use api_gateway::consumptions::estimator_client::EstimatorClient;
-use api_gateway::consumptions::{PredictedDataList, PredictRequest};
+use api_gateway::consumptions::PredictRequest;
 
 extern crate serde;
 extern crate serde_json;
@@ -76,15 +76,26 @@ fn to_json_response<T>(obj: T) -> HttpResponse where T: Serialize {
         .body(string)
 }
 
-// #[derive(Deserialize)]
-// struct ProductUpdateInfo {
-//     product_name: String,
-//     r#type: String,
-//     unit: String,
-//     quantity: Option<i32>,
-//     added_to_cart: Option<bool>,
-//     expiration: Option<Timestamp>,
-// }
+#[derive(Deserialize, Default, Debug)]
+struct ProductUpdateInfo {
+    product_name: String,
+    r#type: String,
+    unit: String,
+    quantity: Option<i32>,
+    expiration: Option<String>,
+}
+
+impl ProductUpdateInfo {
+    fn to_product_update(&self) -> ProductUpdate{
+        ProductUpdate {
+            name: self.product_name.clone(),
+            r#type: type_from_str(&self.r#type).into(),
+            unit: unit_from_str(&self.unit).into(),
+            expiration: self.expiration.clone(),
+            quantity: self.quantity,
+        }
+    }
+}
 
 // TODO: rimuovere queste API di test
 #[get("/")]
@@ -192,12 +203,10 @@ async fn remove_product(req: HttpRequest) -> impl Responder {
     to_json_response(response)
 }
 
-// TODO FIXME: QUESTA API E' BUGGATA. CAMBIA TUTTO IN STRINGA
-#[post("/updateProduct/{product_id}/{field}/{value}")]
-async fn update_product(req: HttpRequest) -> impl Responder {
-    // let product_update_info = req.into_inner(); // TODO: may panic!
+#[post("/updateProduct")]
+async fn update_product(query: Query<ProductUpdateInfo>) -> impl Responder {
     let configs = get_properties();
-    println!("Product update requested.");
+    println!("Product update requested: {:?}", query);
     // Crea un canale per la connessione al server
     let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
     println!("Channel created");
@@ -205,16 +214,7 @@ async fn update_product(req: HttpRequest) -> impl Responder {
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
     // Creo una Request del crate tonic
-    let id = req.match_info().get("product_id").unwrap().to_string();
-    let field = req.match_info().get("field").unwrap().to_string();
-    let value = req.match_info().get("value").unwrap().to_string();
-    let request = tonic::Request::new(
-        ProductUpdate {
-            product_id: id,
-            field,
-            value,
-        },
-    );
+    let request = tonic::Request::new(query.to_product_update());
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
     let response = client.update_product_in_list(request)
@@ -503,7 +503,6 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
         unit,
         item_type: ptype,
     });
-    println!("{:?}", request);
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
@@ -526,7 +525,6 @@ async fn get_week_summary() -> impl Responder {
     println!("gRPC client created");
 
     let request = tonic::Request::new(SummaryRequest {});
-    println!("{:?}", request);
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
@@ -556,7 +554,6 @@ async fn get_month_summary() -> impl Responder {
     println!("gRPC client created");
 
     let request = tonic::Request::new(SummaryRequest {});
-    println!("{:?}", request);
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
@@ -586,7 +583,6 @@ async fn get_total_summary() -> impl Responder {
     println!("gRPC client created");
 
     let request = tonic::Request::new(SummaryRequest {});
-    println!("{:?}", request);
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
@@ -616,7 +612,6 @@ async fn get_recipes_from_pantry() -> impl Responder {
     println!("gRPC client created");
 
     let request = tonic::Request::new(RecipesRequest {});
-    println!("{:?}", request);
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
@@ -645,7 +640,6 @@ async fn predict() -> impl Responder {
     println!("gRPC client created");
 
     let request = tonic::Request::new(PredictRequest {});
-    println!("{:?}", request);
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:

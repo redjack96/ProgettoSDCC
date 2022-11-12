@@ -17,7 +17,7 @@ use tonic::{transport::Server, Request, Status, Response};
 // HELP: nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use product_storage::product_storage::product_storage_server::{ProductStorage, ProductStorageServer};
 use product_storage::product_storage::{ItemName, PantryMessage, UsedItem, Item, Pantry};
-use product_storage::shopping_list::{ProductList,  ListId, Product, Timestamp};
+use product_storage::shopping_list::{ProductList, Product, Timestamp};
 use crate::properties::get_properties;
 use rskafka::{
     client::{

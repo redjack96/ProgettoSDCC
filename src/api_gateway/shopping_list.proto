@@ -41,9 +41,11 @@ message ProductKey {
 }
 
 message ProductUpdate {
-  string productId = 1;
-  string field = 2; // for update
-  string value = 3; // for update
+  string name = 1;
+  ProductType type = 2;
+  Unit unit = 3;
+  optional string expiration = 4;
+  optional int32 quantity = 5;
 }
 
 message ProductRemove {

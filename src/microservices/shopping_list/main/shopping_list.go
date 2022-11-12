@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -35,7 +34,7 @@ type DBOperation struct {
 	opType        OpType
 	product       *pb.Product
 	productRemove *pb.ProductRemove
-	productUpdate *pb.ProductUpdate
+	productUpdate *pb.ProductUpdate // TODO: attenzione qui ci sono campi opzionali!!
 	productKey    *pb.ProductKey
 }
 
@@ -91,7 +90,7 @@ func (s *serverShoppingList) RemoveProductFromList(_ context.Context, productKey
 }
 
 func (s *serverShoppingList) UpdateProductInList(ctx context.Context, productUpdate *pb.ProductUpdate) (*pb.Response, error) {
-	log.Printf("Updating field %s of product with id %s.", productUpdate.Field, productUpdate.ProductId)
+	log.Printf("Updating product %v", productUpdate)
 	operation := new(DBOperation)
 	operation.opType = Update
 	operation.productUpdate = productUpdate
@@ -347,23 +346,49 @@ func queryDB(operation DBOperation) (interface{}, error) {
 		}
 		return res, err
 	case Update:
-		idString := operation.productUpdate.ProductId
-		field := operation.productUpdate.Field
-		value := operation.productUpdate.Value
-		id, _ := primitive.ObjectIDFromHex(idString)
-		filter := bson.D{{"_id", id}}
+		prod := operation.productUpdate
+		prodType := prod.Type
+		prodUnit := prod.Unit
+		prodQuantity := prod.Quantity
+		prodName := prod.Name
+		stringExpiry := prod.Expiration
+
+		fmt.Println("Updating quantity and expiration of already added product")
+		filter := bson.M{"$and": []interface{}{
+			bson.M{"productName": prodName},
+			bson.M{"type": prodType},
+			bson.M{"unit": prodUnit},
+		}}
 		var update bson.D
-		if field == "addedToCart" {
-			valueBool, _ := strconv.ParseBool(value)
-			update = bson.D{{"$set", bson.D{{field, valueBool}}}}
+		var timeExpiry time.Time
+		var errata error
+		layout := "2006-01-02 15:04:05 -0700"
+		if stringExpiry != nil {
+			timeExpiry, errata = time.Parse(layout, *stringExpiry+" 00:00:00 +0100")
+			if errata != nil {
+				fmt.Println(errata)
+				return nil, errata
+			}
+		}
+
+		if stringExpiry != nil && prodQuantity != nil {
+			update = bson.D{
+				{"$set", bson.D{{"expiration", timeExpiry}}},
+				{"$set", bson.D{{"quantity", prodQuantity}}},
+			}
+		} else if stringExpiry != nil {
+			update = bson.D{
+				{"$set", bson.D{{"expiration", timeExpiry}}},
+			}
+		} else if prodQuantity != nil {
+			update = bson.D{
+				{"$set", bson.D{{"quantity", prodQuantity}}},
+			}
 		} else {
-			update = bson.D{{"$set", bson.D{{field, value}}}}
+			fmt.Println("The product has not been updated!")
+			return nil, nil
 		}
-		result, err := prodCollection.UpdateOne(context.TODO(), filter, update)
-		if err != nil {
-			res = result.ModifiedCount
-		}
-		return res, err
+		return prodCollection.UpdateOne(context.TODO(), filter, update)
 	case Select:
 		// apply a filter
 		// filter := bson.D{{"inCart", bson.D{{"$eq", "true"}}}}
@@ -445,7 +470,7 @@ func queryDB(operation DBOperation) (interface{}, error) {
 
 // Run in the server/ directory
 // go run .\server.go
-// PREREQUISITE in this folder!!: protoc --proto_path ../../proto --go_out generated --go-grpc_out generated ../../proto/*.proto
+// PREREQUISITE in this folder!!: protoc --proto_path ../../proto --go_out generated --go-grpc_out generated ../../proto/*.proto --experimental_allow_proto3_optional
 func main() {
 	fmt.Println("Let's go shopping!")
 	// Retrieve the properties from the file
