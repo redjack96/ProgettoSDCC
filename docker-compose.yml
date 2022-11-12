@@ -46,11 +46,11 @@ services:
       - "8007"
     ports:
       - "8007:8007"
-    depends_on:
-      - shopping_list
-      - product_storage
-      - consumptions
-      - summary
+#    depends_on:
+#      - shopping_list
+#      - product_storage
+#      - consumptions
+#      - summary
        #      - notifications
         #      - recipes
 
@@ -183,7 +183,7 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
     depends_on:
-      - mongo-express
+      - mongo
 
   influxdb:
     image: influxdb:latest
