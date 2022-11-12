@@ -5,7 +5,6 @@ import grpc
 import consumptions_pb2
 import consumptions_pb2_grpc
 import properties as p
-import os
 import product_storage_pb2
 
 

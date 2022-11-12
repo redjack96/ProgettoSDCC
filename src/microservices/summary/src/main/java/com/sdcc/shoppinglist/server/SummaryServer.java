@@ -82,11 +82,12 @@ public class SummaryServer {
                 "password",
                 "token");
         System.out.println("Connected to influxDB");
-        // final KafkaSummaryConsumer kst = new KafkaSummaryConsumer(influx);
-        // System.out.println("Starting kafka consumer thread");
-        // new Thread(kst).start();
+        final KafkaSummaryConsumer kst = new KafkaSummaryConsumer(influx);
+        System.out.println("Starting kafka consumer thread");
+        new Thread(kst).start();
         System.out.println("Scheduling chron job");
-        new Thread(new ConsumptionsChronJob(influx, true)).start();
+        ConsumptionsChronJob consumptionsChronJob = new ConsumptionsChronJob(influx, true);
+        consumptionsChronJob.scheduleWeekly();
         // new ConsumptionsChronJob(influx, true).execution();
         server.blockUntilShutdown();
     }
