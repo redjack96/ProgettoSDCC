@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13shopping_list.proto\x12\rshopping_list\"K\n\nProductKey\x12\x13\n\x0bproductName\x18\x01 \x01(\t\x12\x13\n\x0bproductUnit\x18\x02 \x01(\x05\x12\x13\n\x0bproductType\x18\x03 \x01(\x05\"@\n\rProductUpdate\x12\x11\n\tproductId\x18\x01 \x01(\t\x12\r\n\x05\x66ield\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\t\"$\n\rProductRemove\x12\x13\n\x0bproductName\x18\x01 \x01(\t\"+\n\tTimestamp\x12\x0f\n\x07seconds\x18\x01 \x01(\x03\x12\r\n\x05nanos\x18\x02 \x01(\x05\"\xd4\x01\n\x07Product\x12\x13\n\x0bproductName\x18\x01 \x01(\t\x12(\n\x04type\x18\x02 \x01(\x0e\x32\x1a.shopping_list.ProductType\x12!\n\x04unit\x18\x03 \x01(\x0e\x32\x13.shopping_list.Unit\x12\x10\n\x08quantity\x18\x04 \x01(\x05\x12\x13\n\x0b\x61\x64\x64\x65\x64ToCart\x18\x05 \x01(\x08\x12\x12\n\ncheckedOut\x18\x06 \x01(\x08\x12,\n\nexpiration\x18\x07 \x01(\x0b\x32\x18.shopping_list.Timestamp\"\x18\n\x06ListId\x12\x0e\n\x06listId\x18\x01 \x01(\x03\"h\n\x0bProductList\x12!\n\x02id\x18\x01 \x01(\x0b\x32\x15.shopping_list.ListId\x12\x0c\n\x04name\x18\x02 \x01(\t\x12(\n\x08products\x18\x03 \x03(\x0b\x32\x16.shopping_list.Product\"\x10\n\x0eGetListRequest\"\x0c\n\nBuyRequest\"\x17\n\x08Response\x12\x0b\n\x03msg\x18\x01 \x01(\t*Q\n\x0bProductType\x12\x08\n\x04Meat\x10\x00\x12\x08\n\x04\x46ish\x10\x01\x12\t\n\x05\x46ruit\x10\x02\x12\r\n\tVegetable\x10\x03\x12\t\n\x05\x44rink\x10\x04\x12\t\n\x05Other\x10\x05*1\n\x04Unit\x12\n\n\x06\x42ottle\x10\x00\x12\n\n\x06Packet\x10\x01\x12\x06\n\x02Kg\x10\x02\x12\t\n\x05Grams\x10\x03\x32\x95\x04\n\x0cShoppingList\x12\x43\n\x10\x41\x64\x64ProductToList\x12\x16.shopping_list.Product\x1a\x17.shopping_list.Response\x12K\n\x15RemoveProductFromList\x12\x19.shopping_list.ProductKey\x1a\x17.shopping_list.Response\x12L\n\x13UpdateProductInList\x12\x1c.shopping_list.ProductUpdate\x1a\x17.shopping_list.Response\x12\x46\n\x10\x41\x64\x64ProductToCart\x12\x19.shopping_list.ProductKey\x1a\x17.shopping_list.Response\x12K\n\x15RemoveProductFromCart\x12\x19.shopping_list.ProductKey\x1a\x17.shopping_list.Response\x12\x44\n\x07GetList\x12\x1d.shopping_list.GetListRequest\x1a\x1a.shopping_list.ProductList\x12J\n\x14\x42uyAllProductsInCart\x12\x19.shopping_list.BuyRequest\x1a\x17.shopping_list.ResponseB\x13Z\x11.;proto_generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13shopping_list.proto\x12\rshopping_list\"K\n\nProductKey\x12\x13\n\x0bproductName\x18\x01 \x01(\t\x12\x13\n\x0bproductUnit\x18\x02 \x01(\x05\x12\x13\n\x0bproductType\x18\x03 \x01(\x05\"\xb6\x01\n\rProductUpdate\x12\x0c\n\x04name\x18\x01 \x01(\t\x12(\n\x04type\x18\x02 \x01(\x0e\x32\x1a.shopping_list.ProductType\x12!\n\x04unit\x18\x03 \x01(\x0e\x32\x13.shopping_list.Unit\x12\x17\n\nexpiration\x18\x04 \x01(\tH\x00\x88\x01\x01\x12\x15\n\x08quantity\x18\x05 \x01(\x05H\x01\x88\x01\x01\x42\r\n\x0b_expirationB\x0b\n\t_quantity\"$\n\rProductRemove\x12\x13\n\x0bproductName\x18\x01 \x01(\t\"+\n\tTimestamp\x12\x0f\n\x07seconds\x18\x01 \x01(\x03\x12\r\n\x05nanos\x18\x02 \x01(\x05\"\xd4\x01\n\x07Product\x12\x13\n\x0bproductName\x18\x01 \x01(\t\x12(\n\x04type\x18\x02 \x01(\x0e\x32\x1a.shopping_list.ProductType\x12!\n\x04unit\x18\x03 \x01(\x0e\x32\x13.shopping_list.Unit\x12\x10\n\x08quantity\x18\x04 \x01(\x05\x12\x13\n\x0b\x61\x64\x64\x65\x64ToCart\x18\x05 \x01(\x08\x12\x12\n\ncheckedOut\x18\x06 \x01(\x08\x12,\n\nexpiration\x18\x07 \x01(\x0b\x32\x18.shopping_list.Timestamp\"\x18\n\x06ListId\x12\x0e\n\x06listId\x18\x01 \x01(\x03\"h\n\x0bProductList\x12!\n\x02id\x18\x01 \x01(\x0b\x32\x15.shopping_list.ListId\x12\x0c\n\x04name\x18\x02 \x01(\t\x12(\n\x08products\x18\x03 \x03(\x0b\x32\x16.shopping_list.Product\"\x10\n\x0eGetListRequest\"\x0c\n\nBuyRequest\"\x17\n\x08Response\x12\x0b\n\x03msg\x18\x01 \x01(\t*Q\n\x0bProductType\x12\x08\n\x04Meat\x10\x00\x12\x08\n\x04\x46ish\x10\x01\x12\t\n\x05\x46ruit\x10\x02\x12\r\n\tVegetable\x10\x03\x12\t\n\x05\x44rink\x10\x04\x12\t\n\x05Other\x10\x05*1\n\x04Unit\x12\n\n\x06\x42ottle\x10\x00\x12\n\n\x06Packet\x10\x01\x12\x06\n\x02Kg\x10\x02\x12\t\n\x05Grams\x10\x03\x32\x95\x04\n\x0cShoppingList\x12\x43\n\x10\x41\x64\x64ProductToList\x12\x16.shopping_list.Product\x1a\x17.shopping_list.Response\x12K\n\x15RemoveProductFromList\x12\x19.shopping_list.ProductKey\x1a\x17.shopping_list.Response\x12L\n\x13UpdateProductInList\x12\x1c.shopping_list.ProductUpdate\x1a\x17.shopping_list.Response\x12\x46\n\x10\x41\x64\x64ProductToCart\x12\x19.shopping_list.ProductKey\x1a\x17.shopping_list.Response\x12K\n\x15RemoveProductFromCart\x12\x19.shopping_list.ProductKey\x1a\x17.shopping_list.Response\x12\x44\n\x07GetList\x12\x1d.shopping_list.GetListRequest\x1a\x1a.shopping_list.ProductList\x12J\n\x14\x42uyAllProductsInCart\x12\x19.shopping_list.BuyRequest\x1a\x17.shopping_list.ResponseB\x13Z\x11.;proto_generatedb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'shopping_list_pb2', globals())
@@ -21,30 +21,30 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z\021.;proto_generated'
-  _PRODUCTTYPE._serialized_start=668
-  _PRODUCTTYPE._serialized_end=749
-  _UNIT._serialized_start=751
-  _UNIT._serialized_end=800
+  _PRODUCTTYPE._serialized_start=787
+  _PRODUCTTYPE._serialized_end=868
+  _UNIT._serialized_start=870
+  _UNIT._serialized_end=919
   _PRODUCTKEY._serialized_start=38
   _PRODUCTKEY._serialized_end=113
-  _PRODUCTUPDATE._serialized_start=115
-  _PRODUCTUPDATE._serialized_end=179
-  _PRODUCTREMOVE._serialized_start=181
-  _PRODUCTREMOVE._serialized_end=217
-  _TIMESTAMP._serialized_start=219
-  _TIMESTAMP._serialized_end=262
-  _PRODUCT._serialized_start=265
-  _PRODUCT._serialized_end=477
-  _LISTID._serialized_start=479
-  _LISTID._serialized_end=503
-  _PRODUCTLIST._serialized_start=505
-  _PRODUCTLIST._serialized_end=609
-  _GETLISTREQUEST._serialized_start=611
-  _GETLISTREQUEST._serialized_end=627
-  _BUYREQUEST._serialized_start=629
-  _BUYREQUEST._serialized_end=641
-  _RESPONSE._serialized_start=643
-  _RESPONSE._serialized_end=666
-  _SHOPPINGLIST._serialized_start=803
-  _SHOPPINGLIST._serialized_end=1336
+  _PRODUCTUPDATE._serialized_start=116
+  _PRODUCTUPDATE._serialized_end=298
+  _PRODUCTREMOVE._serialized_start=300
+  _PRODUCTREMOVE._serialized_end=336
+  _TIMESTAMP._serialized_start=338
+  _TIMESTAMP._serialized_end=381
+  _PRODUCT._serialized_start=384
+  _PRODUCT._serialized_end=596
+  _LISTID._serialized_start=598
+  _LISTID._serialized_end=622
+  _PRODUCTLIST._serialized_start=624
+  _PRODUCTLIST._serialized_end=728
+  _GETLISTREQUEST._serialized_start=730
+  _GETLISTREQUEST._serialized_end=746
+  _BUYREQUEST._serialized_start=748
+  _BUYREQUEST._serialized_end=760
+  _RESPONSE._serialized_start=762
+  _RESPONSE._serialized_end=785
+  _SHOPPINGLIST._serialized_start=922
+  _SHOPPINGLIST._serialized_end=1455
 # @@protoc_insertion_point(module_scope)

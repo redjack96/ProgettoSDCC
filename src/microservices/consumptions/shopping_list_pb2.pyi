@@ -75,14 +75,18 @@ class ProductRemove(_message.Message):
     def __init__(self, productName: _Optional[str] = ...) -> None: ...
 
 class ProductUpdate(_message.Message):
-    __slots__ = ["field", "productId", "value"]
-    FIELD_FIELD_NUMBER: _ClassVar[int]
-    PRODUCTID_FIELD_NUMBER: _ClassVar[int]
-    VALUE_FIELD_NUMBER: _ClassVar[int]
-    field: str
-    productId: str
-    value: str
-    def __init__(self, productId: _Optional[str] = ..., field: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+    __slots__ = ["expiration", "name", "quantity", "type", "unit"]
+    EXPIRATION_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    QUANTITY_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
+    expiration: str
+    name: str
+    quantity: int
+    type: ProductType
+    unit: Unit
+    def __init__(self, name: _Optional[str] = ..., type: _Optional[_Union[ProductType, str]] = ..., unit: _Optional[_Union[Unit, str]] = ..., expiration: _Optional[str] = ..., quantity: _Optional[int] = ...) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ["msg"]

@@ -21,7 +21,7 @@ type EstimatorClient interface {
 	// This function should receive and return a stream of object
 	//  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
 	Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*PredictedDataList, error)
-	TrainModel(ctx context.Context, in *Item, opts ...grpc.CallOption) (*TrainResponse, error)
+	TrainModel(ctx context.Context, in *TrainRequest, opts ...grpc.CallOption) (*TrainResponse, error)
 }
 
 type estimatorClient struct {
@@ -41,7 +41,7 @@ func (c *estimatorClient) Predict(ctx context.Context, in *PredictRequest, opts 
 	return out, nil
 }
 
-func (c *estimatorClient) TrainModel(ctx context.Context, in *Item, opts ...grpc.CallOption) (*TrainResponse, error) {
+func (c *estimatorClient) TrainModel(ctx context.Context, in *TrainRequest, opts ...grpc.CallOption) (*TrainResponse, error) {
 	out := new(TrainResponse)
 	err := c.cc.Invoke(ctx, "/consumptions.Estimator/TrainModel", in, out, opts...)
 	if err != nil {
@@ -57,7 +57,7 @@ type EstimatorServer interface {
 	// This function should receive and return a stream of object
 	//  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
 	Predict(context.Context, *PredictRequest) (*PredictedDataList, error)
-	TrainModel(context.Context, *Item) (*TrainResponse, error)
+	TrainModel(context.Context, *TrainRequest) (*TrainResponse, error)
 	mustEmbedUnimplementedEstimatorServer()
 }
 
@@ -68,7 +68,7 @@ type UnimplementedEstimatorServer struct {
 func (UnimplementedEstimatorServer) Predict(context.Context, *PredictRequest) (*PredictedDataList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Predict not implemented")
 }
-func (UnimplementedEstimatorServer) TrainModel(context.Context, *Item) (*TrainResponse, error) {
+func (UnimplementedEstimatorServer) TrainModel(context.Context, *TrainRequest) (*TrainResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TrainModel not implemented")
 }
 func (UnimplementedEstimatorServer) mustEmbedUnimplementedEstimatorServer() {}
@@ -103,7 +103,7 @@ func _Estimator_Predict_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _Estimator_TrainModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Item)
+	in := new(TrainRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func _Estimator_TrainModel_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/consumptions.Estimator/TrainModel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EstimatorServer).TrainModel(ctx, req.(*Item))
+		return srv.(EstimatorServer).TrainModel(ctx, req.(*TrainRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
