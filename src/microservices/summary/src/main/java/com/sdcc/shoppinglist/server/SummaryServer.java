@@ -1,5 +1,7 @@
 package com.sdcc.shoppinglist.server;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.sdcc.shoppinglist.summary.Period;
 import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.summary.SummaryGrpc;
@@ -7,11 +9,17 @@ import com.sdcc.shoppinglist.summary.SummaryRequest;
 import com.sdcc.shoppinglist.utils.LogEntry;
 import com.sdcc.shoppinglist.utils.SummaryBuilder;
 import com.sdcc.shoppinglist.utils.TimeWindow;
+import consumptions.Consumptions;
+import consumptions.EstimatorGrpc;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.IOException;
@@ -74,12 +82,16 @@ public class SummaryServer {
                 "password",
                 "token");
         System.out.println("Connected to influxDB");
-        final KafkaSummaryConsumer kst = new KafkaSummaryConsumer(influx);
-        new Thread(kst).start();
+        // final KafkaSummaryConsumer kst = new KafkaSummaryConsumer(influx);
+        // System.out.println("Starting kafka consumer thread");
+        // new Thread(kst).start();
+        System.out.println("Scheduling chron job");
+        new Thread(new ConsumptionsChronJob(influx, true)).start();
+        // new ConsumptionsChronJob(influx, true).execution();
         server.blockUntilShutdown();
     }
 
-    static class SummaryImpl extends SummaryGrpc.SummaryImplBase{
+    static final class SummaryImpl extends SummaryGrpc.SummaryImplBase{
         @Override
         public void weekSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));

@@ -20,9 +20,9 @@ public class InfluxSink {
 
     private static InfluxSink instance = null;
     private static final String BUCKET = "krakend";
-    private static final String ORG =  "myorg";
-    private static final long WEEK_DIFF = 60*60*24*7;
-    private static final long MONTH_DIFF = 60*60*24*31;
+    private static final String ORG = "myorg";
+    private static final long WEEK_DIFF = 60 * 60 * 24 * 7;
+    private static final long MONTH_DIFF = 60 * 60 * 24 * 31;
     private String url;
     private String username;
     private String password;
@@ -30,7 +30,8 @@ public class InfluxSink {
     private InfluxDBClient client;
     private static final Logger log = Logger.getLogger(InfluxSink.class.getSimpleName());
 
-    private InfluxSink() {}
+    private InfluxSink() {
+    }
 
     public InfluxDBClient getClient() {
         return client;
@@ -63,10 +64,10 @@ public class InfluxSink {
         WriteApiBlocking writeApi = client.getWriteApiBlocking();
         Point point = Point.measurement("logs")
                 .addTag("entry-record",
-                        entry.product_name()+"-"
-                        +entry.unit()+"-"
-                        +entry.product_type()+"-"
-                        +System.currentTimeMillis())
+                        entry.product_name() + "-"
+                        + entry.unit() + "-"
+                        + entry.product_type() + "-"
+                        + System.currentTimeMillis())
                 .addField("transactionType", entry.transaction_type())
                 .addField("prodName", entry.product_name())
                 .addField("prodType", entry.product_type())
@@ -90,22 +91,22 @@ public class InfluxSink {
             case Weekly -> {
                 // time: Week
                 unixTimeStart = unixTimeNow - WEEK_DIFF;
-                query = "from(bucket:\""+BUCKET+"\""+") " +
-                        "|> range(start: 0)"+
-                        "|> filter(fn: (r) => r._time >= time(v: "+unixTimeStart+"))";
+                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
+                        "|> range(start: 0)" +
+                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + "))";
             }
             case Monthly -> {
                 // time: Month
                 unixTimeStart = unixTimeNow - MONTH_DIFF;
-                query = "from(bucket:\""+BUCKET+"\""+") " +
-                        "|> range(start: 0)"+
-                        "|> filter(fn: (r) => r._time >= time(v: "+unixTimeStart+"))";
+                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
+                        "|> range(start: 0)" +
+                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + "))";
             }
             case Total -> {
                 // time: total
                 unixTimeStart = 0;
-                query = "from(bucket:\""+BUCKET+"\""+") " +
-                        "|> range(start: "+unixTimeStart+")";
+                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
+                        "|> range(start: " + unixTimeStart + ")";
             }
         }
         System.out.println(query);
@@ -116,10 +117,10 @@ public class InfluxSink {
         String prodName = "", transType = "", prodType = "", prodUnit = "";
         int prodQuantity = 0;
         long ts = 0, prodExpiration = 0;
-        for (FluxTable table: tables) {
+        for (FluxTable table : tables) {
             i++;
             List<FluxRecord> records = table.getRecords();
-            for (FluxRecord record: records) {
+            for (FluxRecord record : records) {
                 ts = Objects.requireNonNull(record.getTime()).toEpochMilli();
                 if (Objects.equals(record.getField(), "prodName")) {
                     prodName = String.valueOf(record.getValueByIndex(5));
@@ -135,7 +136,7 @@ public class InfluxSink {
                     transType = String.valueOf(record.getValueByIndex(5));
                 }
             }
-            if (i%6 == 0) {
+            if (i % 6 == 0) {
 //                System.out.println(transType+"-"+prodName+"-"+prodType+"-"+prodUnit+"-"+prodQuantity+"-"+prodExpiration);
                 LogEntry entry = new LogEntry(ts,
                         transType,

@@ -23,13 +23,13 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
         print("RESPONSE: ", response)
         return consumptions_pb2.PredictedDataList(predicted=response)
 
-    def TrainModel(self, item: product_storage_pb2.Item, context):
-        print("Received request with param: %s" % item.itemName)
+    def TrainModel(self, item: consumptions_pb2.TrainRequest, context):
+        print("I'm here")
+        print("Received request with param: %s" % item.observations)
         return consumptions_pb2.TrainResponse(msg="model trained")
 
 
 def serve():
-    print(os.listdir("modules"))  # returns list
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     consumptions_pb2_grpc.add_EstimatorServicer_to_server(Estimator(), server)
     properties = p.Props()

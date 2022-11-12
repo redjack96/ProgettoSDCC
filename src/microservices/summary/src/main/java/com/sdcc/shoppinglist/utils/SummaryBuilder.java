@@ -20,9 +20,8 @@ public class SummaryBuilder {
 
     public int calculateNumberExpired(List<LogEntry> entries) {
         // Get today's timestamp
-        long unixTimeNow = System.currentTimeMillis() / 1000L;
         return Math.toIntExact(entries.stream()
-                .filter(entry -> entry.expiration_date() <= unixTimeNow)
+                .filter(LogEntry::isExpired)
                 .filter(entry -> entry.transaction_type().contains("add"))
                 .count());
     }

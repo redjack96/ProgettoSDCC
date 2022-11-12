@@ -15,12 +15,10 @@ import java.util.logging.Logger;
 
 public class KafkaSummaryConsumer implements Runnable {
     private static final Logger log = Logger.getLogger(KafkaSummaryConsumer.class.getSimpleName());
-    private InfluxDBClient client;
-    private InfluxSink influx;
+    private final InfluxSink influx;
 
     public KafkaSummaryConsumer(InfluxSink influx){
         log.setLevel(Level.INFO);
-        this.client = influx.getClient();
         this.influx = influx;
     }
 

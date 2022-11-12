@@ -651,7 +651,7 @@ async fn predict() -> impl Responder {
     // Invio la richiesta e attendo la risposta:
     let response = client.predict(request)
         .await
-        .expect("QUI C'E UN PROBLEMA!!!")
+        .expect("Failed to await response from consumptions!!!")
         .into_inner();
 
     to_json_response(response)

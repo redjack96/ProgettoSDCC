@@ -262,7 +262,7 @@ impl ProductStorage for ProductStorageImpl {
 // used by add_bought_products_to_pantry
 fn add_products_to_db(product_list: &ProductList) {
     println!("ListId: {:?}, ListName: {}, Number of products: {}",
-             product_list.clone().id.unwrap_or(ListId { list_id: 0 }).list_id,
+             product_list.clone().id.map_or(0, |i| i.list_id),
              product_list.name,
              product_list.products.len());
 
@@ -389,13 +389,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Database::new();
     db.create_table_products();
     println!("Created database tables!");
-
-    // Activate thread to communicate with NotificationService (with Kafka)
-    // if there are expired products
-    // let handle = thread::Builder::new()
-    //     .name("kafka-producer-thread".to_string())
-    //     .spawn(async_func)
-    //     .unwrap();
 
     // Creo il servizio
     let service = ProductStorageImpl::default(); // istanzia la struct impostando TUTTI i valori in default!

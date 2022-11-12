@@ -11,10 +11,9 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-import product_storage_pb2 as product__storage__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63onsumptions.proto\x12\x0c\x63onsumptions\x1a\x15product_storage.proto\"\x10\n\x0ePredictRequest\"C\n\x11PredictedDataList\x12.\n\tpredicted\x18\x01 \x03(\x0b\x32\x1b.consumptions.PredictedData\"C\n\rPredictedData\x12\x0c\n\x04week\x18\x01 \x01(\t\x12\x0f\n\x07product\x18\x02 \x01(\t\x12\x13\n\x0b\x63onsumption\x18\x03 \x01(\x02\"\x1c\n\rTrainResponse\x12\x0b\n\x03msg\x18\x01 \x01(\t2\x97\x01\n\tEstimator\x12H\n\x07Predict\x12\x1c.consumptions.PredictRequest\x1a\x1f.consumptions.PredictedDataList\x12@\n\nTrainModel\x12\x15.product_storage.Item\x1a\x1b.consumptions.TrainResponseB\x13Z\x11.;proto_generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63onsumptions.proto\x12\x0c\x63onsumptions\"\x10\n\x0ePredictRequest\"C\n\x11PredictedDataList\x12.\n\tpredicted\x18\x01 \x03(\x0b\x32\x1b.consumptions.PredictedData\"T\n\x0cTrainRequest\x12/\n\x0cobservations\x18\x01 \x03(\x0b\x32\x19.consumptions.Observation\x12\x13\n\x0b\x63urrentDate\x18\x02 \x01(\x03\"h\n\x0bObservation\x12\x32\n\x0brequestType\x18\x01 \x01(\x0e\x32\x1d.consumptions.ObservationType\x12\x13\n\x0bproductName\x18\x02 \x01(\t\x12\x10\n\x08quantity\x18\x03 \x01(\x05\"C\n\rPredictedData\x12\x0c\n\x04week\x18\x01 \x01(\t\x12\x0f\n\x07product\x18\x02 \x01(\t\x12\x13\n\x0b\x63onsumption\x18\x03 \x01(\x02\"\x1c\n\rTrainResponse\x12\x0b\n\x03msg\x18\x01 \x01(\t*3\n\x0fObservationType\x12\t\n\x05\x61\x64\x64\x65\x64\x10\x00\x12\x08\n\x04used\x10\x01\x12\x0b\n\x07\x65xpired\x10\x02\x32\x9c\x01\n\tEstimator\x12H\n\x07Predict\x12\x1c.consumptions.PredictRequest\x1a\x1f.consumptions.PredictedDataList\x12\x45\n\nTrainModel\x12\x1a.consumptions.TrainRequest\x1a\x1b.consumptions.TrainResponseB\x13Z\x11.;proto_generatedb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'consumptions_pb2', globals())
@@ -22,14 +21,20 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z\021.;proto_generated'
-  _PREDICTREQUEST._serialized_start=59
-  _PREDICTREQUEST._serialized_end=75
-  _PREDICTEDDATALIST._serialized_start=77
-  _PREDICTEDDATALIST._serialized_end=144
-  _PREDICTEDDATA._serialized_start=146
-  _PREDICTEDDATA._serialized_end=213
-  _TRAINRESPONSE._serialized_start=215
-  _TRAINRESPONSE._serialized_end=243
-  _ESTIMATOR._serialized_start=246
-  _ESTIMATOR._serialized_end=397
+  _OBSERVATIONTYPE._serialized_start=414
+  _OBSERVATIONTYPE._serialized_end=465
+  _PREDICTREQUEST._serialized_start=36
+  _PREDICTREQUEST._serialized_end=52
+  _PREDICTEDDATALIST._serialized_start=54
+  _PREDICTEDDATALIST._serialized_end=121
+  _TRAINREQUEST._serialized_start=123
+  _TRAINREQUEST._serialized_end=207
+  _OBSERVATION._serialized_start=209
+  _OBSERVATION._serialized_end=313
+  _PREDICTEDDATA._serialized_start=315
+  _PREDICTEDDATA._serialized_end=382
+  _TRAINRESPONSE._serialized_start=384
+  _TRAINRESPONSE._serialized_end=412
+  _ESTIMATOR._serialized_start=468
+  _ESTIMATOR._serialized_end=624
 # @@protoc_insertion_point(module_scope)
