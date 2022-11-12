@@ -3,7 +3,8 @@ import React from 'react'
 import './App.css';
 import Navbar from './Navigation/Navbar';
 import images from './Images/images.js';
-import {AddButton, DeleteButton} from "./Widgets/Button";
+import BootstrapSwitchButton from "bootstrap-switch-button-react";
+import Checkbox from "./Widgets/Checkbox";
 
 enum Unit {
     Bottle,
@@ -357,6 +358,7 @@ function AddItemForm({onNewItem}) {
  * @constructor
  */
 function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
+
     // called when clicking the addToCart button. TODO: This button must be also hidden when clicked and the remove from cart shown.!
     const addToCart = () => {
         // Watch out! Here we use the ` NOT ' !!!
@@ -409,6 +411,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
                             >
                                 Remove
                             </Button>
+                            {/*<Checkbox label={"Add to cart"} onFunc={addToCart} offFunc={removeFromCart}/>*/}
                             <Button
                                 size="sm"
                                 variant="outline-info"
