@@ -25,6 +25,9 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
     def TrainModel(self, item: consumptions_pb2.TrainRequest, context):
         print("I'm here")
         print("Received request with param: %s" % item.observations)
+
+        # Save new observation data into persistence
+        # todo
         return consumptions_pb2.TrainResponse(msg="model trained")
 
 

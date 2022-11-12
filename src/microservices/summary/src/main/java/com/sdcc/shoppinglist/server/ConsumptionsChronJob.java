@@ -1,6 +1,9 @@
 package com.sdcc.shoppinglist.server;
 
+import com.sdcc.shoppinglist.summary.Period;
+import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.utils.LogEntry;
+import com.sdcc.shoppinglist.utils.SummaryBuilder;
 import com.sdcc.shoppinglist.utils.TimeWindow;
 import consumptions.Consumptions;
 import consumptions.EstimatorGrpc;
@@ -50,7 +53,7 @@ public class ConsumptionsChronJob implements Runnable {
     public void blockingExecution() {
         LOGGER.info("Chron-job: Sending consumption week data!");
         // Get the data
-        List<LogEntry> logEntriesFromInflux = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
+        List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
         // Create the channel
         var channel = ManagedChannelBuilder.forAddress("consumptions", 8004)// FIXME: hardcoded
                 .usePlaintext()
@@ -62,7 +65,7 @@ public class ConsumptionsChronJob implements Runnable {
 
         // Build the request parameter
         var trainRequest = Consumptions.TrainRequest.newBuilder()
-                .addAllObservations(convertLogsToObservations(logEntriesFromInflux))
+                .addAllObservations(convertLogsToObservations(logs))
                 .setCurrentDate(new Date().getTime())
                 .build();
         LOGGER.info("Sending training request to consumptions service!");

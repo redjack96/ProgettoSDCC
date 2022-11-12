@@ -46,13 +46,13 @@ services:
       - "8007"
     ports:
       - "8007:8007"
-#    depends_on:
-#      - shopping_list
-#      - product_storage
-  #    - notifications
-  #      - recipes
-  #      - consumptions
-  #      - summary
+    depends_on:
+      - shopping_list
+      - product_storage
+      - consumptions
+      - summary
+       #      - notifications
+        #      - recipes
 
   # --- APP-MICROSERVICES
   shopping_list:
@@ -119,9 +119,6 @@ services:
       - "./config.properties:/usr/src/recipes/config.properties"
     depends_on:
       - redis
-#    networks: forse si possono specificare molteplici reti?
-#      vpcbr:
-#        ipv4_address: 192.168.119.1
 
   consumptions:
     image: consumptions
@@ -134,8 +131,6 @@ services:
       - "./config.properties:/usr/src/consumptions/config.properties"
     depends_on:
       - cassandra
-    networks:
-      cassandra-network:
 
   # KAFKA + ZOOKEEPER ---------------------------------------------------------------
   zookeeper:
@@ -160,7 +155,6 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-      #      - KAFKA_CREATE_TOPICS= 'test:1:1'
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
       - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:29092
       - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:29092
@@ -176,7 +170,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    # command: mongod
 
   # # UI per amministrare MongoDB
   mongo-express:
@@ -190,7 +183,7 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
     depends_on:
-      - mongo
+      - mongo-express
 
   influxdb:
     image: influxdb:latest
@@ -228,22 +221,8 @@ services:
       - CASSANDRA_CLUSTER_NAME=CassandraCluster
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_DC=datacenter
-    networks:
-      cassandra-network:
-#      vpcbr:
-#        ipv4_address: 192.168.119.2
 
 volumes:
   influxdb-storage:
   cassandra_data:
     driver: local
-
-
-networks:
-  cassandra-network:
-  vpcbr:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.0.0/16
-          gateway: 192.168.0.1
