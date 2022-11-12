@@ -5,6 +5,6 @@ import persistence
 
 print("Hello<3")
 cass = persistence.Cassandra()
-cass.insert_entry()
-cass.select_entry()
+# cass.select_entries_for_product("SELECT * FROM dataset WHERE product_name='Pane';")
+cass.select_entries_for_product('Pane')
 server.serve()
