@@ -107,6 +107,7 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
     depends_on:
       - influxdb
+      - consumptions
 
   recipes:
     image: "recipes"

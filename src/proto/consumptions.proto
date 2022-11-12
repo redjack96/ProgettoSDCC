@@ -3,7 +3,6 @@ syntax = "proto3";
 
 // package name for the buffer will be used later
 package consumptions;
-import "product_storage.proto";
 option go_package = ".;proto_generated";
 
 // service which can be executed
@@ -11,7 +10,7 @@ service Estimator {
   // This function should receive and return a stream of object
 //  rpc Predict(stream BoughtProduct) returns (stream BuyMore);
   rpc Predict(PredictRequest) returns (PredictedDataList);
-  rpc TrainModel(product_storage.Item) returns (TrainResponse);
+  rpc TrainModel(TrainRequest) returns (TrainResponse);
 }
 
 // argument
@@ -20,6 +19,23 @@ message PredictRequest {}
 
 message PredictedDataList {
   repeated PredictedData predicted = 1;
+}
+
+enum ObservationType {
+  added = 0;
+  used = 1;
+  expired = 2;
+}
+
+message TrainRequest {
+  repeated Observation observations = 1;
+  int64 currentDate = 2; // only to calculate the week referring to the product
+}
+
+message Observation {
+  ObservationType requestType = 1;
+  string productName = 2;
+  int32 quantity = 3;
 }
 
 message PredictedData {

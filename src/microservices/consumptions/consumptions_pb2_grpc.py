@@ -3,7 +3,6 @@
 import grpc
 
 import consumptions_pb2 as consumptions__pb2
-import product_storage_pb2 as product__storage__pb2
 
 
 class EstimatorStub(object):
@@ -23,7 +22,7 @@ class EstimatorStub(object):
                 )
         self.TrainModel = channel.unary_unary(
                 '/consumptions.Estimator/TrainModel',
-                request_serializer=product__storage__pb2.Item.SerializeToString,
+                request_serializer=consumptions__pb2.TrainRequest.SerializeToString,
                 response_deserializer=consumptions__pb2.TrainResponse.FromString,
                 )
 
@@ -56,7 +55,7 @@ def add_EstimatorServicer_to_server(servicer, server):
             ),
             'TrainModel': grpc.unary_unary_rpc_method_handler(
                     servicer.TrainModel,
-                    request_deserializer=product__storage__pb2.Item.FromString,
+                    request_deserializer=consumptions__pb2.TrainRequest.FromString,
                     response_serializer=consumptions__pb2.TrainResponse.SerializeToString,
             ),
     }
@@ -99,7 +98,7 @@ class Estimator(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/consumptions.Estimator/TrainModel',
-            product__storage__pb2.Item.SerializeToString,
+            consumptions__pb2.TrainRequest.SerializeToString,
             consumptions__pb2.TrainResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
