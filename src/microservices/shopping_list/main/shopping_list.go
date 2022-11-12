@@ -263,8 +263,8 @@ func queryDB(operation DBOperation) (interface{}, error) {
 	// complete operations
 	var res interface{}
 	switch operation.opType {
-	case Insert:
-		// add all products to a single interface
+	case Insert: // this inserts one product at a time in the list
+		// retrieve information of product from api_gateway
 		prod := operation.product
 		prodType := prod.Type
 		prodUnit := prod.Unit
@@ -274,24 +274,63 @@ func queryDB(operation DBOperation) (interface{}, error) {
 		prodCheckedOut := prod.CheckedOut
 		tmExpiry := prod.Expiration
 		prodExpiry := time.Unix(tmExpiry.Seconds, 0)
-		// add the elements to an interface of bson elements
-		doc := bson.D{
-			{"type", prodType},
-			{"unit", prodUnit},
-			{"expiration", prodExpiry},
-			{"quantity", prodQuantity},
-			{"productName", prodName},
-			{"addedToCart", prodInCart},
-			{"checkedOut", prodCheckedOut},
+		// check if product, unit, type is already in the list.
+		filter := bson.D{
+			{"productName", bson.D{{"$eq", prodName}}},
+			{"unit", bson.D{{"$eq", prodUnit}}},
+			{"type", bson.D{{"$eq", prodType}}},
 		}
-		fmt.Println(doc)
-		// insert the document in the collection
-		results, err := prodCollection.InsertOne(context.TODO(), doc)
-		// check for errors in the insertion
-		if err == nil {
-			res = results.InsertedID
+		cursor, err := prodCollection.Find(
+			context.TODO(),
+			filter,
+		)
+		if err != nil {
+			log.Fatal(err)
 		}
-		return res, err
+		fmt.Println()
+		if cursor.RemainingBatchLength() == 0 {
+			// add the elements to an interface of bson elements
+			doc := bson.D{
+				{"type", prodType},
+				{"unit", prodUnit},
+				{"expiration", prodExpiry},
+				{"quantity", prodQuantity},
+				{"productName", prodName},
+				{"addedToCart", prodInCart},
+				{"checkedOut", prodCheckedOut},
+			}
+			fmt.Println("Added for the first time: ", doc)
+			// insert the document in the collection
+			results, err := prodCollection.InsertOne(context.TODO(), doc)
+			// check for errors in the insertion
+			if err == nil {
+				res = results.InsertedID
+			}
+			return res, err
+		} else {
+			fmt.Println("Updating quantity and nearest expiration of already added product")
+			filter := bson.M{"$and": []interface{}{
+				bson.M{"productName": prodName},
+				bson.M{"type": prodType},
+				bson.M{"unit": prodUnit},
+			}}
+			// if the new expiration is before the saved one, we update also the expiration
+			var update bson.D
+			cursor.Next(context.TODO())
+			if prodExpiry.Unix() < cursor.Current.Lookup("expiration").Time().Unix() {
+				update = bson.D{
+					{"$set", bson.D{{"expiration", prodExpiry}}},
+					{"$set", bson.D{{"quantity", cursor.Current.Lookup("quantity").Int32() + prodQuantity}}},
+				}
+			} else {
+				update = bson.D{
+					{"$set", bson.D{{"quantity", cursor.Current.Lookup("quantity").Int32() + prodQuantity}}},
+				}
+			}
+
+			res, err := prodCollection.UpdateOne(context.TODO(), filter, update)
+			return res, err
+		}
 	case Remove:
 		prodName := operation.productKey.ProductName
 		prodType := operation.productKey.ProductType
