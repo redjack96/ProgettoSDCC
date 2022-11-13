@@ -54,6 +54,7 @@ public class ConsumptionsChronJob implements Runnable {
         LOGGER.info("Chron-job: Sending consumption week data!");
         // Get the data
         List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
+        LOGGER.info("lOGS:"+logs);
         // Create the channel
         var channel = ManagedChannelBuilder.forAddress("consumptions", 8004)// FIXME: hardcoded
                 .usePlaintext()
