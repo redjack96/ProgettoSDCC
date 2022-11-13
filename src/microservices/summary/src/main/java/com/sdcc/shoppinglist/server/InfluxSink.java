@@ -21,6 +21,8 @@ public class InfluxSink {
     private static InfluxSink instance = null;
     private static final String BUCKET = "krakend";
     private static final String ORG = "myorg";
+
+    private static final long TEST_DIFF = 60; // 1 MINUTES
     private static final long WEEK_DIFF = 60 * 60 * 24 * 7;
     private static final long MONTH_DIFF = 60 * 60 * 24 * 31;
     private String url;
@@ -63,18 +65,19 @@ public class InfluxSink {
     public void addLogEntryToInflux(LogEntry entry) {
         WriteApiBlocking writeApi = client.getWriteApiBlocking();
         Point point = Point.measurement("logs")
-                .addTag("entry-record",
-                        entry.product_name() + "-"
-                        + entry.unit() + "-"
-                        + entry.product_type() + "-"
-                        + System.currentTimeMillis())
+//                .addTag("entry-record",
+//                        entry.product_name() + "-"
+//                        + entry.unit() + "-"
+//                        + entry.product_type() + "-"
+//                        + System.currentTimeMillis())
+                .addTag("entry-record", "logs")
                 .addField("transactionType", entry.transaction_type())
                 .addField("prodName", entry.product_name())
                 .addField("prodType", entry.product_type())
                 .addField("prodUnit", entry.unit())
                 .addField("prodQuantity", entry.quantity())
                 .addField("prodExpiration", entry.expiration_date())
-                .time(Instant.ofEpochMilli(entry.log_timestamp()), WritePrecision.MS);
+                .time(entry.log_timestamp(), WritePrecision.S);
         log.log(Level.INFO, "Writing point...");
         writeApi.writePoint(BUCKET, ORG, point);
         log.log(Level.INFO, "Point written.");
@@ -93,20 +96,36 @@ public class InfluxSink {
                 unixTimeStart = unixTimeNow - WEEK_DIFF;
                 query = "from(bucket:\"" + BUCKET + "\"" + ") " +
                         "|> range(start: 0)" +
-                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + "))";
+                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + ") " +
+                        "and r._time <= time(v: "+ unixTimeNow+"))";
             }
             case Monthly -> {
                 // time: Month
                 unixTimeStart = unixTimeNow - MONTH_DIFF;
                 query = "from(bucket:\"" + BUCKET + "\"" + ") " +
                         "|> range(start: 0)" +
-                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + "))";
+                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + ") " +
+                        "and r._time <= time(v: "+ unixTimeNow+"))";
             }
             case Total -> {
                 // time: total
                 unixTimeStart = 0;
                 query = "from(bucket:\"" + BUCKET + "\"" + ") " +
                         "|> range(start: " + unixTimeStart + ")";
+            }
+            case Test -> {
+                // time: testing time window
+                unixTimeStart = unixTimeNow - TEST_DIFF;
+//                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
+//                        "|> range(start: 0)" +
+//                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + ") " +
+//                        "and r._time <= time(v: "+ unixTimeNow+"))";
+                System.out.println("unixTimeStart = " + unixTimeStart);
+                System.out.println("unixTimeNow = " + unixTimeNow);
+                query = """
+                        from(bucket:"%s")
+                        |> range(start: %d)
+                        """.formatted(BUCKET, unixTimeStart);
             }
         }
         System.out.println(query);

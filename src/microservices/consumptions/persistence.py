@@ -1,5 +1,6 @@
 import logging
 from cassandra.cluster import Cluster
+import time
 from cassandra.concurrent import execute_concurrent_with_args
 from pandas import DataFrame as df
 import pandas as pd
@@ -74,10 +75,9 @@ def convert_rows_to_dataframe(rows):
 
 class Cassandra:
     def __init__(self):
-        self.session, self.cluster = None, None
-
-    def init_database(self):
         self.session, self.cluster = self.__cassandra_connection()
+
+    def init_dataset(self):
         self.__create_tables()
         self.__create_index()
         self.__populate_tables("consumi-storage.csv")

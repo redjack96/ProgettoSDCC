@@ -3,5 +3,6 @@ package com.sdcc.shoppinglist.utils;
 public enum TimeWindow {
     Weekly,
     Monthly,
-    Total
+    Total,
+    Test    // for testing purposes
 }

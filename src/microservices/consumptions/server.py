@@ -10,8 +10,6 @@ import consumptions_pb2_grpc
 import properties as p
 import product_storage_pb2
 
-cassandra: persistence.Cassandra
-
 
 def uniform_quantity_by_unit(unit, quantity):
     # uniform quantity converting everything to Grams
@@ -46,6 +44,8 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
     def TrainModel(self, item: consumptions_pb2.TrainRequest, context):
         print("I'm here")
         print("Received request with param: %s" % item.observations)
+        # Connect to Cassandra
+        cass = persistence.Cassandra()
         # Save new observation data into persistence
         obs = item.observations
         for instance in obs:
@@ -53,17 +53,11 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
             new_quantity = uniform_quantity_by_unit(instance.unit, instance.quantity)
             product_name = instance.productName
             req_type = instance.requestType
-            if cassandra is not None:
-                cassandra.update_entry(week_num, product_name, new_quantity, req_type)
-            else:
-                print("Cassandra is none")
+            cass.update_entry(week_num, product_name, new_quantity, req_type)
         return consumptions_pb2.TrainResponse(msg="model trained")
 
 
-def serve(cassandra_conn: persistence.Cassandra):
-    # Set global variable for Cassandra connection
-    global cassandra
-    cassandra = cassandra_conn
+def serve():
     # Publish service
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     consumptions_pb2_grpc.add_EstimatorServicer_to_server(Estimator(), server)
