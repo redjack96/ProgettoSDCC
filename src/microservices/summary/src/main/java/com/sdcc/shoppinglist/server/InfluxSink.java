@@ -86,48 +86,18 @@ public class InfluxSink {
 
     public List<LogEntry> getLogEntriesFromInflux(TimeWindow time) {
         long unixTimeNow = System.currentTimeMillis() / 1000L;
-        long unixTimeStart;
         QueryApi queryApi = client.getQueryApi();
         List<LogEntry> entries = new ArrayList<>();
-        String query = "";
-        switch (time) {
-            case Weekly -> {
-                // time: Week
-                unixTimeStart = unixTimeNow - WEEK_DIFF;
-                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
-                        "|> range(start: 0)" +
-                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + ") " +
-                        "and r._time <= time(v: "+ unixTimeNow+"))";
-            }
-            case Monthly -> {
-                // time: Month
-                unixTimeStart = unixTimeNow - MONTH_DIFF;
-                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
-                        "|> range(start: 0)" +
-                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + ") " +
-                        "and r._time <= time(v: "+ unixTimeNow+"))";
-            }
-            case Total -> {
-                // time: total
-                unixTimeStart = 0;
-                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
-                        "|> range(start: " + unixTimeStart + ")";
-            }
-            case Test -> {
-                // time: testing time window
-                unixTimeStart = unixTimeNow - TEST_DIFF;
-//                query = "from(bucket:\"" + BUCKET + "\"" + ") " +
-//                        "|> range(start: 0)" +
-//                        "|> filter(fn: (r) => r._time >= time(v: " + unixTimeStart + ") " +
-//                        "and r._time <= time(v: "+ unixTimeNow+"))";
-                System.out.println("unixTimeStart = " + unixTimeStart);
-                System.out.println("unixTimeNow = " + unixTimeNow);
-                query = """
-                        from(bucket:"%s")
-                        |> range(start: %d)
-                        """.formatted(BUCKET, unixTimeStart);
-            }
-        }
+        long unixTimeStart = switch (time) {
+            case Weekly ->  unixTimeNow - WEEK_DIFF;
+            case Monthly -> unixTimeNow - MONTH_DIFF;
+            case Total -> 0;
+            case Test -> unixTimeNow - TEST_DIFF;
+        };
+        String query = """
+                from(bucket:"%s")
+                |> range(start: %d)
+                """.formatted(BUCKET, unixTimeStart);
         System.out.println(query);
         List<FluxTable> tables = queryApi.query(query);
         log.log(Level.INFO, "Query executed.");
