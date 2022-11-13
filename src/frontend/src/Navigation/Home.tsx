@@ -160,6 +160,8 @@ function ShoppingListCard() {
         name: "",
         products: []
     });
+    const [voidMessage, setVoidMessage] = React.useState("Nothing added to List! Add one when you're ready!");
+
 
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
@@ -172,7 +174,20 @@ function ShoppingListCard() {
                     console.log(x);
                     return x;
                 })
-                .then(setItems)
+                .then(itemsOrError => {
+                    try {
+                        setItems(itemsOrError)
+                        setVoidMessage("Nothing added to List! Add one when you're ready!")
+                    } catch {
+                        console.log("Error: shopping_list service is down")
+                        setItems({
+                            id: 0,
+                            name: "",
+                            products: []
+                        })
+                        setVoidMessage(itemsOrError.msg)
+                    }
+                })
                 .catch(e => console.log("Errore: " + e))
         }
     }, [items]);
@@ -181,10 +196,19 @@ function ShoppingListCard() {
     const onNewItem = React.useCallback(
         (newItem: Item) => {
             if (loading) {
-                setItems({
-                    ...items,
-                    products: [...items.products, newItem]
-                });
+                try {
+                    setItems({
+                        ...items,
+                        products: [...items.products, newItem]
+                    });
+                } catch {
+                    setItems({
+                        id: 0,
+                        name: "",
+                        products: []
+                    });
+                    setVoidMessage("Error: shopping_list service is down")
+                }
                 setLoading(false);
             }
         },
@@ -222,14 +246,14 @@ function ShoppingListCard() {
             });
             setLoading(false);
         },
-        [items.products],
+        [items],
     );
 
     return (
         <React.Fragment>
-            <AddItemForm onNewItem={onNewItem}/>
+            <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
             {items.products.length === 0 && (
-                <p className="text-center">Nessun prodotto! Aggiungine uno quando vuoi.</p>
+                <p className="text-center">{voidMessage}</p>
             )}
             {items.products.map(item => (
                 <ItemDisplay
@@ -313,14 +337,15 @@ function AddItemForm({onNewItem}) {
                         <Form.Control
                             value={quantity.valueOf()}
                             onChange={e => setQuantity(isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value))}
-                            type="text"
-                            placeholder="Quantity"
+                            type="number"
+                            size="sm"
+                            placeholder="0"
                             aria-describedby="basic-addon1"
                         />
                     </Form.Group>
                     <Form.Group as={Col} controlId="formSelectUnit">
                         <Form.Label>Unit</Form.Label>
-                        <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))}>
+                        <Form.Control as="select" size="sm" onChange={e => setUnit(Unit.parse(e.target.value))}>
                             <option>Select unit...</option>
                             <option>Bottle</option>
                             <option>Packet</option>
@@ -328,10 +353,12 @@ function AddItemForm({onNewItem}) {
                             <option>Grams</option>
                         </Form.Control>
                     </Form.Group>
+                </Row>
+                <Row>
                     <Form.Group as={Col} controlId="formSelectType">
                         <Form.Label>Type</Form.Label>
                         {/*Il value è della select*/}
-                        <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))}>
+                        <Form.Control as="select" size="sm" onChange={e => setType(ProductType.parse(e.target.value))}>
                             <option>Select product type...</option>
                             <option>Vegetable</option>
                             <option>Fruit</option>
@@ -402,8 +429,8 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     const toProductPage = () => {
         navigate('/updateProductPage', {
             state: {
-                id: 1,
-                name: 'Benissimo! Aggiorniamo ' + item.product_name,
+                // id: 1,
+                // name: 'Benissimo! Aggiorniamo ' + item.product_name,
                 item: item,
             }
         });

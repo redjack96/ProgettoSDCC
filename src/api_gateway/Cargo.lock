@@ -244,7 +244,9 @@ dependencies = [
  "actix-web",
  "async-trait",
  "chrono",
+ "failsafe",
  "java-properties",
+ "lazy_static",
  "prost",
  "prost-types",
  "serde",
@@ -636,6 +638,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9852635589dc9f9ea1b6fe9f05b50ef208c85c834a562f0c6abb1c475736ec2b"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "failsafe"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60888d0f510699b3ef8734a045b0d28f4279283d7665acacc68cd7e8ac18e683"
+dependencies = [
+ "futures-core",
+ "parking_lot",
+ "pin-project",
+ "rand",
 ]
 
 [[package]]

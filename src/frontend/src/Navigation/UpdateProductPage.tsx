@@ -84,8 +84,8 @@ function UpdateForm({item}: UpdateFormProps) {
                     <Form.Control
                         value={quantity.valueOf()}
                         onChange={e => setQuantity(parseInt(e.target.value))}
-                        type="text"
-                        placeholder="Quantity"
+                        type="number"
+                        placeholder="0"
                         aria-describedby="basic-addon1"
                     />
                 </Form.Group>

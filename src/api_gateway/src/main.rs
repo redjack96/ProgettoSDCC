@@ -13,9 +13,11 @@ use api_gateway::product_storage::{ItemName, Pantry, PantryMessage};
 use api_gateway::summary::{SummaryData, SummaryRequest};
 use api_gateway::recipes::{RecipeList, RecipesRequest};
 use api_gateway::product_storage::{Item, UsedItem};
-use std::{thread, time::Duration};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use actix_web::web::Query;
+use failsafe::{Config, StateMachine};
+use failsafe::backoff::EqualJittered;
+use failsafe::failure_policy::{ConsecutiveFailures, OrElse, SuccessRateOverTimeWindow};
 use serde::{Serialize, Deserialize};
 use tonic::Response;
 use api_gateway::product_storage::product_storage_client::ProductStorageClient;
@@ -23,10 +25,18 @@ use api_gateway::summary::summary_client::SummaryClient;
 use api_gateway::recipes::recipes_client::RecipesClient;
 use api_gateway::consumptions::estimator_client::EstimatorClient;
 use api_gateway::consumptions::PredictRequest;
+use failsafe::futures::CircuitBreaker;
+use tokio::sync::Mutex;
 
 extern crate serde;
 extern crate serde_json;
 extern crate serde_derive;
+
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref CIRCUIT_BREAKER: Mutex<StateMachine<OrElse<SuccessRateOverTimeWindow<EqualJittered>, ConsecutiveFailures<EqualJittered>>, ()>> = Mutex::new(Config::new().build());
+}
 
 fn unit_from_str(input: &str) -> Unit {
     match input {
@@ -76,6 +86,16 @@ fn to_json_response<T>(obj: T) -> HttpResponse where T: Serialize {
         .body(string)
 }
 
+fn to_json_unavailable(err: failsafe::Error<tonic::transport::Error>) -> HttpResponse {
+    let msg = format!("Service Unavailable, retry later. Error: {}", err);
+    let string = serde_json::json!({
+        "msg": &msg,
+    });
+    HttpResponse::ServiceUnavailable()
+        .insert_header(("Access-Control-Allow-Origin", "*"))
+        .body(string.to_string())
+}
+
 #[derive(Deserialize, Default, Debug)]
 struct ProductUpdateInfo {
     product_name: String,
@@ -86,7 +106,7 @@ struct ProductUpdateInfo {
 }
 
 impl ProductUpdateInfo {
-    fn to_product_update(&self) -> ProductUpdate{
+    fn to_product_update(&self) -> ProductUpdate {
         ProductUpdate {
             name: self.product_name.clone(),
             r#type: type_from_str(&self.r#type).into(),
@@ -133,7 +153,11 @@ async fn add_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    let result = get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel created");
     // Creo un gRPC client
     let mut client = ShoppingListClient::new(channel);
@@ -166,7 +190,7 @@ async fn add_product(req: HttpRequest) -> impl Responder {
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.add_product_to_list(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.add_product_to_list(request))
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
@@ -178,7 +202,11 @@ async fn remove_product(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product removal requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    let result = get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel created");
     // Creo un gRPC client
     let mut client = ShoppingListClient::new(channel);
@@ -196,7 +224,7 @@ async fn remove_product(req: HttpRequest) -> impl Responder {
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.remove_product_from_list(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.remove_product_from_list(request))
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
@@ -208,7 +236,11 @@ async fn update_product(query: Query<ProductUpdateInfo>) -> impl Responder {
     let configs = get_properties();
     println!("Product update requested: {:?}", query);
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    let result = get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel created");
     // Creo un gRPC client
     let mut client = ShoppingListClient::new(channel);
@@ -217,7 +249,7 @@ async fn update_product(query: Query<ProductUpdateInfo>) -> impl Responder {
     let request = tonic::Request::new(query.to_product_update());
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.update_product_in_list(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.update_product_in_list(request))
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
@@ -230,7 +262,11 @@ async fn add_to_cart(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition to cart requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    let result = get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel created");
     // Creo un gRPC client
     let mut client = ShoppingListClient::new(channel);
@@ -248,7 +284,7 @@ async fn add_to_cart(req: HttpRequest) -> impl Responder {
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.add_product_to_cart(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.add_product_to_cart(request))
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty Response".to_string() }))
         .into_inner();
@@ -260,7 +296,11 @@ async fn remove_from_cart(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product removal from cart requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    let result = get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel created");
     // Creo un gRPC client
     let mut client = ShoppingListClient::new(channel);
@@ -278,9 +318,9 @@ async fn remove_from_cart(req: HttpRequest) -> impl Responder {
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.remove_product_from_cart(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.remove_product_from_cart(request))
         .await
-        .unwrap_or(Response::new(OurResponse{ msg: "Empty response".to_string() }))
+        .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -290,7 +330,11 @@ async fn get_shopping_list() -> impl Responder {
     let configs = get_properties();
     println!("Shopping List requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    let result = get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel created");
     // Creo un gRPC client
     let mut client = ShoppingListClient::new(channel);
@@ -299,16 +343,16 @@ async fn get_shopping_list() -> impl Responder {
     let request = tonic::Request::new(GetListRequest {});
 
     println!("Request created");
-    // Invio la richiesta e attendo la risposta:
-    let product_list = client.get_list(request)
+    // Invio la richiesta e attendo la risposta con il circuit breaker
+    let product_list = CIRCUIT_BREAKER.lock().await.call(client.get_list(request))
         .await
-        .unwrap_or(Response::new(ProductList{
+        .unwrap_or(Response::new(ProductList {
             id: None,
             name: "Empty List".to_string(),
-            products: vec![]
+            products: vec![],
         }))
         .into_inner();
-    to_json_response(product_list)
+    return to_json_response(product_list);
 }
 
 // rpc BuyAllProductsInCart(ProductList) returns (Response)
@@ -316,7 +360,11 @@ async fn get_shopping_list() -> impl Responder {
 async fn buy_products_in_cart() -> impl Responder {
     let configs = get_properties();
     println!("Buy products requested");
-    let channel = try_get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    let result = get_channel(&configs.shopping_list_address, configs.shopping_list_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel created");
     let mut client = ShoppingListClient::new(channel);
     println!("gRPC client created");
@@ -324,9 +372,9 @@ async fn buy_products_in_cart() -> impl Responder {
     let request = tonic::Request::new(BuyRequest {});
     println!("Request created");
     // Sending request and waiting for response
-    let response = client.buy_all_products_in_cart(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.buy_all_products_in_cart(request))
         .await
-        .unwrap_or(Response::new(OurResponse{ msg: "Empty response".to_string() }))
+        .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -338,7 +386,11 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition to product storage requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    let result = get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to product_storage created");
     // Create a gRPC client for ProductStorage
     let mut client = ProductStorageClient::new(channel);
@@ -374,9 +426,9 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.add_product_to_pantry(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.add_product_to_pantry(request))
         .await
-        .unwrap_or(Response::new(OurResponse{ msg: "Empty response".to_string() }))
+        .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
     to_json_response(response)
 }
@@ -386,7 +438,11 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Drop product from storage requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    let result = get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to product_storage created");
     // Create a gRPC client for ProductStorage
     let prod_name = req.match_info().get("name").map(|n| n.to_string()).unwrap_or("".to_string());
@@ -399,7 +455,7 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = client.drop_product_from_pantry(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.drop_product_from_pantry(request))
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
@@ -412,7 +468,11 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Product addition to product storage requested.");
     // Crea un canale per la connessione al server
-    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    let result = get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to product_storage created");
     // Create a gRPC client for ProductStorage
     let mut client = ProductStorageClient::new(channel);
@@ -449,7 +509,7 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.update_product_in_pantry(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.update_product_in_pantry(request))
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
@@ -460,7 +520,11 @@ async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
 async fn get_pantry() -> impl Responder {
     let configs = get_properties();
     println!("Storage content requested.");
-    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    let result = get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to product_storage created");
     // Create a gRPC client for ProductStorage
     let mut client = ProductStorageClient::new(channel);
@@ -471,7 +535,7 @@ async fn get_pantry() -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let pantry = client.get_pantry(request)
+    let pantry = CIRCUIT_BREAKER.lock().await.call(client.get_pantry(request))
         .await
         .unwrap_or(Response::new(Pantry { products: vec![] }))
         .into_inner();
@@ -483,7 +547,11 @@ async fn get_pantry() -> impl Responder {
 async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
     println!("Storage content requested.");
-    let channel = try_get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    let result = get_channel(&configs.product_storage_address, configs.product_storage_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to product_storage created");
     // Create a gRPC client for ProductStorage
     let mut client = ProductStorageClient::new(channel);
@@ -506,7 +574,7 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.use_product_in_pantry(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.use_product_in_pantry(request))
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
@@ -518,7 +586,11 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
 #[get("/getWeekSummary")]
 async fn get_week_summary() -> impl Responder {
     let configs = get_properties();
-    let channel = try_get_channel(&configs.summary_address, configs.summary_port).await;
+    let result = get_channel(&configs.summary_address, configs.summary_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to summary created");
     // Create a gRPC client for ProductStorage
     let mut client = SummaryClient::new(channel);
@@ -528,7 +600,7 @@ async fn get_week_summary() -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.week_summary(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.week_summary(request))
         .await
         .unwrap_or(Response::new(SummaryData {
             reference: 0,
@@ -547,7 +619,11 @@ async fn get_week_summary() -> impl Responder {
 #[get("/getMonthSummary")]
 async fn get_month_summary() -> impl Responder {
     let configs = get_properties();
-    let channel = try_get_channel(&configs.summary_address, configs.summary_port).await;
+    let result = get_channel(&configs.summary_address, configs.summary_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to summary created");
     // Create a gRPC client for ProductStorage
     let mut client = SummaryClient::new(channel);
@@ -557,7 +633,7 @@ async fn get_month_summary() -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.month_summary(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.month_summary(request))
         .await
         .unwrap_or(Response::new(SummaryData {
             reference: 0,
@@ -576,7 +652,11 @@ async fn get_month_summary() -> impl Responder {
 #[get("/getTotalSummary")]
 async fn get_total_summary() -> impl Responder {
     let configs = get_properties();
-    let channel = try_get_channel(&configs.summary_address, configs.summary_port).await;
+    let result = get_channel(&configs.summary_address, configs.summary_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to summary created");
     // Create a gRPC client for ProductStorage
     let mut client = SummaryClient::new(channel);
@@ -586,7 +666,7 @@ async fn get_total_summary() -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.total_summary(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.total_summary(request))
         .await
         .unwrap_or(Response::new(SummaryData {
             reference: 0,
@@ -605,7 +685,11 @@ async fn get_total_summary() -> impl Responder {
 #[get("/getRecipes")]
 async fn get_recipes_from_pantry() -> impl Responder {
     let configs = get_properties();
-    let channel = try_get_channel(&configs.recipes_address, configs.recipes_port).await;
+    let result = get_channel(&configs.recipes_address, configs.recipes_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to recipes created");
     // Create a gRPC client for ProductStorage
     let mut client = RecipesClient::new(channel);
@@ -615,7 +699,7 @@ async fn get_recipes_from_pantry() -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.get_recipes_from_pantry(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.get_recipes_from_pantry(request))
         .await
         .unwrap_or(Response::new(RecipeList { recipes: vec![] }))
         .into_inner();
@@ -633,7 +717,11 @@ async fn get_recipes_from_pantry() -> impl Responder {
 #[get("/predictConsumptions")]
 async fn predict() -> impl Responder {
     let configs = get_properties();
-    let channel = try_get_channel(&configs.consumptions_address, configs.consumptions_port).await;
+    let result = get_channel(&configs.consumptions_address, configs.consumptions_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
     println!("Channel to consumptions created");
     // Create a gRPC client for ProductStorage
     let mut client = EstimatorClient::new(channel);
@@ -643,7 +731,7 @@ async fn predict() -> impl Responder {
     println!("Request created");
 
     // Invio la richiesta e attendo la risposta:
-    let response = client.predict(request)
+    let response = CIRCUIT_BREAKER.lock().await.call(client.predict(request))
         .await
         .expect("Failed to await response from consumptions!!!")
         .into_inner();
@@ -652,16 +740,23 @@ async fn predict() -> impl Responder {
 }
 
 
+async fn get_channel(address: &String, port: i32) -> Result<Channel, failsafe::Error<tonic::transport::Error>> {
+    let uri_str = format!("http://{}:{}", address, port);
+    let uri = Uri::try_from(uri_str.clone()).expect(&format!("Error in creating uri {}", uri_str));
+    let endpoint = Channel::builder(uri);
+    CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await
+}
+
 async fn try_get_channel(address: &String, port: i32) -> Channel {
-    let mut channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap())
-        .connect()
-        .await;
-    while channel.is_err() {
-        println!("Waiting for service!");
-        thread::sleep(Duration::from_millis(4000));
-        channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
-    }
-    channel.unwrap()
+    let uri_str = format!("http://{}:{}", address, port);
+    let uri = Uri::try_from(uri_str.clone()).expect(&format!("Error in creating uri {}", uri_str));
+    let endpoint = Channel::builder(uri);
+    CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await.expect(&format!("{} is down. Retry later.", address))
+    // while channel.is_err() {
+    //     println!("Waiting for service {}!", address);
+    //     thread::sleep(Duration::from_millis(4000));
+    //     channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
+    // }
 }
 
 
