@@ -124,7 +124,7 @@ services:
   consumptions:
     image: consumptions
     container_name: "ConsumptionService"
-    restart: always
+    # restart: always
     build:
       dockerfile: "../docker/Dockerfile.consumptions"
       context: "src"

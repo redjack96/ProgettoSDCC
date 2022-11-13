@@ -1,8 +1,8 @@
 import logging
+from time import sleep
+
+import cassandra
 from cassandra.cluster import Cluster
-import time
-from cassandra.concurrent import execute_concurrent_with_args
-from pandas import DataFrame as df
 import pandas as pd
 
 import consumptions_pb2
@@ -75,11 +75,24 @@ def convert_rows_to_dataframe(rows):
 
 class Cassandra:
     def __init__(self):
-        self.session, self.cluster = self.__cassandra_connection()
+        self.session, self.cluster = None, None
 
-    def init_dataset(self):
+    def init_database(self):
+        ok = False
+        while not ok:
+            try:
+                print("connecting to cassandra")
+                self.session, self.cluster = self.__cassandra_connection()
+                ok = True
+            except cassandra.cluster.NoHostAvailable:
+                print("Connection failed... retrying in 1 second")
+                sleep(1)
+
+        print("creating tables")
         self.__create_tables()
+        print("creating index")
         self.__create_index()
+        print("populating tables")
         self.__populate_tables("consumi-storage.csv")
 
     @staticmethod

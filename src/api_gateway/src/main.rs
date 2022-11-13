@@ -96,6 +96,16 @@ fn to_json_unavailable(err: failsafe::Error<tonic::transport::Error>) -> HttpRes
         .body(string.to_string())
 }
 
+fn to_json_error(err: failsafe::Error<tonic::Status>) -> HttpResponse {
+    let msg = format!("Error in calling the API: {}", err);
+    let string = serde_json::json!({
+        "msg": &msg,
+    });
+    HttpResponse::ServiceUnavailable()
+        .insert_header(("Access-Control-Allow-Origin", "*"))
+        .body(string.to_string())
+}
+
 #[derive(Deserialize, Default, Debug)]
 struct ProductUpdateInfo {
     product_name: String,
@@ -372,11 +382,11 @@ async fn buy_products_in_cart() -> impl Responder {
     let request = tonic::Request::new(BuyRequest {});
     println!("Request created");
     // Sending request and waiting for response
-    let response = CIRCUIT_BREAKER.lock().await.call(client.buy_all_products_in_cart(request))
-        .await
-        .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
-        .into_inner();
-    to_json_response(response)
+    // TODO: fare così ovunque!
+    match CIRCUIT_BREAKER.lock().await.call(client.buy_all_products_in_cart(request)).await {
+        Ok(resp) => to_json_response(resp.into_inner()),
+        Err(e ) => to_json_error(e),
+    }
 }
 
 
@@ -747,17 +757,17 @@ async fn get_channel(address: &String, port: i32) -> Result<Channel, failsafe::E
     CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await
 }
 
-async fn try_get_channel(address: &String, port: i32) -> Channel {
-    let uri_str = format!("http://{}:{}", address, port);
-    let uri = Uri::try_from(uri_str.clone()).expect(&format!("Error in creating uri {}", uri_str));
-    let endpoint = Channel::builder(uri);
-    CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await.expect(&format!("{} is down. Retry later.", address))
-    // while channel.is_err() {
-    //     println!("Waiting for service {}!", address);
-    //     thread::sleep(Duration::from_millis(4000));
-    //     channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
-    // }
-}
+// async fn try_get_channel(address: &String, port: i32) -> Channel {
+//     let uri_str = format!("http://{}:{}", address, port);
+//     let uri = Uri::try_from(uri_str.clone()).expect(&format!("Error in creating uri {}", uri_str));
+//     let endpoint = Channel::builder(uri);
+//     CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await.expect(&format!("{} is down. Retry later.", address))
+//     // while channel.is_err() {
+//     //     println!("Waiting for service {}!", address);
+//     //     thread::sleep(Duration::from_millis(4000));
+//     //     channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
+//     // }
+// }
 
 
 // cargo run --bin client -- tuoiparametri
