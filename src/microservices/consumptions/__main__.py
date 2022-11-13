@@ -13,6 +13,7 @@ def exception_handler(exception_type, exception, traceback):
     # your format
     print("%s: %s" % (exception_type.__name__, exception))
 
+
 def main():
     # this is needed to print less stack trace!
     sys.excepthook = exception_handler

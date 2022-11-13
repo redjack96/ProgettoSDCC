@@ -4,6 +4,7 @@ import '../App.css';
 import Navbar from './Navbar';
 import images from '../Images/images.js';
 import {useNavigate} from "react-router-dom";
+import {Fab} from '@mui/material';
 
 function Home() {
     return (
@@ -249,6 +250,42 @@ function ShoppingListCard() {
         [items],
     );
 
+    const onBuyAll = React.useCallback(
+        () => {
+            console.log("BuyAll")
+            fetch(API_GATEWAY_ADDRESS + '/buyProductsInCart', {method: 'POST'})
+                .then(r => {
+                    let x = r.json();
+                    console.log(x);
+                    return x;
+                })
+                .catch(e => console.log("Errore: " + e))
+
+            console.log("reloading list from server");
+            fetch(API_GATEWAY_ADDRESS + '/getList')
+                .then(r => {
+                    let x = r.json();
+                    console.log(x);
+                    return x;
+                })
+                .then(itemsOrError => {
+                    try {
+                        setItems(itemsOrError)
+                        setVoidMessage("Nothing added to List! Add one when you're ready!")
+                    } catch {
+                        console.log("Error: shopping_list service is down")
+                        setItems({
+                            id: 0,
+                            name: "",
+                            products: []
+                        })
+                        setVoidMessage(itemsOrError.msg)
+                    }
+                })
+                .catch(e => console.log("Errore: " + e))
+        }
+    , [items])
+
     return (
         <React.Fragment>
             <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
@@ -264,6 +301,9 @@ function ShoppingListCard() {
                 />
             ))}
             {/*{rows}*/}
+            <Fab variant="extended" onClick={onBuyAll}>
+                BuyAll
+            </Fab>
         </React.Fragment>
     );
 }
