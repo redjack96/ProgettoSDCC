@@ -229,7 +229,7 @@ function ShoppingListCard() {
         <React.Fragment>
             <AddItemForm onNewItem={onNewItem}/>
             {items.products.length === 0 && (
-                <p className="text-center">Nessun prodotto! Aggiungine uno quando vuoi.</p>
+                <p className="text-center">Nothing added to List! Add one when you're ready!</p>
             )}
             {items.products.map(item => (
                 <ItemDisplay
@@ -313,14 +313,15 @@ function AddItemForm({onNewItem}) {
                         <Form.Control
                             value={quantity.valueOf()}
                             onChange={e => setQuantity(isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value))}
-                            type="text"
-                            placeholder="Quantity"
+                            type="number"
+                            size="sm"
+                            placeholder="0"
                             aria-describedby="basic-addon1"
                         />
                     </Form.Group>
                     <Form.Group as={Col} controlId="formSelectUnit">
                         <Form.Label>Unit</Form.Label>
-                        <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))}>
+                        <Form.Control as="select" size="sm" onChange={e => setUnit(Unit.parse(e.target.value))}>
                             <option>Select unit...</option>
                             <option>Bottle</option>
                             <option>Packet</option>
@@ -328,10 +329,12 @@ function AddItemForm({onNewItem}) {
                             <option>Grams</option>
                         </Form.Control>
                     </Form.Group>
+                </Row>
+                <Row>
                     <Form.Group as={Col} controlId="formSelectType">
                         <Form.Label>Type</Form.Label>
                         {/*Il value è della select*/}
-                        <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))}>
+                        <Form.Control as="select" size="sm" onChange={e => setType(ProductType.parse(e.target.value))}>
                             <option>Select product type...</option>
                             <option>Vegetable</option>
                             <option>Fruit</option>
