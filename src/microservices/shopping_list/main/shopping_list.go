@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/afex/hystrix-go/hystrix"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -18,7 +20,7 @@ import (
 	"time"
 )
 
-//import "github.com/afex/hystrix-go/hystrix"
+//
 // TODO: vedi https://github.com/afex/hystrix-go
 
 type OpType int64
@@ -205,38 +207,66 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 		}
 	}
 
-	// Sending products to ProductStorage
-	properties, _ := props.GetProperties()
-	productStorageAddress := fmt.Sprintf("%s:%d", properties.ProductStorageAddress, properties.ProductStoragePort)
-	conn, err := grpc.Dial(productStorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
+	fmt.Println("\nConnecting with product storage to store items")
+	// make a channel to get the output of the hystrix go-routine and implement circuit-breaker pattern
+	outputConn := make(chan *grpc.ClientConn)
+	errConn := hystrix.Go("connect shopping list to product storage", func() error {
+		// establish connection to product storage
+		properties, _ := props.GetProperties()
+		productStorageAddress := fmt.Sprintf("%s:%d", properties.ProductStorageAddress, properties.ProductStoragePort)
+		conn, err := grpc.Dial(productStorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			// send to main thread nothing
+			outputConn <- nil
+			return err
+		}
+		// send to main thread the connection
+		outputConn <- conn
+		return nil
+	}, func(err error) error {
+		// this is executed when service are down
 		log.Println("Product storage down")
-		return nil, err
+		return err
+	})
+	// waits until connection is established or a failure is detected
+	conn := <-outputConn
+	if conn == nil {
+		// waits until error is sent by hystrix go-routine.
+		return nil, <-errConn
 	}
 	defer func(conn *grpc.ClientConn) {
 		err := conn.Close()
 		if err != nil {
 			log.Fatalf("cannot close connection: %v", err)
 		}
-	}(conn) // runs immediately this function (like in JavaScript). To be more precise, it runs the lambda function at the end of the main function.
-	fmt.Println("\nConnecting with product storage to store items")
+	}(conn) // runs immediately this function (like in JavaScript, we have '()'), with conn as parameter at the end of the main function.
+
 	// pb stand for ProtocolBuffer
 	c := pb.NewProductStorageClient(conn)
 	fmt.Println(c)
 	// Contact server and print out its response; cancel is a function
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+
 	fmt.Println("Sending products to pantry")
-	r, err := c.AddBoughtProductsToPantry(ctx, &pb.ProductList{
-		Id:       entireList.Id,
-		Name:     entireList.Name,
-		Products: onlyInCart,
+	outputMsg := make(chan *pb.Response)
+	hystrix.Go("sending products to product storage", func() error {
+		r, err := c.AddBoughtProductsToPantry(context.TODO(), &pb.ProductList{
+			Id:       entireList.Id,
+			Name:     entireList.Name,
+			Products: onlyInCart,
+		})
+		outputMsg <- r
+		return err
+	}, func(err error) error {
+		fmt.Println("Impossible to send product to pantry. Product storage is down")
+		outputMsg <- nil
+		return err
 	})
-	if err != nil {
-		return &pb.Response{Msg: "could not add bought items to Pantry"}, err
+	r := <-outputMsg
+	if r == nil {
+		theErr := errors.New("product storage service is down")
+		return &pb.Response{Msg: "could not add bought items to Pantry"}, theErr
 	}
 	log.Printf("Response received: %s", r.Msg)
-
 	// Remove products from cart in mongodb
 	operation := new(DBOperation)
 	operation.opType = Buy

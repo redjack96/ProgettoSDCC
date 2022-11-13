@@ -107,7 +107,6 @@ impl ProductItem {
             times_is_bought: self.times_is_bought,
         }
     }
-
 }
 
 // const KAFKA_RETRIES: i32 = 5;
