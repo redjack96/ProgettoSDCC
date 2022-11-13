@@ -18,6 +18,9 @@ import (
 	"time"
 )
 
+//import "github.com/afex/hystrix-go/hystrix"
+// TODO: vedi https://github.com/afex/hystrix-go
+
 type OpType int64
 
 const (
@@ -191,7 +194,7 @@ func (s *serverShoppingList) GetList(_ context.Context, _ *pb.GetListRequest) (*
 }
 
 func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.BuyRequest) (*pb.Response, error) {
-	log.Printf("Buying all products in cart...")
+	log.Printf("\nBuying all products in cart...\n")
 
 	onlyInCart := make([]*pb.Product, 0)
 	entireList, _ := s.GetList(ctx, &pb.GetListRequest{})
@@ -202,22 +205,13 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 		}
 	}
 
-	// Remove products from cart in mongodb
-	operation := new(DBOperation)
-	operation.opType = Buy
-	qResult, err := queryDB(*operation)
-	if err != nil {
-		log.Fatalln("Error querying DB", err)
-	}
-	fmt.Printf("Removed %d elements from shopping list", qResult)
-
-	// TODO: aggiungere comunicazione con consumption service per predire i consumi (aggiungere al dataset delle cose comprate)
 	// Sending products to ProductStorage
 	properties, _ := props.GetProperties()
 	productStorageAddress := fmt.Sprintf("%s:%d", properties.ProductStorageAddress, properties.ProductStoragePort)
 	conn, err := grpc.Dial(productStorageAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("did non connect: %v", err)
+		log.Println("Product storage down")
+		return nil, err
 	}
 	defer func(conn *grpc.ClientConn) {
 		err := conn.Close()
@@ -225,14 +219,14 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 			log.Fatalf("cannot close connection: %v", err)
 		}
 	}(conn) // runs immediately this function (like in JavaScript). To be more precise, it runs the lambda function at the end of the main function.
-
+	fmt.Println("\nConnecting with product storage to store items")
 	// pb stand for ProtocolBuffer
 	c := pb.NewProductStorageClient(conn)
 	fmt.Println(c)
 	// Contact server and print out its response; cancel is a function
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-
+	fmt.Println("Sending products to pantry")
 	r, err := c.AddBoughtProductsToPantry(ctx, &pb.ProductList{
 		Id:       entireList.Id,
 		Name:     entireList.Name,
@@ -242,6 +236,15 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 		return &pb.Response{Msg: "could not add bought items to Pantry"}, err
 	}
 	log.Printf("Response received: %s", r.Msg)
+
+	// Remove products from cart in mongodb
+	operation := new(DBOperation)
+	operation.opType = Buy
+	qResult, err := queryDB(*operation)
+	if err != nil {
+		log.Fatalln("Error querying DB", err)
+	}
+	fmt.Printf("Removed %d elements from shopping list", qResult)
 	return &pb.Response{Msg: "ok - all product bought and sent to pantry"}, nil
 }
 

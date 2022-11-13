@@ -46,13 +46,14 @@ services:
       - "8007"
     ports:
       - "8007:8007"
+# TODO: se aggiungiamo failsafe-rs, non serve piu' depends_on!!!
 #    depends_on:
 #      - shopping_list
 #      - product_storage
 #      - consumptions
 #      - summary
-       #      - notifications
-        #      - recipes
+#      - notifications
+#      - recipes
 
   # --- APP-MICROSERVICES
   shopping_list:

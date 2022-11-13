@@ -14,7 +14,7 @@ export function App() {
                     {/*For react-router < v6, use <Route exact path="/" component={Home} /> */}
                     <Route path="/" element={<Home/>}/>
                     <Route path="/updateProductPage" element={<UpdateProductPage/>}/>
-                    {/*For react-router < v6, use Redirect instead of Navigate AND it cannot be child of Routes! It must be used where needed (in a button?)*/}
+                    {/*For react-router < v6, use Redirect instead of Navigate AND it cannot be child of Routes! It must be used where needed (in a button onClick={() => navigate("/")}, where const navigate = useNavigate();)*/}
                     {/*<Navigate to={"/"}/>*/}
                 </Routes>
             </BrowserRouter>
@@ -23,5 +23,4 @@ export function App() {
 }
 
 // TODO: importante, per eseguire fuori da docker con hot reload, usa:
-
-// npm start --host 0.0.0.0 --port 3000 --disableHostCheck true
+//  npm start --host 0.0.0.0 --port 3000 --disableHostCheck true
