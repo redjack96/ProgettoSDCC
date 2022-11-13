@@ -1,3 +1,4 @@
+import shopping_list_pb2 as _shopping_list_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
@@ -10,14 +11,16 @@ expired: ObservationType
 used: ObservationType
 
 class Observation(_message.Message):
-    __slots__ = ["productName", "quantity", "requestType"]
+    __slots__ = ["productName", "quantity", "requestType", "unit"]
     PRODUCTNAME_FIELD_NUMBER: _ClassVar[int]
     QUANTITY_FIELD_NUMBER: _ClassVar[int]
     REQUESTTYPE_FIELD_NUMBER: _ClassVar[int]
+    UNIT_FIELD_NUMBER: _ClassVar[int]
     productName: str
     quantity: int
     requestType: ObservationType
-    def __init__(self, requestType: _Optional[_Union[ObservationType, str]] = ..., productName: _Optional[str] = ..., quantity: _Optional[int] = ...) -> None: ...
+    unit: _shopping_list_pb2.Unit
+    def __init__(self, requestType: _Optional[_Union[ObservationType, str]] = ..., productName: _Optional[str] = ..., quantity: _Optional[int] = ..., unit: _Optional[_Union[_shopping_list_pb2.Unit, str]] = ...) -> None: ...
 
 class PredictRequest(_message.Message):
     __slots__ = []
