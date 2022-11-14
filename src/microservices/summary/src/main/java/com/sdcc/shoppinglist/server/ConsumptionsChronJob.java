@@ -1,14 +1,17 @@
 package com.sdcc.shoppinglist.server;
 
-import com.sdcc.shoppinglist.summary.Period;
-import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.utils.LogEntry;
-import com.sdcc.shoppinglist.utils.SummaryBuilder;
 import com.sdcc.shoppinglist.utils.TimeWindow;
 import consumptions.Consumptions;
 import consumptions.EstimatorGrpc;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.vavr.control.Try;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -17,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public class ConsumptionsChronJob implements Runnable {
@@ -30,14 +34,9 @@ public class ConsumptionsChronJob implements Runnable {
     public static final String TRANSACTION_BUY = "add_bought_products_to_pantry";
     public static final String TRANSACTION_ADD = "add_product_to_pantry";
     public static final String TRANSACTION_USE = "use_product_in_pantry";
+    private final CircuitBreaker circuitBreaker;
 
     public ConsumptionsChronJob(InfluxSink influx, boolean startNow) {
-        // FIXME levare e fare in modo che aspetti il microservizio di consumption (Circuit Breaker?)
-        try {
-            Thread.sleep(90000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         this.influx = influx;
         var now = ZonedDateTime.now(ZoneId.of("America/Los_Angeles"));
         var nextRun = now.withHour(0).withMinute(0).withSecond(0);
@@ -47,6 +46,14 @@ public class ConsumptionsChronJob implements Runnable {
         var duration = Duration.between(now, nextRun);
         this.initialDelay = duration.getSeconds();
         this.startNow = startNow;
+        var circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .failureRateThreshold(50)
+                .waitDurationInOpenState(Duration.ofMillis(1000))
+                .permittedNumberOfCallsInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .recordExceptions(IOException.class, TimeoutException.class)
+                .build();
+        this.circuitBreaker = CircuitBreakerRegistry.of(circuitBreakerConfig).circuitBreaker("predict request from summary");
     }
 
     public void scheduleWeekly() {
@@ -61,14 +68,16 @@ public class ConsumptionsChronJob implements Runnable {
         LOGGER.info("Chron-job: Sending consumption week data!");
         // Get the data
         List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Test); // TODO: TimeWindow.Weekly
-        LOGGER.info("lOGS:"+logs);
-        // Create the channel
+        LOGGER.info("Chron-job: LOGS:" + logs);
+        LOGGER.info("Chron-job: Connecting to consumptions!");
+        // If the connection cannot be established rapidly, the circuit breaker ends this method.
         var channel = ManagedChannelBuilder.forAddress("consumptions", 8004)// FIXME: hardcoded
                 .usePlaintext()
                 .build();
+        // Create the channel
+        LOGGER.info("Chron-job: Successfully connected to consumptions");
         // Create the client
         var client = EstimatorGrpc.newBlockingStub(channel);
-
         // convert LogEntry to Observations for consumptions microservice
 
         // Build the request parameter
@@ -76,12 +85,22 @@ public class ConsumptionsChronJob implements Runnable {
                 .addAllObservations(convertLogsToObservations(logs))
                 .setCurrentDate(new Date().getTime())
                 .build();
-        LOGGER.info("Sending training request to consumptions service!");
+        LOGGER.info("Chron-job: Sending training request to consumptions service!");
         // Sends the request
-        try {
+        var responseSupplier = circuitBreaker.decorateSupplier(() -> {
             Consumptions.TrainResponse trainResponse = client.trainModel(trainRequest);
             LOGGER.info(trainResponse.getMsg());
-            // Asynchronously waits the response
+            return trainResponse;
+        });
+
+        Consumptions.TrainResponse trainResponse = Try.ofSupplier(responseSupplier)
+                .toJavaOptional()
+                .orElse(Consumptions.TrainResponse.newBuilder().setMsg("Failed to receive training response").build());
+
+        circuitBreaker.reset();
+        LOGGER.info("Training Response: " + trainResponse);
+        try {
+            // Synchronously waits the response
             channel.shutdownNow().awaitTermination(15, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
