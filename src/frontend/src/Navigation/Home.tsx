@@ -154,6 +154,7 @@ export class Timestamp {
     }
 }
 
+
 function ShoppingListCard() {
     const [loading, setLoading] = React.useState(false)
     const [items, setItems] = React.useState({
@@ -289,6 +290,15 @@ function ShoppingListCard() {
     return (
         <React.Fragment>
             <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
+            <Button
+                variant="success"
+                onClick={onBuyAll}
+                aria-label="Buy in Cart"
+                disabled={!items.products.length}
+            >
+                Buy all in cart
+            </Button>
+            <br/><br/>
             {items.products.length === 0 && (
                 <p className="text-center">{voidMessage}</p>
             )}
@@ -300,10 +310,7 @@ function ShoppingListCard() {
                     onItemRemoval={onItemRemoval}
                 />
             ))}
-            {/*{rows}*/}
-            <Fab variant="extended" onClick={onBuyAll}>
-                BuyAll
-            </Fab>
+            <br/>
         </React.Fragment>
     );
 }
