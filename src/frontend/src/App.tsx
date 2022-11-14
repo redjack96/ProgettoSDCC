@@ -3,6 +3,12 @@ import {Container} from "react-bootstrap";
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import Home from "./Navigation/Home";
 import UpdateProductPage from "./Navigation/UpdateProductPage";
+import {Storage} from "./Services/Storage";
+import {Recipes} from "./Services/Recipes";
+import {Summary} from "./Services/Summary";
+import {Consumptions} from "./Services/Consumptions";
+
+
 
 export function App() {
     return (
@@ -14,6 +20,10 @@ export function App() {
                     {/*For react-router < v6, use <Route exact path="/" component={Home} /> */}
                     <Route path="/" element={<Home/>}/>
                     <Route path="/updateProductPage" element={<UpdateProductPage/>}/>
+                    <Route path="/productStoragePage" element={<Storage />}/>
+                    <Route path="/recipesPage" element={<Recipes />}/>
+                    <Route path="/summaryPage" element={<Summary />}/>
+                    <Route path="/consumptionsPage" element={<Consumptions />}/>
                     {/*For react-router < v6, use Redirect instead of Navigate AND it cannot be child of Routes! It must be used where needed (in a button onClick={() => navigate("/")}, where const navigate = useNavigate();)*/}
                     {/*<Navigate to={"/"}/>*/}
                 </Routes>
