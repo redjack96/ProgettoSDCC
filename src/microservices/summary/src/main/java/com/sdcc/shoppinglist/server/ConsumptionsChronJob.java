@@ -32,6 +32,12 @@ public class ConsumptionsChronJob implements Runnable {
     public static final String TRANSACTION_USE = "use_product_in_pantry";
 
     public ConsumptionsChronJob(InfluxSink influx, boolean startNow) {
+        // FIXME levare e fare in modo che aspetti il microservizio di consumption (Circuit Breaker?)
+        try {
+            Thread.sleep(90000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         this.influx = influx;
         var now = ZonedDateTime.now(ZoneId.of("America/Los_Angeles"));
         var nextRun = now.withHour(0).withMinute(0).withSecond(0);

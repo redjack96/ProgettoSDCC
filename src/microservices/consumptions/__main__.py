@@ -2,6 +2,7 @@
 import sys
 
 import server
+import threading
 import persistence
 
 
@@ -14,14 +15,24 @@ def exception_handler(exception_type, exception, traceback):
     print("%s: %s" % (exception_type.__name__, exception))
 
 
+cass: persistence.Cassandra
+
+
+def connect_to_database():
+    global cass
+    cass = persistence.Cassandra()
+    cass.init_database()
+
+
 def main():
     # this is needed to print less stack trace!
     sys.excepthook = exception_handler
 
     # now just call everything, without threads
-    cassandra_conn: persistence.Cassandra = persistence.Cassandra()
-    cassandra_conn.init_database()
-    server.serve(cassandra_conn)
+    thread = threading.Thread(target=connect_to_database, args=())
+    thread.start()
+    thread.join()
+    server.serve(cass)
 
 
 main()

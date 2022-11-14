@@ -17,7 +17,7 @@ protoc --proto_path ../../proto --go_out generated --go-grpc_out generated ../..
 cd "${SCRIPT_DIR}/src/microservices/consumptions" || exit
 
 echo "Generating Python GRPC files"
-python -m grpc_tools.protoc -I ../../proto --python_out=. --pyi_out=. --grpc_python_out=. ../../proto/*.proto --experimental_allow_proto3_optional
+python3 -m grpc_tools.protoc -I ../../proto --python_out=. --pyi_out=. --grpc_python_out=. ../../proto/*.proto --experimental_allow_proto3_optional
 
 
 

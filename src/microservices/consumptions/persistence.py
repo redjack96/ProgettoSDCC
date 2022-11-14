@@ -34,8 +34,28 @@ def prepare_select_week_query(product: str, week_num: int):
     return query_first + week + query_mid + prod + query_last
 
 
-def prepare_update_query(type_update: consumptions_pb2.ObservationType, old_quantity: int,
-                         week_num: int, product_name: str, new_quantity: int):
+def prepare_update_entry_query(week_num: int, product_name: str, n_bought: int, n_expired: int, n_used: int, n_rem: int,
+                               consumption: float):
+    """
+    Prepares a query for the complete update of an existing observation
+    :param week_num:
+    :param product_name:
+    :param n_bought:
+    :param n_expired:
+    :param n_used:
+    :param n_rem:
+    :param consumption:
+    :return: the prepared query (str)
+    """
+    prod = f"'{product_name}'"
+    query = f"UPDATE dataset SET n_bought={n_bought}, n_expired={n_expired}, n_used={n_used}, n_rem={n_rem}, consumption={consumption}" + \
+            f" WHERE week_num={week_num} AND product_name=" + prod + ";"
+    print("update query:", query)
+    return query
+
+
+def prepare_update_quantity_query(type_update: consumptions_pb2.ObservationType, old_quantity: int,
+                                  week_num: int, product_name: str, new_quantity: int):
     # select previous value of observation in database
     week_str = str(week_num)
     total_str = str(old_quantity + new_quantity)
@@ -136,12 +156,12 @@ class Cassandra:
             self.insert_entry([week, name, bought, expired, used, rem, consumption])
         print("Tables are populated.")
 
-    def update_entry(self, week_num: int, product_name: str, new_quantity: int,
-                     type_update: consumptions_pb2.ObservationType):
-        # select previous value of observation in database
+    def update_quantity(self, week_num: int, product_name: str, new_quantity: int,
+                        type_update: consumptions_pb2.ObservationType):
+        # select existing observation in database
         entry = self.select_entries_for_week_product(week_num, product_name)
         if entry.size == 0:  # if no previous observation for week and product are found, insert it
-            print("No previous observations")
+            print("No existing observations")
             if type_update == consumptions_pb2.added:
                 self.insert_entry([week_num, product_name, new_quantity, 0, 0, 0, 0.0])
             elif type_update == consumptions_pb2.used:
@@ -150,7 +170,7 @@ class Cassandra:
                 self.insert_entry([week_num, product_name, 0, new_quantity, 0, 0, 0.0])
         else:
             # check which quantity is to be updated
-            print("Yes previous observation")
+            print("Yes existing observation")
             if type_update == consumptions_pb2.added:
                 old_quantity = entry.iloc[0]["n_bought"]
             elif type_update == consumptions_pb2.used:
@@ -164,8 +184,24 @@ class Cassandra:
             print("product_name: ", product_name)
             print("new_quantity: ", new_quantity)
             print("type update: ", consumptions_pb2.ObservationType.Name(type_update))
-            query_update = prepare_update_query(type_update, old_quantity, week_num, product_name, new_quantity)
+            query_update = prepare_update_quantity_query(type_update, old_quantity, week_num, product_name,
+                                                         new_quantity)
             self.session.execute(query_update)
+
+    def update_entry(self, week_num: int, product_name: str, n_bought: int, n_expired: int, n_used: int, n_rem: int,
+                     consumption: float):
+        """
+        Updates an observation into the dataset
+        :param week_num:
+        :param product_name:
+        :param n_bought:
+        :param n_expired:
+        :param n_used:
+        :param n_rem:
+        :param consumption:
+        """
+        query = prepare_update_entry_query(week_num, product_name, n_bought, n_expired, n_used, n_rem, consumption)
+        self.session.execute(query)
 
     def insert_entry(self, zipped_args: list):
         print("zipped args: ", zipped_args)
@@ -204,3 +240,35 @@ class Cassandra:
         query_select = "SELECT * FROM dataset;"
         rows = self.session.execute(query_select)
         return convert_rows_to_dataframe(rows)
+
+    def calculate_features_of_product(self, week_num: int, product_name: str):
+        """
+        Calculates the features not inferable from the logs
+        :param week_num: number of the week considered
+        :param product_name: name of the product considered
+        :return:
+        """
+        # Select the entry for the product name corresponding to the previous week to calculate remainder
+        entry = self.select_entries_for_week_product(week_num - 1, product_name)
+        if entry.size != 0:
+            print("There are previous observations")
+            rem = entry.iloc[0]["n_rem"]
+        else:
+            print("No previous observations")
+            # Add an empty entry for the previous week (only if week > 1)
+            if week_num > 1:
+                self.insert_entry([week_num - 1, product_name, 0, 0, 0, 0, 0.0])
+            rem = 0
+        print("previous rem:", rem)
+        # Select the entry for the product name corresponding to the week to update
+        entry = self.select_entries_for_week_product(week_num, product_name)
+        if entry.size != 0:
+            bought = entry.iloc[0]["n_bought"]
+            used = entry.iloc[0]["n_used"]
+            expired = entry.iloc[0]["n_expired"]
+        else:
+            return
+        new_rem = (rem + bought) - expired - used
+        consumption = used / (bought + rem)
+        # Update the observation in the dataset
+        self.update_entry(week_num, product_name, bought, expired, used, new_rem, consumption)

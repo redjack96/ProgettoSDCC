@@ -1,5 +1,6 @@
 from concurrent import futures
 
+import consumptions
 import persistence
 import shopping_list_pb2
 from consumptions import ConsumptionEstimator
@@ -9,6 +10,10 @@ import consumptions_pb2
 import consumptions_pb2_grpc
 import properties as p
 import product_storage_pb2
+
+cassandra_conn: persistence.Cassandra
+estimator: consumptions.ConsumptionEstimator
+week_num: int = 0
 
 
 def uniform_quantity_by_unit(unit, quantity):
@@ -30,7 +35,6 @@ def uniform_quantity_by_unit(unit, quantity):
 class Estimator(consumptions_pb2_grpc.EstimatorServicer):
     def Predict(self, request: consumptions_pb2.PredictRequest, context):
         print("Received predict request")
-        estimator = ConsumptionEstimator()
         predicted = estimator.predict_consumptions()
         response = []
         for prod in predicted:
@@ -44,20 +48,29 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
     def TrainModel(self, item: consumptions_pb2.TrainRequest, context):
         print("I'm here")
         print("Received request with param: %s" % item.observations)
-        # Connect to Cassandra
-        cass = persistence.Cassandra()
+        global week_num
         # Save new observation data into persistence
         obs = item.observations
         for instance in obs:
-            week_num = 1  # FIXME fare in modo di recuperare la settimana giusta
-            new_quantity = uniform_quantity_by_unit(instance.unit, instance.quantity)
+            week_num = week_num + 1  # increment the global week counter
             product_name = instance.productName
+            estimator.add_new_product(product_name)  # Add product to the product list in the estimator
+            estimator.increment_week(product_name)  # Train a new week when receiving data from summary
+            # Uniform the product quantity to Grams unit
+            new_quantity = uniform_quantity_by_unit(instance.unit, instance.quantity)
             req_type = instance.requestType
-            cass.update_entry(week_num, product_name, new_quantity, req_type)
+            cassandra_conn.update_quantity(week_num, product_name, new_quantity, req_type)
+            cassandra_conn.calculate_features_of_product(week_num, product_name)
+            # Re-train the model
+            estimator.train_model(product_name)
         return consumptions_pb2.TrainResponse(msg="model trained")
 
 
-def serve():
+def serve(cassandra: persistence.Cassandra):
+    # Set the global variable for the cassandra connection
+    global cassandra_conn, estimator
+    cassandra_conn = cassandra
+    estimator = ConsumptionEstimator(cassandra)
     # Publish service
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     consumptions_pb2_grpc.add_EstimatorServicer_to_server(Estimator(), server)
