@@ -61,8 +61,8 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
             req_type = instance.requestType
             cassandra_conn.update_quantity(week_num, product_name, new_quantity, req_type)
             cassandra_conn.calculate_features_of_product(week_num, product_name)
-            # Re-train the model
-            estimator.train_model(product_name)
+        # Re-train the model
+        estimator.pipeline_training()
         return consumptions_pb2.TrainResponse(msg="model trained")
 
 
