@@ -11,10 +11,9 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-import shopping_list_pb2 as shopping__list__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13notifications.proto\x12\rnotifications\x1a\x13shopping_list.proto2\x92\x01\n\x0cNotification\x12\x41\n\x0eNotifyDeadline\x12\x16.shopping_list.Product\x1a\x17.shopping_list.Response\x12?\n\x0cNotifyRunOut\x12\x16.shopping_list.Product\x1a\x17.shopping_list.ResponseB\x13Z\x11.;proto_generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13notifications.proto\x12\rnotifications\"\x15\n\x13NotificationRequest\"(\n\x10NotificationList\x12\x14\n\x0cnotification\x18\x01 \x03(\t2g\n\x0cNotification\x12W\n\x10GetNotifications\x12\".notifications.NotificationRequest\x1a\x1f.notifications.NotificationListB\x13Z\x11.;proto_generatedb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'notifications_pb2', globals())
@@ -22,6 +21,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z\021.;proto_generated'
-  _NOTIFICATION._serialized_start=60
+  _NOTIFICATIONREQUEST._serialized_start=38
+  _NOTIFICATIONREQUEST._serialized_end=59
+  _NOTIFICATIONLIST._serialized_start=61
+  _NOTIFICATIONLIST._serialized_end=101
+  _NOTIFICATION._serialized_start=103
   _NOTIFICATION._serialized_end=206
 # @@protoc_insertion_point(module_scope)

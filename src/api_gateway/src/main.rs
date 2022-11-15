@@ -33,6 +33,8 @@ extern crate serde_json;
 extern crate serde_derive;
 
 use lazy_static::lazy_static;
+use api_gateway::notifications::notification_client::NotificationClient;
+use api_gateway::notifications::{NotificationList, NotificationRequest};
 
 lazy_static! {
     static ref CIRCUIT_BREAKER: Mutex<StateMachine<OrElse<SuccessRateOverTimeWindow<EqualJittered>, ConsecutiveFailures<EqualJittered>>, ()>> = Mutex::new(Config::new().build());
@@ -592,6 +594,30 @@ async fn use_product_in_pantry(req: HttpRequest) -> impl Responder {
     to_json_response(response)
 }
 
+/** NOTIFICATION API **/
+#[get("/getNotifications")]
+async fn get_notifications() -> impl Responder {
+    let configs = get_properties();
+    let result = get_channel(&configs.notifications_address, configs.notifications_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
+    println!("Channel to notifications created!");
+    let mut client = NotificationClient::new(channel);
+    println!("gRPC client created");
+
+    let request = tonic::Request::new(NotificationRequest{});
+    let response = CIRCUIT_BREAKER.lock().await.call(client.get_notifications(request))
+        .await
+        .unwrap_or(Response::new(NotificationList{
+            notification: vec![]
+        })).into_inner();
+
+    to_json_response(response)
+}
+
+
 /** SUMMARY API **/
 #[get("/getWeekSummary")]
 async fn get_week_summary() -> impl Responder {
@@ -795,6 +821,7 @@ async fn main() -> std::io::Result<()> {
             .service(update_product_in_storage)
             .service(get_pantry)
             .service(use_product_in_pantry)
+            .service(get_notifications)
             .service(get_week_summary)
             .service(get_month_summary)
             .service(get_total_summary)

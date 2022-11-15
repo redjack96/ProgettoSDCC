@@ -3,23 +3,27 @@ package com.sdcc.shoppinglist.server;
 import com.sdcc.shoppinglist.server.serde.JsonDeserializer;
 import com.sdcc.shoppinglist.server.utils.Product;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Receives notifications from the other microservices polling a Kafka broker
  */
-public class NotificationConsumer {
+public class NotificationConsumer implements Runnable{
 
-    public static void main(String[] args) throws InterruptedException {
+    public static final String EXPIRED = "expired";
+    public static final String FINISHED = "consumed";
+
+
+    @Override
+    public void run() {
         final Logger log = Logger.getLogger(NotificationConsumer.class.getSimpleName());
         log.setLevel(Level.INFO);
         final var url = "kafka://kafka:9092";
@@ -31,11 +35,12 @@ public class NotificationConsumer {
         props.put("auto.offset.reset", "earliest");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", JsonDeserializer.class);
+        final RedisCache redis = new RedisCache();
         try (Consumer<Long, Product> consumer = new KafkaConsumer<>(props)) {
             System.out.println("Waiting some time for kafka to initialize");
             Thread.sleep(15);
             System.out.println("Now it is time to subscribe!");
-            consumer.subscribe(Arrays.asList("consumed", "expired"));
+            consumer.subscribe(Arrays.asList(FINISHED, EXPIRED));
 
             log.info("Starting receiving notifications");
             while (true) {
@@ -43,15 +48,23 @@ public class NotificationConsumer {
                 if (consumerRecords.count() == 0) {
                     log.info("No notifications to show");
                 } else {
-                    consumerRecords.forEach(longStringConsumerRecord -> {
-                        String topic = longStringConsumerRecord.topic();
-                        Product payload = longStringConsumerRecord.value();
-                        log.log(Level.INFO, "Found notification!!! Topic:"+topic+" - Record:"+payload);
-                    });
+                    for (ConsumerRecord<Long, Product> consumerRecord : consumerRecords) {
+                        String topic = consumerRecord.topic();
+                        Product payload = consumerRecord.value();
+                        if (FINISHED.equals(topic)){
+                            redis.setNotificationIfNotExist(FINISHED, payload);
+                        } else if (EXPIRED.equals(topic)){
+                            redis.setNotificationIfNotExist(EXPIRED, payload);
+                        }
+                        log.log(Level.INFO, "Found notification!!! Topic:" + topic + " - Record:" + payload);
+                    }
                 }
                 consumer.commitAsync();
             }
+        } catch (InterruptedException e) {
+            log.warning("Kafka consumer thread interrupted.");
+        } finally {
+            redis.cleanup();
         }
-
     }
 }

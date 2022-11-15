@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import shopping_list_pb2 as shopping__list__pb2
+import notifications_pb2 as notifications__pb2
 
 
 class NotificationStub(object):
@@ -15,15 +15,10 @@ class NotificationStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.NotifyDeadline = channel.unary_unary(
-                '/notifications.Notification/NotifyDeadline',
-                request_serializer=shopping__list__pb2.Product.SerializeToString,
-                response_deserializer=shopping__list__pb2.Response.FromString,
-                )
-        self.NotifyRunOut = channel.unary_unary(
-                '/notifications.Notification/NotifyRunOut',
-                request_serializer=shopping__list__pb2.Product.SerializeToString,
-                response_deserializer=shopping__list__pb2.Response.FromString,
+        self.GetNotifications = channel.unary_unary(
+                '/notifications.Notification/GetNotifications',
+                request_serializer=notifications__pb2.NotificationRequest.SerializeToString,
+                response_deserializer=notifications__pb2.NotificationList.FromString,
                 )
 
 
@@ -31,13 +26,7 @@ class NotificationServicer(object):
     """service which can be executed
     """
 
-    def NotifyDeadline(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def NotifyRunOut(self, request, context):
+    def GetNotifications(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -46,15 +35,10 @@ class NotificationServicer(object):
 
 def add_NotificationServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'NotifyDeadline': grpc.unary_unary_rpc_method_handler(
-                    servicer.NotifyDeadline,
-                    request_deserializer=shopping__list__pb2.Product.FromString,
-                    response_serializer=shopping__list__pb2.Response.SerializeToString,
-            ),
-            'NotifyRunOut': grpc.unary_unary_rpc_method_handler(
-                    servicer.NotifyRunOut,
-                    request_deserializer=shopping__list__pb2.Product.FromString,
-                    response_serializer=shopping__list__pb2.Response.SerializeToString,
+            'GetNotifications': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetNotifications,
+                    request_deserializer=notifications__pb2.NotificationRequest.FromString,
+                    response_serializer=notifications__pb2.NotificationList.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -68,7 +52,7 @@ class Notification(object):
     """
 
     @staticmethod
-    def NotifyDeadline(request,
+    def GetNotifications(request,
             target,
             options=(),
             channel_credentials=None,
@@ -78,25 +62,8 @@ class Notification(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/notifications.Notification/NotifyDeadline',
-            shopping__list__pb2.Product.SerializeToString,
-            shopping__list__pb2.Response.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def NotifyRunOut(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/notifications.Notification/NotifyRunOut',
-            shopping__list__pb2.Product.SerializeToString,
-            shopping__list__pb2.Response.FromString,
+        return grpc.experimental.unary_unary(request, target, '/notifications.Notification/GetNotifications',
+            notifications__pb2.NotificationRequest.SerializeToString,
+            notifications__pb2.NotificationList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -1,0 +1,12 @@
+FROM maven:3.8.2-eclipse-temurin-17
+WORKDIR /notifications
+RUN mkdir -p src/main/proto
+COPY microservices/notifications/pom.xml ./pom.xml
+RUN mvn dependency:go-offline
+COPY proto ./src/main/proto
+#RUN mvn protobuf:compile
+COPY microservices/notifications/src ./src
+RUN mvn verify
+# CMD ["tail", "-f", "/dev/null"]
+#CMD ["java", "-cp", "target/notifications-1.0-jar-with-dependencies.jar", "com.sdcc.shoppinglist.server.Main", "kafka://kafka:9092"]
+CMD mvn exec:java -q -Dexec.mainClass="com.sdcc.shoppinglist.server.Main" -Dexec.args="kafka://kafka:9092"

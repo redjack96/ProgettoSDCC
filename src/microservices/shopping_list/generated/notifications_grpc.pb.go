@@ -18,8 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotificationClient interface {
-	NotifyDeadline(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error)
-	NotifyRunOut(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error)
+	GetNotifications(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*NotificationList, error)
 }
 
 type notificationClient struct {
@@ -30,18 +29,9 @@ func NewNotificationClient(cc grpc.ClientConnInterface) NotificationClient {
 	return &notificationClient{cc}
 }
 
-func (c *notificationClient) NotifyDeadline(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/notifications.Notification/NotifyDeadline", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *notificationClient) NotifyRunOut(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/notifications.Notification/NotifyRunOut", in, out, opts...)
+func (c *notificationClient) GetNotifications(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*NotificationList, error) {
+	out := new(NotificationList)
+	err := c.cc.Invoke(ctx, "/notifications.Notification/GetNotifications", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +42,7 @@ func (c *notificationClient) NotifyRunOut(ctx context.Context, in *Product, opts
 // All implementations must embed UnimplementedNotificationServer
 // for forward compatibility
 type NotificationServer interface {
-	NotifyDeadline(context.Context, *Product) (*Response, error)
-	NotifyRunOut(context.Context, *Product) (*Response, error)
+	GetNotifications(context.Context, *NotificationRequest) (*NotificationList, error)
 	mustEmbedUnimplementedNotificationServer()
 }
 
@@ -61,11 +50,8 @@ type NotificationServer interface {
 type UnimplementedNotificationServer struct {
 }
 
-func (UnimplementedNotificationServer) NotifyDeadline(context.Context, *Product) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NotifyDeadline not implemented")
-}
-func (UnimplementedNotificationServer) NotifyRunOut(context.Context, *Product) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NotifyRunOut not implemented")
+func (UnimplementedNotificationServer) GetNotifications(context.Context, *NotificationRequest) (*NotificationList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNotifications not implemented")
 }
 func (UnimplementedNotificationServer) mustEmbedUnimplementedNotificationServer() {}
 
@@ -80,38 +66,20 @@ func RegisterNotificationServer(s grpc.ServiceRegistrar, srv NotificationServer)
 	s.RegisterService(&Notification_ServiceDesc, srv)
 }
 
-func _Notification_NotifyDeadline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Product)
+func _Notification_GetNotifications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NotificationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NotificationServer).NotifyDeadline(ctx, in)
+		return srv.(NotificationServer).GetNotifications(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/notifications.Notification/NotifyDeadline",
+		FullMethod: "/notifications.Notification/GetNotifications",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NotificationServer).NotifyDeadline(ctx, req.(*Product))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Notification_NotifyRunOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Product)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NotificationServer).NotifyRunOut(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/notifications.Notification/NotifyRunOut",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NotificationServer).NotifyRunOut(ctx, req.(*Product))
+		return srv.(NotificationServer).GetNotifications(ctx, req.(*NotificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -124,12 +92,8 @@ var Notification_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*NotificationServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "NotifyDeadline",
-			Handler:    _Notification_NotifyDeadline_Handler,
-		},
-		{
-			MethodName: "NotifyRunOut",
-			Handler:    _Notification_NotifyRunOut_Handler,
+			MethodName: "GetNotifications",
+			Handler:    _Notification_GetNotifications_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

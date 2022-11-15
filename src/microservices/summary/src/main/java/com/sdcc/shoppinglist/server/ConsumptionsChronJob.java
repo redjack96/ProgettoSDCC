@@ -7,7 +7,6 @@ import consumptions.EstimatorGrpc;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.vavr.control.Try;
 

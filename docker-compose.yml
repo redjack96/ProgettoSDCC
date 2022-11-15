@@ -86,7 +86,9 @@ services:
   notifications:
     image: "notifications"
     container_name: "NotificationsService"
-    build: "src/microservices/notifications"
+    build:
+      dockerfile: "../docker/Dockerfile.notifications"
+      context: "src"
     #    environment:
     #      ENVIRONMENT: local
     #      INTERNAL_KAFKA_ADDR: 'kafka:9092'
@@ -95,6 +97,7 @@ services:
       - "./config.properties:/notifications/src/main/resources/config.properties"
     depends_on:
       - product_storage
+      - redis-notifications
 
   summary:
     image: summary
@@ -165,6 +168,7 @@ services:
       - zookeeper
   
   # DATABASES ------------------------------------------------------------------------
+  # for shopping list
   mongo:
     image: mongo
     container_name: mongo
@@ -172,7 +176,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
 
-  # # UI per amministrare MongoDB
+  # MongoDB UI
   mongo-express:
     image: mongo-express
     restart: always
@@ -186,6 +190,7 @@ services:
     depends_on:
       - mongo
 
+  # for summary
   influxdb:
     image: influxdb:latest
     container_name: influxdb
@@ -201,12 +206,21 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET: krakend
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: token
 
+  # for recipes
   redis:
     image: redis:latest
     container_name: redis-cache
     ports:
       - '6379:6379'
 
+  # for notification
+  redis-notifications:
+    image: redis:latest
+    container_name: redis-notification
+    ports:
+      - '6380:6379'
+
+  # for consumptions
   cassandra:
     image: cassandra:latest
     container_name: cassandra

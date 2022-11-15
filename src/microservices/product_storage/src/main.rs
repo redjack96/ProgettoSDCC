@@ -224,7 +224,7 @@ impl ProductStorage for ProductStorageImpl {
         update_product_in_db(prod);
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
-
+    // TODO: questo deve essere chiamato da recipes!!
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
         println!("prod_unit: {}", prod.unit);
