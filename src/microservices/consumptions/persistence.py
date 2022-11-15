@@ -266,9 +266,15 @@ class Cassandra:
             bought = entry.iloc[0]["n_bought"]
             used = entry.iloc[0]["n_used"]
             expired = entry.iloc[0]["n_expired"]
+            old_consumption = entry.iloc[0]["consumption"]
         else:
             return
+
         new_rem = (rem + bought) - expired - used
-        consumption = used / (bought + rem)
+        # Skip consumption calculation if used != 0 and bought == 0
+        if bought == 0 and used > 0:
+            consumption = old_consumption
+        else:
+            consumption = used / (bought + rem)
         # Update the observation in the dataset
         self.update_entry(week_num, product_name, bought, expired, used, new_rem, consumption)

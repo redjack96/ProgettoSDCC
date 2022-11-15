@@ -146,7 +146,8 @@ class ConsumptionEstimator:
 
     def increment_week(self, product_name: str, week_num: int):  # TODO mandargli il valore della vera settimana
         old_idx = self.week_indexes[product_name]
-        self.week_indexes[product_name] = old_idx + 1
+        if week_num > old_idx:
+            self.week_indexes[product_name] = old_idx + 1
         print("Actual Week: ", week_num)
         print("Last registered Week: ", old_idx)
         print("Week considered: ", self.week_indexes[product_name])
