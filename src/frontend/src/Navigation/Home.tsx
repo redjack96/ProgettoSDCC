@@ -4,21 +4,151 @@ import '../App.css';
 import Navbar from './Navbar';
 import images from '../Images/images.js';
 import {useNavigate} from "react-router-dom";
-import {Fab} from '@mui/material';
+import {PageHeader} from "./PageHeader";
 
 function Home() {
+    const [loading, setLoading] = React.useState(false)
+    const [voidMessage, setVoidMessage] = React.useState("Nothing added to List! Add one when you're ready!");
+    const [items, setItems] = React.useState({
+        id: 0,
+        name: "",
+        products: []
+    });
+
+    // called on page load, loads the entire list from shopping_list microservice
+    React.useEffect(() => {
+        if (!loading) {
+            console.log("reloading list from server");
+            setLoading(true);
+            fetch(API_GATEWAY_ADDRESS + '/getList')
+                .then(r => {
+                    let x = r.json();
+                    console.log(x);
+                    return x;
+                })
+                .then(itemsOrError => {
+                    try {
+                        setItems(itemsOrError)
+                        setVoidMessage("Nothing added to List! Add one when you're ready!")
+                    } catch {
+                        console.log("Error: shopping_list service is down")
+                        setItems({
+                            id: 0,
+                            name: "",
+                            products: []
+                        })
+                        setVoidMessage(itemsOrError.msg)
+                    }
+                })
+                .catch(e => console.log("Errore: " + e))
+        }
+    }, [items]);
+
+    // This removes only from the array state "items.products"
+    const onItemRemoval = React.useCallback(
+        item => {
+            const i = items.products.findIndex(value => value.product_name === item.product_name)
+            console.log("index to remove = " + i);
+            // const index = items.findIndex(i => i.id === item.id);
+            setItems({
+                ...items,
+                products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
+            });
+            setLoading(false);
+        },
+        [items.products],
+    );
+
+    console.log(items.products);
+
+    const onItemUpdate = React.useCallback(
+        item => {
+            const index = items.products.findIndex(i => i.id === item.id);
+            console.log("The index to update is" + index);
+            setItems({
+                ...items,
+                products: [
+                    ...items.products.slice(0, index),
+                    item,
+                    ...items.products.slice(index + 1),
+                ]
+            });
+            setLoading(false);
+        },
+        [items],
+    );
+
+    const onBuyAll = React.useCallback(
+        () => {
+            console.log("BuyAll")
+            fetch(API_GATEWAY_ADDRESS + '/buyProductsInCart', {method: 'POST'})
+                .then(r => {
+                    let x = r.json();
+                    console.log(x);
+                    return x;
+                })
+                .catch(e => console.log("Errore: " + e))
+
+            console.log("reloading list from server");
+            fetch(API_GATEWAY_ADDRESS + '/getList')
+                .then(r => {
+                    let x = r.json();
+                    console.log(x);
+                    return x;
+                })
+                .then(itemsOrError => {
+                    try {
+                        setItems(itemsOrError)
+                        setVoidMessage("Nothing added to List! Add one when you're ready!")
+                    } catch {
+                        console.log("Error: shopping_list service is down")
+                        setItems({
+                            id: 0,
+                            name: "",
+                            products: []
+                        })
+                        setVoidMessage(itemsOrError.msg)
+                    }
+                })
+                .catch(e => console.log("Errore: " + e))
+        }
+        , [items])
+
+    // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
+    const onNewItem = React.useCallback(
+        (newItem: Item) => {
+            if (loading) {
+                try {
+                    setItems({
+                        ...items,
+                        products: [...items.products, newItem]
+                    });
+                } catch {
+                    setItems({
+                        id: 0,
+                        name: "",
+                        products: []
+                    });
+                    setVoidMessage("Error: shopping_list service is down")
+                }
+                setLoading(false);
+            }
+        },
+        [items.products],
+    );
     return (
         <Container>
-            <Container>
-                <Navbar/>
-            </Container>
-            <Container>
-                <Row>
-                    <Col md={{offset: 3, span: 6}}>
-                        <ShoppingListCard/>
-                    </Col>
-                </Row>
-            </Container>
+            <Navbar/>
+            <PageHeader pageName="Shopping list"/>
+            <Row>
+                <Col md={{offset: 0, span: 6}}>
+                    {/* FORM */}
+                    <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
+                </Col>
+                <Col md={{offset: 12, span: 6}}>
+                    <ShoppingList handleBuy={onBuyAll} items={items} handleRemoval={onItemRemoval} handleUpdate={onItemUpdate} voidMessage={voidMessage}/>
+                </Col>
+            </Row>
         </Container>
     );
 }
@@ -108,6 +238,37 @@ export namespace ProductType {
     export function parseFromInt(productInt: number): string {
         return ProductType[productInt];
     }
+
+    export function imageFromType(typeInt: number) {
+        switch (typeInt) {
+            case 0: {
+                console.log("Meat");
+                return images.meat;
+            }
+            case 1: {
+                console.log("Fish");
+                return images.fish;
+            }
+
+            case 2: {
+                console.log("Fruit");
+                return images.fruit;
+            }
+
+            case 3: {
+                console.log("Veg");
+                return images.veggies;
+            }
+            case 4: {
+                console.log("Drink");
+                return images.drinks;
+            }
+            default: {
+                console.log("Other");
+                return images.other;
+            }
+        }
+    }
 }
 
 
@@ -155,144 +316,12 @@ export class Timestamp {
 }
 
 
-function ShoppingListCard() {
-    const [loading, setLoading] = React.useState(false)
-    const [items, setItems] = React.useState({
-        id: 0,
-        name: "",
-        products: []
-    });
-    const [voidMessage, setVoidMessage] = React.useState("Nothing added to List! Add one when you're ready!");
-
-
-    // called on page load, loads the entire list from shopping_list microservice
-    React.useEffect(() => {
-        if (!loading) {
-            console.log("reloading list from server");
-            setLoading(true);
-            fetch(API_GATEWAY_ADDRESS + '/getList')
-                .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
-                })
-                .then(itemsOrError => {
-                    try {
-                        setItems(itemsOrError)
-                        setVoidMessage("Nothing added to List! Add one when you're ready!")
-                    } catch {
-                        console.log("Error: shopping_list service is down")
-                        setItems({
-                            id: 0,
-                            name: "",
-                            products: []
-                        })
-                        setVoidMessage(itemsOrError.msg)
-                    }
-                })
-                .catch(e => console.log("Errore: " + e))
-        }
-    }, [items]);
-
-    // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
-    const onNewItem = React.useCallback(
-        (newItem: Item) => {
-            if (loading) {
-                try {
-                    setItems({
-                        ...items,
-                        products: [...items.products, newItem]
-                    });
-                } catch {
-                    setItems({
-                        id: 0,
-                        name: "",
-                        products: []
-                    });
-                    setVoidMessage("Error: shopping_list service is down")
-                }
-                setLoading(false);
-            }
-        },
-        [items.products],
-    );
-
-    // This removes only from the array state "items.products"
-    const onItemRemoval = React.useCallback(
-        item => {
-            const i = items.products.findIndex(value => value.product_name === item.product_name)
-            console.log("index to remove = " + i);
-            // const index = items.findIndex(i => i.id === item.id);
-            setItems({
-                ...items,
-                products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
-            });
-            setLoading(false);
-        },
-        [items.products],
-    );
-
-    console.log(items.products);
-
-    const onItemUpdate = React.useCallback(
-        item => {
-            const index = items.products.findIndex(i => i.id === item.id);
-            console.log("The index to update is" + index);
-            setItems({
-                ...items,
-                products: [
-                    ...items.products.slice(0, index),
-                    item,
-                    ...items.products.slice(index + 1),
-                ]
-            });
-            setLoading(false);
-        },
-        [items],
-    );
-
-    const onBuyAll = React.useCallback(
-        () => {
-            console.log("BuyAll")
-            fetch(API_GATEWAY_ADDRESS + '/buyProductsInCart', {method: 'POST'})
-                .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
-                })
-                .catch(e => console.log("Errore: " + e))
-
-            console.log("reloading list from server");
-            fetch(API_GATEWAY_ADDRESS + '/getList')
-                .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
-                })
-                .then(itemsOrError => {
-                    try {
-                        setItems(itemsOrError)
-                        setVoidMessage("Nothing added to List! Add one when you're ready!")
-                    } catch {
-                        console.log("Error: shopping_list service is down")
-                        setItems({
-                            id: 0,
-                            name: "",
-                            products: []
-                        })
-                        setVoidMessage(itemsOrError.msg)
-                    }
-                })
-                .catch(e => console.log("Errore: " + e))
-        }
-    , [items])
-
+function ShoppingList({items, handleBuy, voidMessage, handleUpdate, handleRemoval}) {
     return (
         <React.Fragment>
-            <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
             <Button
                 variant="success"
-                onClick={onBuyAll}
+                onClick={handleBuy}
                 aria-label="Buy in Cart"
                 disabled={!items.products.length}
             >
@@ -306,8 +335,8 @@ function ShoppingListCard() {
                 <ItemDisplay
                     item={item}
                     key={items.products.indexOf(item)}
-                    onItemUpdate={onItemUpdate}
-                    onItemRemoval={onItemRemoval}
+                    onItemUpdate={handleUpdate}
+                    onItemRemoval={handleRemoval}
                 />
             ))}
             <br/>
@@ -353,10 +382,9 @@ function AddItemForm({onNewItem}) {
     // TODO: We will need to add also the quantity, type and expiration fields.
     return (
         <Form onSubmit={submitNewItem}>
-            <InputGroup className="mb-3">
-                {/*This is needed to write the name of the product*/}
+            <InputGroup>
                 <Row className="mb-3">
-                    <Form.Group as={Col} controlId="formGridName">
+                    <Form.Group as={Col}>
                         <Form.Label>Name</Form.Label>
                         <Form.Control
                             value={itemName.trim()}
@@ -385,14 +413,13 @@ function AddItemForm({onNewItem}) {
                             value={quantity.valueOf()}
                             onChange={e => setQuantity(isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value))}
                             type="number"
-                            size="sm"
                             placeholder="0"
                             aria-describedby="basic-addon1"
                         />
                     </Form.Group>
                     <Form.Group as={Col} controlId="formSelectUnit">
                         <Form.Label>Unit</Form.Label>
-                        <Form.Control as="select" size="sm" onChange={e => setUnit(Unit.parse(e.target.value))}>
+                        <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))}>
                             <option>Select unit...</option>
                             <option>Bottle</option>
                             <option>Packet</option>
@@ -401,11 +428,11 @@ function AddItemForm({onNewItem}) {
                         </Form.Control>
                     </Form.Group>
                 </Row>
-                <Row>
+                <Row className="mb-3">
                     <Form.Group as={Col} controlId="formSelectType">
                         <Form.Label>Type</Form.Label>
                         {/*Il value è della select*/}
-                        <Form.Control as="select" size="sm" onChange={e => setType(ProductType.parse(e.target.value))}>
+                        <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))}>
                             <option>Select product type...</option>
                             <option>Vegetable</option>
                             <option>Fruit</option>
@@ -415,15 +442,17 @@ function AddItemForm({onNewItem}) {
                             <option>Other</option>
                         </Form.Control>
                     </Form.Group>
+                    <Col md="auto" style={{'margin':'30px'}}>
+                        <Button
+                            type="submit"
+                            variant="success"
+                            disabled={!itemName.trim().length}
+                            className={submitting ? 'disabled' : ''}
+                        >
+                            {submitting ? 'Adding...' : 'Add to shopping list'}
+                        </Button>
+                    </Col>
                 </Row>
-                <Button
-                    type="submit"
-                    variant="success"
-                    disabled={!itemName.trim().length}
-                    className={submitting ? 'disabled' : ''}
-                >
-                    {submitting ? 'Adding...' : 'Aggiungi.'}
-                </Button>
             </InputGroup>
         </Form>
     )
@@ -537,36 +566,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
 }
 
 function ItemInfo({item}) {
-    const imageFromType = typeInt => {
-        switch (typeInt) {
-            case 0: {
-                console.log("Meat");
-                return images.meat;
-            }
-            case 1: {
-                console.log("Fish");
-                return images.fish;
-            }
 
-            case 2: {
-                console.log("Fruit");
-                return images.fruit;
-            }
-
-            case 3: {
-                console.log("Veg");
-                return images.veggies;
-            }
-            case 4: {
-                console.log("Drink");
-                return images.drinks;
-            }
-            default: {
-                console.log("Other");
-                return images.other;
-            }
-        }
-    }
     const extractAndReformatDateToShow = (expiration: Timestamp) => {
         console.log(expiration);
         let timestamp = new Timestamp(expiration.seconds);
@@ -605,7 +605,7 @@ function ItemInfo({item}) {
                     </Row>
                 </Col>
                 <Col xs={3}>
-                    <Image src={imageFromType(item.type)} alt="type image" aria-label={item.type}/>
+                    <Image src={ProductType.imageFromType(item.type)} alt="type image" aria-label={item.type}/>
                 </Col>
             </Row>
         </Container>

@@ -1,214 +1,302 @@
 import React from "react";
-import {Container} from "react-bootstrap";
-import {
-    MDBBtn,
-    MDBCard,
-    MDBCardBody,
-    MDBCardHeader,
-    MDBCardImage,
-    MDBCol,
-    MDBContainer,
-    MDBIcon,
-    MDBInput,
-    MDBListGroup,
-    MDBListGroupItem,
-    MDBRipple,
-    MDBRow,
-    MDBTooltip,
-    MDBTypography,
-} from "mdb-react-ui-kit";
+import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
 import Navbar from "../Navigation/Navbar";
+import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../Navigation/Home";
+import {PageHeader} from "../Navigation/PageHeader";
 
 
 export function Storage(){
+    const [loading, setLoading] = React.useState(false)
+    const [items, setItems] = React.useState({
+        id: 0,
+        name: "",
+        products: []
+    });
+    const [voidMessage, setVoidMessage] = React.useState("No products in storage.");
+
+    // called on page load, loads the entire list from storage microservice
+    React.useEffect(() => {
+        if (!loading) {
+            console.log("reloading list from server");
+            setLoading(true);
+            fetch(API_GATEWAY_ADDRESS + '/getPantry')
+                .then(r => {
+                    let x = r.json();
+                    console.log(x);
+                    return x;
+                })
+                .then(itemsOrError => {
+                    try {
+                        setItems(itemsOrError)
+                        setVoidMessage("Nothing added to List! Add one when you're ready!")
+                    } catch {
+                        console.log("Error: shopping_list service is down")
+                        setItems({
+                            id: 0,
+                            name: "",
+                            products: []
+                        })
+                        setVoidMessage(itemsOrError.msg)
+                    }
+                })
+                .catch(e => console.log("Errore: " + e))
+        }
+    }, [items]);
+
+    // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
+    const handleUseItems = React.useCallback(
+        (usedItem: PantryItem) => {
+            const newState = items.products.map(obj => {
+                // if id is corresponding, update quantity property
+                if (obj.product_name === usedItem.product_name && obj.type === usedItem.type && obj.unit === usedItem.unit) {
+                    return {...obj, quantity: obj.quantity-usedItem.quantity};
+                }
+
+                // otherwise return object as is
+                return obj;
+            });
+            if (loading) {
+                try {
+                    setItems({
+                        ...items,
+                        products: [newState]
+                    });
+                } catch {
+                    setItems({
+                        id: 0,
+                        name: "",
+                        products: []
+                    });
+                    setVoidMessage("Error: shopping_list service is down")
+                }
+                setLoading(false);
+            }
+        },
+        [items.products],
+    );
+
+    // This removes only from the array state "items.products"
+    const onItemRemoval = React.useCallback(
+        item => {
+            console.log("DENTRO ITEM REMOVAL");
+            const i = items.products.findIndex(value => value.item_name === item.item_name);
+            console.log("index to remove = " + i);
+            setItems({
+                ...items,
+                products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
+            });
+            setLoading(false);
+        },
+        [items.products],
+    );
+
     return (
       <Container>
-          <Navbar />
-          <section className="h-100 gradient-custom">
-              <MDBContainer className="py-5 h-100">
-                  <MDBRow className="justify-content-center my-4">
-                      <MDBCol md="8">
-                          <MDBCard className="mb-4">
-                              <MDBCardHeader className="py-3">
-                                  <MDBTypography tag="h5" className="mb-0">
-                                      Cart - 2 items
-                                  </MDBTypography>
-                              </MDBCardHeader>
-                              <MDBCardBody>
-                                  <MDBRow>
-                                      <MDBCol lg="3" md="12" className="mb-4 mb-lg-0">
-                                          <MDBRipple rippleTag="div" rippleColor="light"
-                                                     className="bg-image rounded hover-zoom hover-overlay">
-                                              <img
-                                                  src="https://mdbcdn.b-cdn.net/img/Photos/Horizontal/E-commerce/Vertical/12a.webp"
-                                                  className="w-100" />
-                                              <a href="#!">
-                                                  <div className="mask" style={{ backgroundColor: "rgba(251, 251, 251, 0.2)" , }}>
-                                                  </div>
-                                              </a>
-                                          </MDBRipple>
-                                      </MDBCol>
-
-                                      <MDBCol lg="5" md="6" className=" mb-4 mb-lg-0">
-                                          <p>
-                                              <strong>Blue denim shirt</strong>
-                                          </p>
-                                          <p>Color: blue</p>
-                                          <p>Size: M</p>
-
-                                          <MDBTooltip wrapperProps={{ size: "sm" }} wrapperClass="me-1 mb-2"
-                                                      title="Remove item">
-                                              <MDBIcon fas icon="trash" />
-                                          </MDBTooltip>
-
-                                          <MDBTooltip wrapperProps={{ size: "sm" , color: "danger" }} wrapperClass="me-1 mb-2"
-                                                      title="Move to the wish list">
-                                              <MDBIcon fas icon="heart" />
-                                          </MDBTooltip>
-                                      </MDBCol>
-                                      <MDBCol lg="4" md="6" className="mb-4 mb-lg-0">
-                                          <div className="d-flex mb-4" style={{ maxWidth: "300px" }}>
-                                              <MDBBtn className="px-3 me-2">
-                                                  <MDBIcon fas icon="minus" />
-                                              </MDBBtn>
-
-                                              <MDBInput defaultValue={1} min={0} type="number" label="Quantity" />
-
-                                              <MDBBtn className="px-3 ms-2">
-                                                  <MDBIcon fas icon="plus" />
-                                              </MDBBtn>
-                                          </div>
-
-                                          <p className="text-start text-md-center">
-                                              <strong>$17.99</strong>
-                                          </p>
-                                      </MDBCol>
-                                  </MDBRow>
-
-                                  <hr className="my-4" />
-
-                                  <MDBRow>
-                                      <MDBCol lg="3" md="12" className="mb-4 mb-lg-0">
-                                          <MDBRipple rippleTag="div" rippleColor="light"
-                                                     className="bg-image rounded hover-zoom hover-overlay">
-                                              <img
-                                                  src="https://mdbcdn.b-cdn.net/img/Photos/Horizontal/E-commerce/Vertical/13a.webp"
-                                                  className="w-100" />
-                                              <a href="#!">
-                                                  <div className="mask" style={{ backgroundColor: "rgba(251, 251, 251, 0.2)" , }}>
-                                                  </div>
-                                              </a>
-                                          </MDBRipple>
-                                      </MDBCol>
-
-                                      <MDBCol lg="5" md="6" className=" mb-4 mb-lg-0">
-                                          <p>
-                                              <strong>Red hoodie</strong>
-                                          </p>
-                                          <p>Color: red</p>
-                                          <p>Size: M</p>
-
-                                          <MDBTooltip wrapperProps={{ size: "sm" }} wrapperClass="me-1 mb-2"
-                                                      title="Remove item">
-                                              <MDBIcon fas icon="trash" />
-                                          </MDBTooltip>
-
-                                          <MDBTooltip wrapperProps={{ size: "sm" , color: "danger" }} wrapperClass="me-1 mb-2"
-                                                      title="Move to the wish list">
-                                              <MDBIcon fas icon="heart" />
-                                          </MDBTooltip>
-                                      </MDBCol>
-                                      <MDBCol lg="4" md="6" className="mb-4 mb-lg-0">
-                                          <div className="d-flex mb-4" style={{ maxWidth: "300px" }}>
-                                              <MDBBtn className="px-3 me-2">
-                                                  <MDBIcon fas icon="minus" />
-                                              </MDBBtn>
-
-                                              <MDBInput defaultValue={1} min={0} type="number" label="Quantity" />
-
-                                              <MDBBtn className="px-3 ms-2">
-                                                  <MDBIcon fas icon="plus" />
-                                              </MDBBtn>
-                                          </div>
-
-                                          <p className="text-start text-md-center">
-                                              <strong>$17.99</strong>
-                                          </p>
-                                      </MDBCol>
-                                  </MDBRow>
-                              </MDBCardBody>
-                          </MDBCard>
-
-                          <MDBCard className="mb-4">
-                              <MDBCardBody>
-                                  <p>
-                                      <strong>Expected shipping delivery</strong>
-                                  </p>
-                                  <p className="mb-0">12.10.2020 - 14.10.2020</p>
-                              </MDBCardBody>
-                          </MDBCard>
-
-                          <MDBCard className="mb-4 mb-lg-0">
-                              <MDBCardBody>
-                                  <p>
-                                      <strong>We accept</strong>
-                                  </p>
-                                  <MDBCardImage className="me-2" width="45px"
-                                                src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/visa.svg"
-                                                alt="Visa" />
-                                  <MDBCardImage className="me-2" width="45px"
-                                                src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/amex.svg"
-                                                alt="American Express" />
-                                  <MDBCardImage className="me-2" width="45px"
-                                                src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/mastercard.svg"
-                                                alt="Mastercard" />
-                                  <MDBCardImage className="me-2" width="45px"
-                                                src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce/includes/gateways/paypal/assets/images/paypal.png"
-                                                alt="PayPal acceptance mark" />
-                              </MDBCardBody>
-                          </MDBCard>
-                      </MDBCol>
-                      <MDBCol md="4">
-                          <MDBCard className="mb-4">
-                              <MDBCardHeader>
-                                  <MDBTypography tag="h5" className="mb-0">
-                                      Summary
-                                  </MDBTypography>
-                              </MDBCardHeader>
-                              <MDBCardBody>
-                                  <MDBListGroup flush>
-                                      <MDBListGroupItem
-                                          className="d-flex justify-content-between align-items-center border-0 px-0 pb-0">
-                                          Products
-                                          <span>$53.98</span>
-                                      </MDBListGroupItem>
-                                      <MDBListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                          Shipping
-                                          <span>Gratis</span>
-                                      </MDBListGroupItem>
-                                      <MDBListGroupItem
-                                          className="d-flex justify-content-between align-items-center border-0 px-0 mb-3">
-                                          <div>
-                                              <strong>Total amount</strong>
-                                              <strong>
-                                                  <p className="mb-0">(including VAT)</p>
-                                              </strong>
-                                          </div>
-                                          <span>
-                  <strong>$53.98</strong>
-                </span>
-                                      </MDBListGroupItem>
-                                  </MDBListGroup>
-
-                                  <MDBBtn block size="lg">
-                                      Go to checkout
-                                  </MDBBtn>
-                              </MDBCardBody>
-                          </MDBCard>
-                      </MDBCol>
-                  </MDBRow>
-              </MDBContainer>
-          </section>
+          <Navbar/>
+          <PageHeader pageName="My storage"/>
+          <Row>
+              <Col>
+                  <h2>Use item</h2>
+                  <UseForm onUseItem={handleUseItems}/>
+              </Col>
+              <Col>
+                  <h2>Pantry</h2>
+                  <PantryView items={items} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
+              </Col>
+          </Row>
       </Container>
     );
+}
+
+export class PantryItem {
+    constructor(itemName: string, quantity: number, unit: Unit, type: ProductType) {
+        this.product_name = itemName;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.type = type;
+    }
+    product_name: string;
+    quantity: number;
+    type: ProductType;
+    unit: Unit;
+
+    static default(): Item {
+        return new Item("Unknown", 0, Unit.Packet, ProductType.Other, Timestamp.default());
+    }
+
+    toString() {
+        return `Item product_name: (${this.product_name} quantity: ${this.quantity} unit: ${this.unit} type: ${this.type})`
+    }
+}
+
+
+export function UseForm({onUseItem}) {
+    /* Form fields */
+    const [itemName, setItemName] = React.useState('');
+    const [quantity, setQuantity] = React.useState(0)
+    const [type, setType] = React.useState(ProductType.Other);
+    const [unit, setUnit] = React.useState(Unit.Packet);
+    const [submitting, setSubmitting] = React.useState(false);
+
+    const submitUseItem = e => {
+        setSubmitting(true)
+        e.preventDefault();
+        // when this function is called, we submit a new item, so we setSubmitting to true
+        setSubmitting(true);
+        let request = API_GATEWAY_ADDRESS + '/useProductInPantry/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type);
+        fetch(request, {method: 'POST'})
+            .then(r => r.json)
+            .then(() => {
+                // we call the callback passed as a parameter (!) to this component. We give it the item name to add. For us, it will be an object
+                onUseItem(new PantryItem(itemName, quantity, unit, type))
+                console.log("used " + itemName.trim());
+                // we are done submitting the item
+                setSubmitting(false);
+                // we update the state of "newItem" to an empty string, to clean the text field.
+                setItemName('');
+            })
+    }
+
+    return(
+        <Form onSubmit={submitUseItem}>
+            <InputGroup className="mb-3">
+                {/*This is needed to write the name of the product*/}
+                <Row className="mb-3">
+                    <Form.Group as={Col} controlId="formGridName">
+                        <Form.Label>Name</Form.Label>
+                        <Form.Control
+                            value={itemName.trim()}
+                            onChange={e => setItemName(e.target.value)}
+                            type="text"
+                            placeholder="New Item"
+                            aria-describedby="basic-addon1"
+                        />
+                    </Form.Group>
+                </Row>
+                <Row className="mb-3">
+                    <Form.Group as={Col} controlId="formQuantity">
+                        <Form.Label>Quantity</Form.Label>
+                        <Form.Control
+                            value={quantity.valueOf()}
+                            onChange={e => setQuantity(isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value))}
+                            type="number"
+                            placeholder="0"
+                            aria-describedby="basic-addon1"
+                        />
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="formSelectUnit">
+                        <Form.Label>Unit</Form.Label>
+                        <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))}>
+                            <option>Select unit...</option>
+                            <option>Bottle</option>
+                            <option>Packet</option>
+                            <option>Kg</option>
+                            <option>Grams</option>
+                        </Form.Control>
+                    </Form.Group>
+                </Row>
+                <Row>
+                    <Form.Group as={Col} controlId="formSelectType">
+                        <Form.Label>Type</Form.Label>
+                        {/*Il value è della select*/}
+                        <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))}>
+                            <option>Select product type...</option>
+                            <option>Vegetable</option>
+                            <option>Fruit</option>
+                            <option>Meat</option>
+                            <option>Drink</option>
+                            <option>Fish</option>
+                            <option>Other</option>
+                        </Form.Control>
+                    </Form.Group>
+                </Row>
+                <Button style={{'margin': '20px'}}
+                    type="submit"
+                    variant="success"
+                    disabled={!itemName.trim().length}
+                    className={submitting ? 'disabled' : ''}
+                >
+                    {submitting ? 'Using item...' : 'Use Item'}
+                </Button>
+            </InputGroup>
+        </Form>
+    )
+}
+
+
+export function PantryView({items, voidMessage, handleRemove}) {
+    return(
+        <table className="table align-middle mb-0 bg-white">
+            <thead className="bg-light">
+            <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+                {/*map items nel pantry in pantry element come in shopping list*/}
+                {items.products.length === 0 && (
+                    <p className="text-center">{voidMessage}</p>
+                )}
+                {items.products.map(item => (
+                    <PantryElement
+                        item={item}
+                        onItemRemoval={handleRemove}
+                        key={items.products.indexOf(item)}
+                    />
+                ))}
+            </tbody>
+        </table>
+    )
+}
+
+
+export function PantryElement({item, onItemRemoval}) {
+    // called when removing an item
+    const removePantryItem = () => {
+        fetch(API_GATEWAY_ADDRESS + `/dropProductFromStorage/${item.item_name}`, {method: 'POST'})
+            .then(r => {
+                console.log(r.json());
+                return r;
+            })
+            .then(() => onItemRemoval(item))
+            .catch((err) => console.log(err));
+    };
+    return(
+        <tr>
+            <td>
+                <div className="d-flex align-items-center">
+                    <img
+                        src={ProductType.imageFromType(item.type)}
+                        alt=""
+                        className="rounded-circle"
+                        style={{ 'width': '45px', 'height': '45px' }}
+                    />
+                    <div className="ms-3">
+                        <p className="fw-bold mb-1">{item.item_name}</p>
+                        <p className="text-muted mb-0">{ProductType.parseFromInt(item.type)}</p>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <p className="fw-normal mb-1">{item.quantity}</p>
+                <p className="text-muted mb-0">{Unit.parseFromInt(item.unit)}</p>
+            </td>
+            <td>
+                <span className="badge badge-success rounded-pill d-inline">Active</span>
+            </td>
+            <td>
+                <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={removePantryItem}
+                    aria-label="Rimuovi il prodotto"
+                >
+                    Remove
+                </Button>
+            </td>
+        </tr>
+    )
 }

@@ -12,7 +12,7 @@ import {Consumptions} from "./Services/Consumptions";
 
 export function App() {
     return (
-        <Container>
+        <React.Fragment>
             {/*When the apps first start, you will be redirected to /, so the Home page will be rendered. If you add /updateProductPage to the URL, you will see the other page!*/}
             <BrowserRouter>
                 {/*For react-router < v6, use Switch instead of Routes*/}
@@ -28,7 +28,7 @@ export function App() {
                     {/*<Navigate to={"/"}/>*/}
                 </Routes>
             </BrowserRouter>
-        </Container>
+        </React.Fragment>
     );
 }
 
