@@ -3,8 +3,6 @@ mod properties;
 use properties::get_properties;
 
 use tonic::transport::{Channel, Uri};
-// Vedi il server.rs per più spiegazioni sulla sintassi di Rust
-// sintassi per gli use grpc
 // nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
 use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 // nome_progetto::package_file_proto::NomeMessage
@@ -13,7 +11,7 @@ use api_gateway::product_storage::{ItemName, Pantry, PantryMessage};
 use api_gateway::summary::{SummaryData, SummaryRequest};
 use api_gateway::recipes::{RecipeList, RecipesRequest};
 use api_gateway::product_storage::{Item, UsedItem};
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest};
+use actix_web::{get, post, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use actix_web::web::Query;
 use failsafe::{Config, StateMachine};
 use failsafe::backoff::EqualJittered;
@@ -128,36 +126,6 @@ impl ProductUpdateInfo {
         }
     }
 }
-
-// TODO: rimuovere queste API di test
-#[get("/")]
-async fn hello() -> impl Responder {
-    // HttpResponse::Ok()
-    //     .insert_header(("Access-Control-Allow-Origin", "*"))
-    //     .body("{\"name\":\"giacomo\"}")
-    json_response(serde_json::json!({
-        "name":"giacomo"
-    }))
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    json_response(serde_json::json!({
-        "echo" : req_body
-    }))
-}
-
-// FIXME: Qua invece di usare la #[macro] scriviamo route ... preferisco la macro
-async fn manual_hello() -> impl Responder {
-    str_response("hey there".to_string())
-}
-
-#[get("/greet/{name}")]
-async fn greet(name: web::Path<String>) -> impl Responder {
-    println!("Sent greetings to {name}");
-    str_response(format!("Hello {name}!"))
-}
-
 
 /** SHOPPING LIST API **/
 #[post("/addProduct/{name}/{quantity}/{unit}/{type}/{expiry}")]
@@ -384,7 +352,6 @@ async fn buy_products_in_cart() -> impl Responder {
     let request = tonic::Request::new(BuyRequest {});
     println!("Request created");
     // Sending request and waiting for response
-    // TODO: fare così ovunque!
     match CIRCUIT_BREAKER.lock().await.call(client.buy_all_products_in_cart(request)).await {
         Ok(resp) => to_json_response(resp.into_inner()),
         Err(e ) => to_json_error(e),
@@ -783,18 +750,6 @@ async fn get_channel(address: &String, port: i32) -> Result<Channel, failsafe::E
     CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await
 }
 
-// async fn try_get_channel(address: &String, port: i32) -> Channel {
-//     let uri_str = format!("http://{}:{}", address, port);
-//     let uri = Uri::try_from(uri_str.clone()).expect(&format!("Error in creating uri {}", uri_str));
-//     let endpoint = Channel::builder(uri);
-//     CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await.expect(&format!("{} is down. Retry later.", address))
-//     // while channel.is_err() {
-//     //     println!("Waiting for service {}!", address);
-//     //     thread::sleep(Duration::from_millis(4000));
-//     //     channel = Channel::builder(Uri::try_from(format!("http://{}:{}", address, port)).unwrap()).connect().await;
-//     // }
-// }
-
 
 // cargo run --bin client -- tuoiparametri
 #[actix_web::main] // or #[tokio::main]
@@ -803,12 +758,6 @@ async fn main() -> std::io::Result<()> {
     println!("inter container address: {}:{}, on the host: localhost:{}", configs.api_gateway_address, configs.api_gateway_port, configs.api_gateway_port);
     HttpServer::new(|| {
         App::new()
-            // se non metti il nome, verrà inserito hello world
-            .route("/hello", web::get().to(|| async { "Hello World!" }))
-            .route("/manual_hello", web::get().to(manual_hello))
-            .service(hello) // manual_hello, hello, echo e greet sono funzioni!!
-            .service(echo)
-            .service(greet)
             .service(add_product)
             .service(remove_product)
             .service(update_product)

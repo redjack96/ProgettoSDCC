@@ -27,10 +27,7 @@ public class ConsumptionsChronJob implements Runnable {
     private final InfluxSink influx;
     private final long initialDelay;
     private final boolean startNow;
-
-    public static final int TEST = 60*5; // 5 minutes
     public static final int WEEK = 7;
-    public static final String TRANSACTION_BUY = "add_bought_products_to_pantry";
     public static final String TRANSACTION_ADD = "add_product_to_pantry";
     public static final String TRANSACTION_USE = "use_product_in_pantry";
     private final CircuitBreaker circuitBreaker;
@@ -40,7 +37,7 @@ public class ConsumptionsChronJob implements Runnable {
         var now = ZonedDateTime.now(ZoneId.of("America/Los_Angeles"));
         var nextRun = now.withHour(0).withMinute(0).withSecond(0);
         if (now.compareTo(nextRun) > 0)
-            nextRun = nextRun.plusSeconds(WEEK); // TODO: plusDays(WEEK)
+            nextRun = nextRun.plusDays(WEEK);
 
         var duration = Duration.between(now, nextRun);
         this.initialDelay = duration.getSeconds();
@@ -59,18 +56,18 @@ public class ConsumptionsChronJob implements Runnable {
         var scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(this,
                 startNow ? 0L : initialDelay,
-                TimeUnit.SECONDS.toSeconds(TEST), // TODO: TimeUnit.DAYS.toSeconds(WEEK)
+                TimeUnit.DAYS.toSeconds(WEEK),
                 TimeUnit.SECONDS);
     }
 
     public void blockingExecution() {
         LOGGER.info("Chron-job: Sending consumption week data!");
         // Get the data
-        List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Test); // TODO: TimeWindow.Weekly
+        List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
         LOGGER.info("Chron-job: LOGS:" + logs);
         LOGGER.info("Chron-job: Connecting to consumptions!");
         // If the connection cannot be established rapidly, the circuit breaker ends this method.
-        var channel = ManagedChannelBuilder.forAddress("consumptions", 8004)// FIXME: hardcoded
+        var channel = ManagedChannelBuilder.forAddress("consumptions", 8004)
                 .usePlaintext()
                 .build();
         // Create the channel

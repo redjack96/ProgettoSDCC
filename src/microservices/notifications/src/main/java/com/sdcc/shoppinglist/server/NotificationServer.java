@@ -23,34 +23,6 @@ public class NotificationServer implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(NotificationServer.class.getSimpleName());
     public static final int PORT = 8005;
 
-    // TODO remove
-    private void redisTest() {
-        RedisCache r = new RedisCache();
-        r.setNotificationIfNotExist(EXPIRED, new Product("Prova"));
-        int timeLeft = 20;
-        System.out.println("Added Prova to Expired-NEW. Time left: 20");
-        while (timeLeft > 0) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Time left: " + --timeLeft);
-        }
-        System.out.println("Added Prova to Expired-OLD. You have " + r.getExpiration() + " seconds to see it.");
-        r.consumeNewExpiredNotifications();
-        timeLeft = r.getExpiration();
-        while (timeLeft > 0) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.println("Time left: " + --timeLeft);
-        }
-        r.cleanup();
-    }
-
     @Override
     public void run() {
         System.out.println("Starting Notification gRPC server!");

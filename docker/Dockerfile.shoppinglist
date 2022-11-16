@@ -15,7 +15,6 @@ COPY microservices/shopping_list/go.sum go.sum
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 RUN protoc --proto_path proto --go_out generated --go-grpc_out generated proto/*.proto --experimental_allow_proto3_optional
-#RUN go get -d ./...
 RUN go mod tidy
 RUN go get go.mongodb.org/mongo-driver/bson
 RUN go get go.mongodb.org/mongo-driver/bson/primitive
@@ -26,6 +25,4 @@ RUN go get github.com/afex/hystrix-go/hystrix
 RUN export PATH="$PATH:$(go env GOPATH)/bin"
 
 COPY microservices/shopping_list/main ./main
-
-# TODO: adesso compila ed esegue: finché programmiamo va bene, ma poi quando si rilascia è troppo pesante. Al rilascio, usare una multibuild (e.g. un altro FROM) per evitare di compilare ed eseguire ogni volta
 CMD ["go", "run", "main/shopping_list.go"]
