@@ -1,10 +1,9 @@
 import React from "react";
 import {Button, ButtonGroup, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
-import Navbar from "../Navigation/Navbar";
-import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../Navigation/Home";
-import {PageHeader} from "../Navigation/PageHeader";
 import {useNavigate} from "react-router-dom";
-import {green} from "@mui/material/colors";
+import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
+import Navbar from "../Navigation/Utils/Navbar";
+import {PageHeader} from "../Navigation/Utils/PageHeader";
 
 
 export function Storage(){
@@ -99,6 +98,15 @@ export function Storage(){
     const toAddPantryPage = () => {
         console.log("items: "+items)
         navigate('/addPantryPage', {
+            state: {
+                items: {items}
+            }
+        });
+    }
+
+    const toUsePantryPage = () => {
+        console.log("items: "+items)
+        navigate('/usePantryPage', {
             state: {
                 items: {items}
             }

@@ -1,14 +1,14 @@
 import React from 'react'
 import {Container} from "react-bootstrap";
 import {BrowserRouter, Routes, Route} from "react-router-dom";
-import Home from "./Navigation/Home";
-import UpdateProductPage from "./Navigation/UpdateProductPage";
 import {Storage} from "./Services/Storage";
 import {Recipes} from "./Services/Recipes";
 import {Summary} from "./Services/Summary";
 import {Consumptions} from "./Services/Consumptions";
-import {UpdatePantryPage} from "./Navigation/UpdatePantryPage";
-import {AddPantryPage} from "./Navigation/AddPantryPage";
+import Home from "./Services/Home";
+import UpdateProductPage from "./Navigation/Shopping/UpdateProductPage";
+import {UpdatePantryPage} from "./Navigation/Storage/UpdatePantryPage";
+import {AddPantryPage} from "./Navigation/Storage/AddPantryPage";
 
 
 

@@ -1,45 +1,53 @@
-import React from 'react'
+// this is called by the route /updatePantryPage by ...
 import {useLocation, useNavigate} from "react-router-dom";
+import React from "react";
 import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
-import {ProductType, Unit, Item, Timestamp, API_GATEWAY_ADDRESS} from './Home'
+import Navbar from "../Utils/Navbar";
+import {PageHeader} from "../Utils/PageHeader";
+import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/Home";
 
-// this is called by the route /updateProductPage by the ItemDisplay's Update button
-function UpdateProductPage() {
-    const location = useLocation();
-    const productName = location.state.item.product_name;
+export function UpdatePantryPage() {
+    const {state} = useLocation();
+    const productName = state.item.product_name;
+    console.log(productName);
     return (
-        <div>
-            <h1>Update Product {productName}</h1>
-            <UpdateForm item={location.state.item}/>
-        </div>
+        <Container>
+            <Navbar/>
+            <PageHeader pageName="Update product in pantry"/>
+            <UpdatePantryForm item={state.item}/>
+        </Container>
     );
 }
 
-// this is used to get help from the IDE in UpdateForm component
-interface UpdateFormProps {
-    item: Item
-}
+
 
 // here we destructure the props to get the single value from the field of the interface
-function UpdateForm({item}: UpdateFormProps) {
+function UpdatePantryForm({item}) {
     const defaultExpiration = new Timestamp(item.expiration.seconds, 0).getOrderedDateString();
-    const [itemName, setItemName] = React.useState(item.product_name);
+    const [itemName, setItemName] = React.useState(item.item_name);
     const [submitting, setSubmitting] = React.useState(true);
     const [type, setType] = React.useState(item.type);
     const [unit, setUnit] = React.useState(item.unit);
     const [quantity, setQuantity] = React.useState(item.quantity);
     // here we cannot use directly item.expiration.getOrderedDateString(), because Javascript doesn't know it is an object, so it doesn't even know the existence of the method!
     const [expiration, setExpiration] = React.useState(defaultExpiration);
+    const [lastUsed, setLastUsed] = React.useState(item.lastUsed);
+    const [useNumber, setUseNumber] = React.useState(item.useNumber);
+    const [totalUseNumber, setTotalUseNumber] = React.useState(item.totalUseNumber);
+    const [timesBought, setTimesBought] = React.useState(item.timesBought);
+    const [buyDate, setBuyDate] = React.useState(item.buyDate);
 
     // this is used to return to home when clicking update button
     const navigate = useNavigate();
-    const toHome = () => {
+    const toStorage = () => {
         console.log("called submitUpdated item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
         // TODO: convertire timestamp in stringa yyyy-mm-dd
-        let request = API_GATEWAY_ADDRESS + '/updateProduct?product_name=' + itemName.trim() + '&unit=' + Unit.toString(unit) + '&type=' + ProductType.toString(type) + '&quantity=' + quantity + '&expiration=' + expiration;
+        let request = API_GATEWAY_ADDRESS + '/updateProductInStorage' + '/' + itemName.trim() + '/' + quantity +
+            '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration + '/' + lastUsed + '/'
+            + useNumber + '/' + totalUseNumber + '/' + timesBought + '/' + buyDate;
         console.log(request);
         fetch(request, {method: 'POST'})
             .then(r => r.json)
@@ -48,10 +56,10 @@ function UpdateForm({item}: UpdateFormProps) {
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })
-        navigate('/');
+        navigate('/productStoragePage');
     }
 
-    return (<Form onSubmit={() => toHome()}>
+    return (<Form onSubmit={() => toStorage()}>
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
@@ -73,6 +81,26 @@ function UpdateForm({item}: UpdateFormProps) {
                         onChange={e => {
                             console.log(e.target.value);
                             return setExpiration(e.target.value);
+                        }}
+                        type="date"
+                    />
+                </Form.Group>
+                <Form.Group as={Col} controlId="formBuyDate">
+                    <Form.Label>Buy Date</Form.Label>
+                    <Form.Control
+                        value={lastUsed}
+                        onChange={e => {
+                            return setBuyDate(e.target.value);
+                        }}
+                        type="date"
+                    />
+                </Form.Group>
+                <Form.Group as={Col} controlId="formLastUsed">
+                    <Form.Label>Last Used</Form.Label>
+                    <Form.Control
+                        value={lastUsed}
+                        onChange={e => {
+                            return setLastUsed(e.target.value);
                         }}
                         type="date"
                     />
@@ -112,6 +140,38 @@ function UpdateForm({item}: UpdateFormProps) {
                         <option>Other</option>
                     </Form.Control>
                 </Form.Group>
+                <Row className="mb-3">
+                    <Form.Group as={Col} controlId="formUseNumber">
+                        <Form.Label>Uses</Form.Label>
+                        <Form.Control
+                            value={useNumber}
+                            onChange={event => setUseNumber(event.target.value)}
+                            type="number"
+                            placeholder="0"
+                            aria-describedby="basic-addon1"
+                        />
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="formTotalUseNumber">
+                        <Form.Label>Total Uses</Form.Label>
+                        <Form.Control
+                            value={totalUseNumber}
+                            onChange={event => setTotalUseNumber(event.target.value)}
+                            type="number"
+                            placeholder="0"
+                            aria-describedby="basic-addon1"
+                        />
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="formTimesBought">
+                        <Form.Label>Times Bought</Form.Label>
+                        <Form.Control
+                            value={timesBought}
+                            onChange={event => setTimesBought(event.target.value)}
+                            type="number"
+                            placeholder="0"
+                            aria-describedby="basic-addon1"
+                        />
+                    </Form.Group>
+                </Row>
             </Row>
             <Container>
                 <Row className="mb-3">
@@ -128,5 +188,3 @@ function UpdateForm({item}: UpdateFormProps) {
         </InputGroup>
     </Form>);
 }
-
-export default UpdateProductPage;

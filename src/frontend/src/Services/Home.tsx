@@ -1,10 +1,10 @@
 import {Container, Button, Row, Col, Form, InputGroup, Image, ButtonGroup} from 'react-bootstrap';
 import React from 'react'
 import '../App.css';
-import Navbar from './Navbar';
 import images from '../Images/images.js';
 import {useNavigate} from "react-router-dom";
-import {PageHeader} from "./PageHeader";
+import Navbar from "../Navigation/Utils/Navbar";
+import {PageHeader} from "../Navigation/Utils/PageHeader";
 
 function Home() {
     const [loading, setLoading] = React.useState(false)

@@ -17,7 +17,8 @@ import {
     MDBTooltip,
     MDBTypography,
 } from "mdb-react-ui-kit";
-import Navbar from "../Navigation/Navbar";
+import Navbar from "../Navigation/Utils/Navbar";
+
 
 export function Recipes() {
     return(

@@ -1,62 +1,57 @@
-// this is called by the route /addPantryPage by ...
+import React from 'react'
 import {useLocation, useNavigate} from "react-router-dom";
-import React from "react";
-import Navbar from "./Navbar";
-import {PageHeader} from "./PageHeader";
 import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
-import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
-import {PantryItem} from "../Services/Storage";
+import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../../Services/Home";
 
-
-export function AddPantryPage() {
-    const {state} = useLocation();
-    console.log("items: ", state.items)
-    const onAddItem = React.useCallback(
-        (newItem: PantryItem) => {
-            state.items.products.pushEntry(newItem)
-        },
-        [state.items],
-    );
+// this is called by the route /updateProductPage by the ItemDisplay's Update button
+function UpdateProductPage() {
+    const location = useLocation();
+    const productName = location.state.item.product_name;
     return (
-        <Container>
-            <Navbar/>
-            <PageHeader pageName="Add a product in Pantry"/>
-            <AddPantryForm onAdd={onAddItem}/>
-        </Container>
+        <div>
+            <h1>Update Product {productName}</h1>
+            <UpdateForm item={location.state.item}/>
+        </div>
     );
 }
 
-function AddPantryForm({onAdd}) {
-    const [itemName, setItemName] = React.useState('');
-    const [quantity, setQuantity] = React.useState(1);
-    const [type, setType] = React.useState(ProductType.Other);
-    const [unit, setUnit] = React.useState(Unit.Packet);
-    const [expiration, setExpiration] = React.useState('9999-12-31'); // FIXME: forse qua ci vuole un numero, non una stringa.
-    // this state is the status of this component. If it is submitting, the item is being added. If not it is already added.
-    const [submitting, setSubmitting] = React.useState(false);
+// this is used to get help from the IDE in UpdateForm component
+interface UpdateFormProps {
+    item: Item
+}
+
+// here we destructure the props to get the single value from the field of the interface
+function UpdateForm({item}: UpdateFormProps) {
+    const defaultExpiration = new Timestamp(item.expiration.seconds, 0).getOrderedDateString();
+    const [itemName, setItemName] = React.useState(item.product_name);
+    const [submitting, setSubmitting] = React.useState(true);
+    const [type, setType] = React.useState(item.type);
+    const [unit, setUnit] = React.useState(item.unit);
+    const [quantity, setQuantity] = React.useState(item.quantity);
+    // here we cannot use directly item.expiration.getOrderedDateString(), because Javascript doesn't know it is an object, so it doesn't even know the existence of the method!
+    const [expiration, setExpiration] = React.useState(defaultExpiration);
 
     // this is used to return to home when clicking update button
     const navigate = useNavigate();
-    const toStorage = () => {
-        console.log("called submitAdded item");
+    const toHome = () => {
+        console.log("called submitUpdated item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-        let request = API_GATEWAY_ADDRESS + '/addProductToStorage'+'/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
+        // TODO: convertire timestamp in stringa yyyy-mm-dd
+        let request = API_GATEWAY_ADDRESS + '/updateProduct?product_name=' + itemName.trim() + '&unit=' + Unit.toString(unit) + '&type=' + ProductType.toString(type) + '&quantity=' + quantity + '&expiration=' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
                 setSubmitting(false);
-                onAdd(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0),
-                    1, 1, 1, new Timestamp(new Date().getTime(), 0)));
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })
-        navigate('/productStoragePage');
+        navigate('/');
     }
 
-    return (<Form onSubmit={() => toStorage()}>
+    return (<Form onSubmit={() => toHome()}>
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
@@ -126,10 +121,12 @@ function AddPantryForm({onAdd}) {
                         disabled={!itemName.trim().length}
                         className={submitting ? 'disabled' : ''}
                     >
-                        Add
+                        Update
                     </Button>
                 </Row>
             </Container>
         </InputGroup>
     </Form>);
 }
+
+export default UpdateProductPage;

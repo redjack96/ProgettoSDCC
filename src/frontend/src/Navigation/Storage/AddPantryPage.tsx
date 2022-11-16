@@ -1,58 +1,55 @@
-// this is called by the route /updatePantryPage by ...
+// this is called by the route /addPantryPage by ...
 import {useLocation, useNavigate} from "react-router-dom";
 import React from "react";
-import Navbar from "./Navbar";
-import {PageHeader} from "./PageHeader";
 import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
-import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
+import {PantryItem} from "../../Services/Storage";
+import Navbar from "../Utils/Navbar";
+import {PageHeader} from "../Utils/PageHeader";
+import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/Home";
 
-export function UpdatePantryPage() {
+
+export function AddPantryPage() {
     const {state} = useLocation();
-    const productName = state.item.product_name;
-    console.log(productName);
+    console.log("items: ", state.items)
+    const onAddItem = React.useCallback(
+        (newItem: PantryItem) => {
+            state.items.products.pushEntry(newItem)
+        },
+        [state.items],
+    );
     return (
         <Container>
             <Navbar/>
-            <PageHeader pageName="Update product in pantry"/>
-            <UpdatePantryForm item={state.item}/>
+            <PageHeader pageName="Add a product in Pantry"/>
+            <AddPantryForm onAdd={onAddItem}/>
         </Container>
     );
 }
 
-
-
-// here we destructure the props to get the single value from the field of the interface
-function UpdatePantryForm({item}) {
-    const defaultExpiration = new Timestamp(item.expiration.seconds, 0).getOrderedDateString();
-    const [itemName, setItemName] = React.useState(item.item_name);
-    const [submitting, setSubmitting] = React.useState(true);
-    const [type, setType] = React.useState(item.type);
-    const [unit, setUnit] = React.useState(item.unit);
-    const [quantity, setQuantity] = React.useState(item.quantity);
-    // here we cannot use directly item.expiration.getOrderedDateString(), because Javascript doesn't know it is an object, so it doesn't even know the existence of the method!
-    const [expiration, setExpiration] = React.useState(defaultExpiration);
-    const [lastUsed, setLastUsed] = React.useState(item.lastUsed);
-    const [useNumber, setUseNumber] = React.useState(item.useNumber);
-    const [totalUseNumber, setTotalUseNumber] = React.useState(item.totalUseNumber);
-    const [timesBought, setTimesBought] = React.useState(item.timesBought);
-    const [buyDate, setBuyDate] = React.useState(item.buyDate);
+function AddPantryForm({onAdd}) {
+    const [itemName, setItemName] = React.useState('');
+    const [quantity, setQuantity] = React.useState(1);
+    const [type, setType] = React.useState(ProductType.Other);
+    const [unit, setUnit] = React.useState(Unit.Packet);
+    const [expiration, setExpiration] = React.useState('9999-12-31'); // FIXME: forse qua ci vuole un numero, non una stringa.
+    // this state is the status of this component. If it is submitting, the item is being added. If not it is already added.
+    const [submitting, setSubmitting] = React.useState(false);
 
     // this is used to return to home when clicking update button
     const navigate = useNavigate();
     const toStorage = () => {
-        console.log("called submitUpdated item");
+        console.log("called submitAdded item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-        // TODO: convertire timestamp in stringa yyyy-mm-dd
-        let request = API_GATEWAY_ADDRESS + '/updateProductInStorage' + '/' + itemName.trim() + '/' + quantity +
-            '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration + '/' + lastUsed + '/'
-            + useNumber + '/' + totalUseNumber + '/' + timesBought + '/' + buyDate;
+        let request = API_GATEWAY_ADDRESS + '/addProductToStorage'+'/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
                 setSubmitting(false);
+                onAdd(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0),
+                    1, 1, 1, new Timestamp(new Date().getTime(), 0)));
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })
@@ -81,26 +78,6 @@ function UpdatePantryForm({item}) {
                         onChange={e => {
                             console.log(e.target.value);
                             return setExpiration(e.target.value);
-                        }}
-                        type="date"
-                    />
-                </Form.Group>
-                <Form.Group as={Col} controlId="formBuyDate">
-                    <Form.Label>Buy Date</Form.Label>
-                    <Form.Control
-                        value={lastUsed}
-                        onChange={e => {
-                            return setBuyDate(e.target.value);
-                        }}
-                        type="date"
-                    />
-                </Form.Group>
-                <Form.Group as={Col} controlId="formLastUsed">
-                    <Form.Label>Last Used</Form.Label>
-                    <Form.Control
-                        value={lastUsed}
-                        onChange={e => {
-                            return setLastUsed(e.target.value);
                         }}
                         type="date"
                     />
@@ -140,38 +117,6 @@ function UpdatePantryForm({item}) {
                         <option>Other</option>
                     </Form.Control>
                 </Form.Group>
-                <Row className="mb-3">
-                    <Form.Group as={Col} controlId="formUseNumber">
-                        <Form.Label>Uses</Form.Label>
-                        <Form.Control
-                            value={useNumber}
-                            onChange={event => setUseNumber(event.target.value)}
-                            type="number"
-                            placeholder="0"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
-                    <Form.Group as={Col} controlId="formTotalUseNumber">
-                        <Form.Label>Total Uses</Form.Label>
-                        <Form.Control
-                            value={totalUseNumber}
-                            onChange={event => setTotalUseNumber(event.target.value)}
-                            type="number"
-                            placeholder="0"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
-                    <Form.Group as={Col} controlId="formTimesBought">
-                        <Form.Label>Times Bought</Form.Label>
-                        <Form.Control
-                            value={timesBought}
-                            onChange={event => setTimesBought(event.target.value)}
-                            type="number"
-                            placeholder="0"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
-                </Row>
             </Row>
             <Container>
                 <Row className="mb-3">
@@ -181,7 +126,7 @@ function UpdatePantryForm({item}) {
                         disabled={!itemName.trim().length}
                         className={submitting ? 'disabled' : ''}
                     >
-                        Update
+                        Add
                     </Button>
                 </Row>
             </Container>
