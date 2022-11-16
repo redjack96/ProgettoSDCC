@@ -1,5 +1,6 @@
 import React from 'react'
 import {Container} from "react-bootstrap";
+import {Helmet} from 'react-helmet';
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import {Storage} from "./Services/Storage";
 import {Recipes} from "./Services/Recipes";
@@ -32,6 +33,9 @@ export function App() {
                     {/*<Navigate to={"/"}/>*/}
                 </Routes>
             </BrowserRouter>
+            <Helmet>
+                <style>{'body { background-color: #ecebe4; }'}</style>
+            </Helmet>
         </React.Fragment>
     );
 }

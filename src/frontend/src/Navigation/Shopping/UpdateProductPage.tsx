@@ -2,16 +2,24 @@ import React from 'react'
 import {useLocation, useNavigate} from "react-router-dom";
 import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../../Services/Home";
+import Navbar from "../Utils/Navbar";
+import {PageHeader} from "../Utils/PageHeader";
+import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 
 // this is called by the route /updateProductPage by the ItemDisplay's Update button
 function UpdateProductPage() {
     const location = useLocation();
     const productName = location.state.item.product_name;
     return (
-        <div>
-            <h1>Update Product {productName}</h1>
-            <UpdateForm item={location.state.item}/>
-        </div>
+        <Container>
+            <Navbar />
+            <PageHeader pageName="Update product in list"/>
+            <MDBCard className="form">
+                <MDBCardBody>
+                    <UpdateForm item={location.state.item}/>
+                </MDBCardBody>
+            </MDBCard>
+        </Container>
     );
 }
 

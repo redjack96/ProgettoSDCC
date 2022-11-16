@@ -5,6 +5,7 @@ import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
 import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/Home";
+import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 
 export function UpdatePantryPage() {
     const {state} = useLocation();
@@ -14,7 +15,11 @@ export function UpdatePantryPage() {
         <Container>
             <Navbar/>
             <PageHeader pageName="Update product in pantry"/>
-            <UpdatePantryForm item={state.item}/>
+            <MDBCard className="form">
+                <MDBCardBody>
+                    <UpdatePantryForm item={state.item}/>
+                </MDBCardBody>
+            </MDBCard>
         </Container>
     );
 }

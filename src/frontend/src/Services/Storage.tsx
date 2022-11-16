@@ -4,6 +4,7 @@ import {useNavigate} from "react-router-dom";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
+import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 
 
 export function Storage(){
@@ -119,26 +120,33 @@ export function Storage(){
           <PageHeader pageName="My storage"/>
           <Row>
               <Col>
-                  <Row>
-                      <h2>Use item</h2>
-                      <UseForm onUseItem={handleUseItems}/>
+                  <Row className="mb-3">
+                      <MDBCard className="form">
+                          <MDBCardBody>
+                              <h2>Use item</h2>
+                              <UseForm onUseItem={handleUseItems}/>
+                          </MDBCardBody>
+                      </MDBCard>
                   </Row>
                   <Row>
-                      <h2>Other actions</h2>
-                      <ButtonGroup as={Col}>
-                          <Button
-                              size="sm"
-                              variant="success"
-                              onClick={() => toAddPantryPage()}
-                              aria-label="Add in pantry"
-                          >
-                              Add item
-                          </Button>
-                      </ButtonGroup>
+                      <MDBCard className="form">
+                          <MDBCardBody>
+                              <h2>Other actions</h2>
+                              <ButtonGroup as={Col}>
+                                  <Button
+                                      size="sm"
+                                      variant="success"
+                                      onClick={() => toAddPantryPage()}
+                                      aria-label="Add in pantry"
+                                  >
+                                      Add item
+                                  </Button>
+                              </ButtonGroup>
+                          </MDBCardBody>
+                      </MDBCard>
                   </Row>
               </Col>
               <Col>
-                  <h2>Pantry</h2>
                   <PantryView items={items} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
               </Col>
           </Row>
@@ -278,16 +286,17 @@ export function UseForm({onUseItem}) {
 
 export function PantryView({items, voidMessage, handleRemove}) {
     return(
-        <table className="table align-middle mb-0 bg-white">
-            <thead className="bg-light">
-            <tr>
-                <th>Name</th>
-                <th>Quantity</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
+        <div className="fixed scrollable">
+            <table className="table align-middle mb-0 bg-white">
+                <thead className="bg-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
                 {/*map items nel pantry in pantry element come in shopping list*/}
                 {items.products.length === 0 && (
                     <p className="text-center">{voidMessage}</p>
@@ -299,8 +308,9 @@ export function PantryView({items, voidMessage, handleRemove}) {
                         key={items.products.indexOf(item)}
                     />
                 ))}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     )
 }
 

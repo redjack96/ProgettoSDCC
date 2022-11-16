@@ -6,6 +6,7 @@ import {PantryItem} from "../../Services/Storage";
 import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/Home";
+import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 
 
 export function AddPantryPage() {
@@ -21,7 +22,11 @@ export function AddPantryPage() {
         <Container>
             <Navbar/>
             <PageHeader pageName="Add a product in Pantry"/>
-            <AddPantryForm onAdd={onAddItem}/>
+            <MDBCard className="form">
+                <MDBCardBody>
+                    <AddPantryForm onAdd={onAddItem}/>
+                </MDBCardBody>
+            </MDBCard>
         </Container>
     );
 }

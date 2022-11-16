@@ -5,6 +5,13 @@ import images from '../Images/images.js';
 import {useNavigate} from "react-router-dom";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
+import {
+    MDBCard,
+    MDBCardBody,
+    MDBCardTitle,
+    MDBCardText,
+    MDBBtn
+} from 'mdb-react-ui-kit';
 
 function Home() {
     const [loading, setLoading] = React.useState(false)
@@ -141,12 +148,36 @@ function Home() {
             <Navbar/>
             <PageHeader pageName="Shopping list"/>
             <Row>
-                <Col md={{offset: 0, span: 6}}>
-                    {/* FORM */}
-                    <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
+                <Col>
+                    <Row className="mb-3">
+                        <MDBCard className="form">
+                            <MDBCardBody>
+                                <h2>Add new item</h2>
+                                <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
+                            </MDBCardBody>
+                        </MDBCard>
+                    </Row>
+                    <Row className="mb-3">
+                        <MDBCard className="form">
+                            <MDBCardBody>
+                                <h2>Buy something</h2>
+                                <ButtonGroup as={Col}>
+                                    <Button
+                                        size="sm"
+                                        variant="success"
+                                        onClick={onBuyAll}
+                                        aria-label="Buy in cart"
+                                        disabled={!items.products.length}
+                                    >
+                                        Buy all in cart
+                                    </Button>
+                                </ButtonGroup>
+                            </MDBCardBody>
+                        </MDBCard>
+                    </Row>
                 </Col>
-                <Col md={{offset: 12, span: 6}}>
-                    <ShoppingList handleBuy={onBuyAll} items={items} handleRemoval={onItemRemoval} handleUpdate={onItemUpdate} voidMessage={voidMessage}/>
+                <Col className="fixed scrollable">
+                    <ShoppingList items={items} handleRemoval={onItemRemoval} handleUpdate={onItemUpdate} voidMessage={voidMessage}/>
                 </Col>
             </Row>
         </Container>
@@ -316,17 +347,9 @@ export class Timestamp {
 }
 
 
-function ShoppingList({items, handleBuy, voidMessage, handleUpdate, handleRemoval}) {
+function ShoppingList({items, voidMessage, handleUpdate, handleRemoval}) {
     return (
         <React.Fragment>
-            <Button
-                variant="success"
-                onClick={handleBuy}
-                aria-label="Buy in Cart"
-                disabled={!items.products.length}
-            >
-                Buy all in cart
-            </Button>
             <br/><br/>
             {items.products.length === 0 && (
                 <p className="text-center">{voidMessage}</p>
