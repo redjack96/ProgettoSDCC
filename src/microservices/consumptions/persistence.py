@@ -241,6 +241,30 @@ class Cassandra:
         rows = self.session.execute(query_select)
         return convert_rows_to_dataframe(rows)
 
+    def fill_missing_entries(self, last_week_registered: int, week_num: int, product_name: str):
+        # Select the entry for the product name corresponding to the previous week to calculate remainder
+        print("last week registered:", last_week_registered)
+        if last_week_registered == 1:
+            # No previous observations
+            rem = 0
+            print("No previous observations")
+            # Fill missing weeks with empty entry
+            for week in range(1, week_num):
+                self.insert_entry([week, product_name, 0, 0, 0, 0, 0.0])
+        else:
+            # There are previous observations
+            print("There are previous observations")
+            entry = self.select_entries_for_week_product(last_week_registered, product_name)
+            bought = entry.iloc[0]["n_bought"]
+            used = entry.iloc[0]["n_used"]
+            expired = entry.iloc[0]["n_expired"]
+            cons = entry.iloc[0]["consumption"]
+            rem = entry.iloc[0]["n_rem"]
+            # Fill missing weeks with previous entry
+            for week in range(last_week_registered, week_num):
+                self.insert_entry([week, product_name, bought, expired, used, rem, cons])
+        print("previous rem:", rem)
+
     def calculate_features_of_product(self, week_num: int, product_name: str):
         """
         Calculates the features not inferable from the logs
@@ -248,8 +272,8 @@ class Cassandra:
         :param product_name: name of the product considered
         :return:
         """
-        # Select the entry for the product name corresponding to the previous week to calculate remainder
         entry = self.select_entries_for_week_product(week_num - 1, product_name)
+        print("ENTRY RECOVERED PREVIOUS WEEK: ", entry.iloc[0])
         if entry.size != 0:
             print("There are previous observations")
             rem = entry.iloc[0]["n_rem"]

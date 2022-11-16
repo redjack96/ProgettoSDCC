@@ -51,16 +51,18 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
         # Save new observation data into persistence
         obs = item.observations
         week_num = week_num + 1  # increment the global week counter
+        print("NEW WEEK: ", week_num)
         estimator.new_training()  # sets the list of new products to []
         for instance in obs:
             product_name = instance.productName
             estimator.add_new_product(product_name)  # Add product to the product list in the estimator
-            estimator.increment_week(product_name, week_num)  # Train a new week when receiving data from summary
             # Uniform the product quantity to Grams unit
             new_quantity = uniform_quantity_by_unit(instance.unit, instance.quantity)
             req_type = instance.requestType
+            cassandra_conn.fill_missing_entries(estimator.get_last_week_index(product_name), week_num, product_name)
             cassandra_conn.update_quantity(week_num, product_name, new_quantity, req_type)
             cassandra_conn.calculate_features_of_product(week_num, product_name)
+            estimator.increment_week(product_name, week_num)  # Increment the last week registered ref
         # Re-train the model (only for last added elements)
         estimator.online_pipeline_training()
         return consumptions_pb2.TrainResponse(msg="model trained")

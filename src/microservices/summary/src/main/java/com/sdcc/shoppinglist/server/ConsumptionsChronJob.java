@@ -28,7 +28,7 @@ public class ConsumptionsChronJob implements Runnable {
     private final long initialDelay;
     private final boolean startNow;
 
-    public static final int TEST = 60;
+    public static final int TEST = 60*5; // 5 minutes
     public static final int WEEK = 7;
     public static final String TRANSACTION_BUY = "add_bought_products_to_pantry";
     public static final String TRANSACTION_ADD = "add_product_to_pantry";

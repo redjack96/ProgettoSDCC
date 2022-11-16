@@ -97,7 +97,7 @@ class ConsumptionEstimator:
         self.total_dataset = self.__update_dataset()
         print("week indexes: ", self.week_indexes)
 
-        for prod_name in self.last_added_products:  # fixme magari training solo per quelli aggiunti ora
+        for prod_name in self.last_added_products:
             print("Online pipeline training for ", prod_name)
             self.__init_per_product_datasets(prod_name)
             print("Online pipeline preprocessing for ", prod_name)
@@ -141,7 +141,7 @@ class ConsumptionEstimator:
             self.total_product_list.append(product_name)
             self.models[product_name] = SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True,
                                                      learning_rate='adaptive')
-            self.week_indexes[product_name] = 0
+            self.week_indexes[product_name] = 1
         print("products list: ", self.total_product_list)
 
     def increment_week(self, product_name: str, week_num: int):  # TODO mandargli il valore della vera settimana
@@ -151,6 +151,12 @@ class ConsumptionEstimator:
         print("Actual Week: ", week_num)
         print("Last registered Week: ", old_idx)
         print("Week considered: ", self.week_indexes[product_name])
+
+    def get_last_week_index(self, product_name: str):
+        print(self.week_indexes.keys())
+        if self.week_indexes.keys().__contains__(product_name):
+            return self.week_indexes[product_name]
+        return 1
 
     def __init_train_dataset(self):
         dataset = pd.read_csv('consumi-storage.csv', skipinitialspace=True)
@@ -211,7 +217,8 @@ class ConsumptionEstimator:
         y_train = self.product_y_train_dict[prod_name]
         X_test = self.product_X_test_dict[prod_name]
         y_test = self.product_y_test_dict[prod_name]
-        self.models[prod_name].partial_fit(X_train, y_train)  # a differenza di fit, esegue un addestramento parziale di tipo
+        self.models[prod_name].partial_fit(X_train,
+                                           y_train)  # a differenza di fit, esegue un addestramento parziale di tipo
         # walk forward
         # (training 1, testing 2 .. training 1-2, testing 3 ..)
         y_pred = self.models[prod_name].predict(X_test)
