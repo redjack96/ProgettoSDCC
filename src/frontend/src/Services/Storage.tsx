@@ -1,8 +1,10 @@
 import React from "react";
-import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
 import Navbar from "../Navigation/Navbar";
 import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../Navigation/Home";
 import {PageHeader} from "../Navigation/PageHeader";
+import {useNavigate} from "react-router-dom";
+import {green} from "@mui/material/colors";
 
 
 export function Storage(){
@@ -90,14 +92,42 @@ export function Storage(){
         [items.products],
     );
 
+
+    /* Navigation functions */
+    const navigate = useNavigate();
+
+    const toAddPantryPage = () => {
+        console.log("items: "+items)
+        navigate('/addPantryPage', {
+            state: {
+                items: {items}
+            }
+        });
+    }
+
     return (
       <Container>
           <Navbar/>
           <PageHeader pageName="My storage"/>
           <Row>
               <Col>
-                  <h2>Use item</h2>
-                  <UseForm onUseItem={handleUseItems}/>
+                  <Row>
+                      <h2>Use item</h2>
+                      <UseForm onUseItem={handleUseItems}/>
+                  </Row>
+                  <Row>
+                      <h2>Other actions</h2>
+                      <ButtonGroup as={Col}>
+                          <Button
+                              size="sm"
+                              variant="success"
+                              onClick={() => toAddPantryPage()}
+                              aria-label="Add in pantry"
+                          >
+                              Add item
+                          </Button>
+                      </ButtonGroup>
+                  </Row>
               </Col>
               <Col>
                   <h2>Pantry</h2>
@@ -264,6 +294,17 @@ export function PantryElement({item, onItemRemoval}) {
             .then(() => onItemRemoval(item))
             .catch((err) => console.log(err));
     };
+
+    const navigate = useNavigate();
+
+    const toUpdatePantryPage = () => {
+        navigate('/updatePantryPage', {
+            state: {
+                item: item
+            }
+        });
+    }
+
     return(
         <tr>
             <td>
@@ -288,14 +329,24 @@ export function PantryElement({item, onItemRemoval}) {
                 <span className="badge badge-success rounded-pill d-inline">Active</span>
             </td>
             <td>
-                <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={removePantryItem}
-                    aria-label="Rimuovi il prodotto"
-                >
-                    Remove
-                </Button>
+                <ButtonGroup>
+                    <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={removePantryItem}
+                        aria-label="Rimuovi il prodotto"
+                    >
+                        Remove
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="success"
+                        onClick={() => toUpdatePantryPage()}
+                        aria-label="Update product in pantry"
+                    >
+                        Update
+                    </Button>
+                </ButtonGroup>
             </td>
         </tr>
     )

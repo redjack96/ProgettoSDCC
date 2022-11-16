@@ -7,6 +7,8 @@ import {Storage} from "./Services/Storage";
 import {Recipes} from "./Services/Recipes";
 import {Summary} from "./Services/Summary";
 import {Consumptions} from "./Services/Consumptions";
+import {UpdatePantryPage} from "./Navigation/UpdatePantryPage";
+import {AddPantryPage} from "./Navigation/AddPantryPage";
 
 
 
@@ -21,6 +23,8 @@ export function App() {
                     <Route path="/" element={<Home/>}/>
                     <Route path="/updateProductPage" element={<UpdateProductPage/>}/>
                     <Route path="/productStoragePage" element={<Storage />}/>
+                    <Route path="/updatePantryPage" element={<UpdatePantryPage />}/>
+                    <Route path="/addPantryPage" element={<AddPantryPage />}/>
                     <Route path="/recipesPage" element={<Recipes />}/>
                     <Route path="/summaryPage" element={<Summary />}/>
                     <Route path="/consumptionsPage" element={<Consumptions />}/>
