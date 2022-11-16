@@ -4,7 +4,7 @@ import React from "react";
 import Navbar from "./Navbar";
 import {PageHeader} from "./PageHeader";
 import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
-import {API_GATEWAY_ADDRESS, ProductType, Unit} from "./Home";
+import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
 import {PantryItem} from "../Services/Storage";
 
 
@@ -48,7 +48,8 @@ function AddPantryForm({onAdd}) {
             .then(r => r.json)
             .then(() => {
                 setSubmitting(false);
-                onAdd(new PantryItem(itemName, quantity, unit, type));
+                onAdd(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0),
+                    1, 1, 1, new Timestamp(new Date().getTime(), 0)));
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })

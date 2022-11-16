@@ -139,19 +139,32 @@ export function Storage(){
 }
 
 export class PantryItem {
-    constructor(itemName: string, quantity: number, unit: Unit, type: ProductType) {
+    constructor(itemName: string, quantity: number, type: ProductType, unit: Unit, lastUsed: Timestamp,
+                useNumber: number, totalUseNumber: number, timesBought: number, buyDate: Timestamp) {
         this.product_name = itemName;
         this.quantity = quantity;
         this.unit = unit;
         this.type = type;
+        this.lastUsed = lastUsed;
+        this.useNumber = useNumber;
+        this.totalUseNumber = totalUseNumber;
+        this.timesBought = timesBought;
+        this.buyDate = buyDate;
     }
+
     product_name: string;
     quantity: number;
     type: ProductType;
     unit: Unit;
+    lastUsed: Timestamp;
+    useNumber: number;
+    totalUseNumber: number;
+    timesBought: number;
+    buyDate: Timestamp;
 
-    static default(): Item {
-        return new Item("Unknown", 0, Unit.Packet, ProductType.Other, Timestamp.default());
+    static default(): PantryItem {
+        return new PantryItem("Unknown", 0, ProductType.Other, Unit.Packet, Timestamp.default(),
+            0, 0, 0, Timestamp.default());
     }
 
     toString() {
@@ -178,7 +191,8 @@ export function UseForm({onUseItem}) {
             .then(r => r.json)
             .then(() => {
                 // we call the callback passed as a parameter (!) to this component. We give it the item name to add. For us, it will be an object
-                onUseItem(new PantryItem(itemName, quantity, unit, type))
+                onUseItem(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0),
+                    1, 1, 1, new Timestamp(new Date().getTime(), 0)))
                 console.log("used " + itemName.trim());
                 // we are done submitting the item
                 setSubmitting(false);
