@@ -6,24 +6,9 @@ version: '3.1'
 #  ports:
 #    - ${PORT}:${PORT}
 services:
-  # OUR MICROSERVICES ----------------------------------------------------------------------------------
-  # --- FRONT-END ONLY FOR RAPID DEVELOPMENT
-  # TODO: SOLO QUI, BASTA CAMBIARE IL CODICE JS E L'APP SI AGGIORNERA' AUTOMATICAMENTE!
-#  frontend_dev:
-#    image: "node:19-alpine"
-#    container_name: "frontend_dev"
-#    working_dir: /app
-#    volumes:
-#      - "./src/frontend:/app"
-#    ports:
-#      - "3000:3000"
-#    command: sh -c "npm run start"
-#    depends_on:
-#      - api_gateway
-#      - shopping_list
-
+  # --- FRONTEND ---
   frontend:
-    image: "web_ui"
+    image: "redjack96/web_ui"
     container_name: "SDCCShoppingList"
     build: "src/frontend"
     ports:
@@ -33,9 +18,9 @@ services:
       - "./src/frontend:/app"
 
 
-  # --- API-GATEWAY
+  # --- API-GATEWAY ---
   api_gateway:
-    image: "api_gateway"
+    image: "redjack96/api_gateway"
     container_name: "ApiGateway"
     build:
       dockerfile: "../docker/Dockerfile.apigateway"
@@ -46,18 +31,10 @@ services:
       - "8007"
     ports:
       - "8007:8007"
-# TODO: se aggiungiamo failsafe-rs, non serve piu' depends_on!!!
-#    depends_on:
-#      - shopping_list
-#      - product_storage
-#      - consumptions
-#      - summary
-#      - notifications
-#      - recipes
 
-  # --- APP-MICROSERVICES
+  # --- APP-MICROSERVICES ---
   shopping_list:
-    image: "shopping_list"
+    image: "redjack96/shopping_list"
     container_name: "ShoppingListService" # attenzione potrebbe dare problemi se replichiamo
     build:
       dockerfile: "../docker/Dockerfile.shoppinglist"
@@ -68,7 +45,7 @@ services:
       - mongo
 
   product_storage:
-    image: "product_storage"
+    image: "redjack96/product_storage"
     container_name: "ProductStorageService"
     depends_on:
       - kafka
@@ -84,7 +61,7 @@ services:
       - "./src/microservices/product_storage/test.db:/product_storage/test.db"
 
   notifications:
-    image: "notifications"
+    image: "redjack96/notifications"
     container_name: "NotificationsService"
     build:
       dockerfile: "../docker/Dockerfile.notifications"
@@ -100,7 +77,7 @@ services:
       - redis-notifications
 
   summary:
-    image: summary
+    image: "redjack96/summary"
     container_name: "SummaryService"
     build:
       dockerfile: "../docker/Dockerfile.summary"
@@ -114,7 +91,7 @@ services:
       - consumptions
 
   recipes:
-    image: "recipes"
+    image: "redjack96/recipes"
     container_name: "RecipesService"
     build:
       dockerfile: "../docker/Dockerfile.recipes"
@@ -125,7 +102,7 @@ services:
       - redis
 
   consumptions:
-    image: consumptions
+    image: "redjack96/consumptions"
     container_name: "ConsumptionService"
     # restart: always
     build:
@@ -136,7 +113,7 @@ services:
     depends_on:
       - cassandra
 
-  # KAFKA + ZOOKEEPER ---------------------------------------------------------------
+  # --- KAFKA + ZOOKEEPER ---
   zookeeper:
     image: 'bitnami/zookeeper:latest'
     container_name: zookeeper
@@ -167,7 +144,7 @@ services:
     depends_on:
       - zookeeper
   
-  # DATABASES ------------------------------------------------------------------------
+  # --- DATABASES ---
   # for shopping list
   mongo:
     image: mongo

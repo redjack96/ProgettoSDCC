@@ -152,7 +152,7 @@ pub fn notify_to_int(input: Notify) -> u8 {
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
     // Adds all bought products to pantry
-    async fn add_bought_products_to_pantry(&self, request: Request<ProductList>) -> Result<tonic::Response<product_storage::shopping_list::Response>, Status> {
+    async fn add_bought_products_to_pantry(&self, request: Request<ProductList>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let msg = format!("Items Added to pantry: {}", request.get_ref().products.len());
         let product_list = request.into_inner();
         // Buy date is added to the incoming items
@@ -269,13 +269,13 @@ fn add_products_to_db(product_list: &ProductList) {
         let item = ProductItem::from_product(&elem);
         let db = Database::new();
 
-        // TODO: First check if element with same name already present in db
+        // First check if element with same name already present in db
         let query = db.prepare_product_statement(Some(&item), QueryType::Select,
                                                  Some(0), Some(0), Some(0),
         );
         let items = db.execute_select_query(query.as_str());
         let query;
-        if items.capacity() != 0 {
+        if !items.is_empty() {
             // Incrementa quantità e numero acquisti e aggiorna scadenza
             query = db.prepare_product_statement(Some(&item), QueryType::UpdateExisting,
                                                  Some(items.get(0).unwrap().quantity),
@@ -423,7 +423,7 @@ async fn async_kafka_producer() {
             1,      // replication factor
             5_000,  // timeout (ms)
         ).await {
-            Ok(_) => println!("created topic {KAFKA_TOPIC}"),
+            Ok(_) => println!("created topic {}", KAFKA_TOPIC),
             Err(_) => println!("the topic already exists"),
         }
         // get a partition-bound client

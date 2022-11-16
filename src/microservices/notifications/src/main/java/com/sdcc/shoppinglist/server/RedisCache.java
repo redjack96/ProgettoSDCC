@@ -29,7 +29,7 @@ public class RedisCache {
 
     public RedisCache() {
         this.jedis = new Jedis("redis-notification", 6379);
-        this.expiration = 20;  // FIXME: TEN_MINUTES
+        this.expiration = TEN_MINUTES;
     }
 
     public void cleanup(){

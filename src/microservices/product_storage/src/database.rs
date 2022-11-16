@@ -59,7 +59,7 @@ impl Database {
         match kind {
             QueryType::Select => {
                 let product = product.expect("No product given.");
-                format!("SELECT * FROM Products WHERE name='{}' AND item_type='{}' AND unit='{}';", // TODO: forse type e unit non servono
+                format!("SELECT * FROM Products WHERE name='{}' AND item_type='{}' AND unit='{}';",
                         product.name.as_str(),
                         product.item_type.to_string(),
                         product.unit.to_string())
