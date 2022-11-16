@@ -27,8 +27,9 @@ message Recipe {
   string id = 1;
   string title = 2;
   string url = 3;
-  repeated Ingredient usedIngredients = 4; // ingredients in pantry that can be used
-  repeated Ingredient missedIngredients = 5; // ingredients missing to complete recipe
+  string img = 4;
+  repeated Ingredient usedIngredients = 5; // ingredients in pantry that can be used
+  repeated Ingredient missedIngredients = 6; // ingredients missing to complete recipe
 }
 
 message RecipesRequest {}

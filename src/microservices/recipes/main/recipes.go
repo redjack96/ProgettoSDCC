@@ -29,6 +29,7 @@ type GeneralInfo struct {
 	MissedIngredients []Ingredient `json:"missedIngredients,omitempty"`
 	UsedIngredients   []Ingredient `json:"usedIngredients,omitempty"`
 	Likes             int          `json:"likes,omitempty"`
+	Image             string       `json:"image,omitempty"`
 }
 
 type UrlInfo struct { // contains the url of the recipe
@@ -105,6 +106,7 @@ func convertToProtobuf(generals []GeneralInfo, urls []UrlInfo) []*pb.Recipe {
 		title := generalInfo.Title
 		missed := generalInfo.MissedIngredients
 		id := generalInfo.Id
+		image := generalInfo.Image
 		for missedIndex := range missed {
 			m := missed[missedIndex]
 			missedRes = append(missedRes, &pb.Ingredient{Name: m.Name})
@@ -118,6 +120,7 @@ func convertToProtobuf(generals []GeneralInfo, urls []UrlInfo) []*pb.Recipe {
 			Id:                strconv.Itoa(id),
 			Title:             title,
 			Url:               url,
+			Img:               image,
 			UsedIngredients:   usedRes,
 			MissedIngredients: missedRes,
 		}

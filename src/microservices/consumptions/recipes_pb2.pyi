@@ -18,18 +18,20 @@ class IngredientsList(_message.Message):
     def __init__(self, ingredientsList: _Optional[_Iterable[_Union[Ingredient, _Mapping]]] = ...) -> None: ...
 
 class Recipe(_message.Message):
-    __slots__ = ["id", "missedIngredients", "title", "url", "usedIngredients"]
+    __slots__ = ["id", "img", "missedIngredients", "title", "url", "usedIngredients"]
     ID_FIELD_NUMBER: _ClassVar[int]
+    IMG_FIELD_NUMBER: _ClassVar[int]
     MISSEDINGREDIENTS_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     URL_FIELD_NUMBER: _ClassVar[int]
     USEDINGREDIENTS_FIELD_NUMBER: _ClassVar[int]
     id: str
+    img: str
     missedIngredients: _containers.RepeatedCompositeFieldContainer[Ingredient]
     title: str
     url: str
     usedIngredients: _containers.RepeatedCompositeFieldContainer[Ingredient]
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., url: _Optional[str] = ..., usedIngredients: _Optional[_Iterable[_Union[Ingredient, _Mapping]]] = ..., missedIngredients: _Optional[_Iterable[_Union[Ingredient, _Mapping]]] = ...) -> None: ...
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., url: _Optional[str] = ..., img: _Optional[str] = ..., usedIngredients: _Optional[_Iterable[_Union[Ingredient, _Mapping]]] = ..., missedIngredients: _Optional[_Iterable[_Union[Ingredient, _Mapping]]] = ...) -> None: ...
 
 class RecipeList(_message.Message):
     __slots__ = ["recipes"]

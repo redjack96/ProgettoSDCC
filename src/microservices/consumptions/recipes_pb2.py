@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rrecipes.proto\x12\x07recipes\"?\n\x0fIngredientsList\x12,\n\x0fingredientsList\x18\x01 \x03(\x0b\x32\x13.recipes.Ingredient\".\n\nRecipeList\x12 \n\x07recipes\x18\x01 \x03(\x0b\x32\x0f.recipes.Recipe\"\x1a\n\nIngredient\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x8e\x01\n\x06Recipe\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12,\n\x0fusedIngredients\x18\x04 \x03(\x0b\x32\x13.recipes.Ingredient\x12.\n\x11missedIngredients\x18\x05 \x03(\x0b\x32\x13.recipes.Ingredient\"\x10\n\x0eRecipesRequest2\x9b\x01\n\x07Recipes\x12J\n\x19GetRecipesFromIngredients\x12\x18.recipes.IngredientsList\x1a\x13.recipes.RecipeList\x12\x44\n\x14GetRecipesFromPantry\x12\x17.recipes.RecipesRequest\x1a\x13.recipes.RecipeListB\x13Z\x11.;proto_generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rrecipes.proto\x12\x07recipes\"?\n\x0fIngredientsList\x12,\n\x0fingredientsList\x18\x01 \x03(\x0b\x32\x13.recipes.Ingredient\".\n\nRecipeList\x12 \n\x07recipes\x18\x01 \x03(\x0b\x32\x0f.recipes.Recipe\"\x1a\n\nIngredient\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x9b\x01\n\x06Recipe\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\x0b\n\x03img\x18\x04 \x01(\t\x12,\n\x0fusedIngredients\x18\x05 \x03(\x0b\x32\x13.recipes.Ingredient\x12.\n\x11missedIngredients\x18\x06 \x03(\x0b\x32\x13.recipes.Ingredient\"\x10\n\x0eRecipesRequest2\x9b\x01\n\x07Recipes\x12J\n\x19GetRecipesFromIngredients\x12\x18.recipes.IngredientsList\x1a\x13.recipes.RecipeList\x12\x44\n\x14GetRecipesFromPantry\x12\x17.recipes.RecipesRequest\x1a\x13.recipes.RecipeListB\x13Z\x11.;proto_generatedb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'recipes_pb2', globals())
@@ -28,9 +28,9 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _INGREDIENT._serialized_start=139
   _INGREDIENT._serialized_end=165
   _RECIPE._serialized_start=168
-  _RECIPE._serialized_end=310
-  _RECIPESREQUEST._serialized_start=312
-  _RECIPESREQUEST._serialized_end=328
-  _RECIPES._serialized_start=331
-  _RECIPES._serialized_end=486
+  _RECIPE._serialized_end=323
+  _RECIPESREQUEST._serialized_start=325
+  _RECIPESREQUEST._serialized_end=341
+  _RECIPES._serialized_start=344
+  _RECIPES._serialized_end=499
 # @@protoc_insertion_point(module_scope)
