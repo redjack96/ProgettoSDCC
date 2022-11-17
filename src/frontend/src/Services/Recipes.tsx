@@ -56,6 +56,15 @@ export function Recipes() {
         }
     }, [items]);
 
+    const showListIngredients = (ingredient, index, row) => {
+        console.log(row.length)
+        if (index == row.length-1) {
+            return ingredient.name;
+        } else {
+            return ingredient.name+',';
+        }
+    }
+
     return(
         <Container>
             <Navbar/>
@@ -70,7 +79,8 @@ export function Recipes() {
                         <MDBCardBody>
                             <MDBCardTitle>{item.title}</MDBCardTitle>
                             <MDBCardText>
-                                Some quick example text to build on the card title and make up the bulk of the card's content.
+                                Missed Ingredients:<br/>
+                                {item.missed_ingredients.slice(0,10).map((ingredient, index, row) => showListIngredients(ingredient, index, row))}
                             </MDBCardText>
                             <MDBBtn href={item.url} color="success">Prepare...</MDBBtn>
                         </MDBCardBody>
