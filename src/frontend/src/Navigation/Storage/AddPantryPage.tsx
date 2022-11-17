@@ -37,7 +37,7 @@ function AddPantryForm({onAdd}) {
     const [quantity, setQuantity] = React.useState(1);
     const [type, setType] = React.useState(ProductType.Other);
     const [unit, setUnit] = React.useState(Unit.Packet);
-    const [expiration, setExpiration] = React.useState('9999-12-31'); // FIXME: forse qua ci vuole un numero, non una stringa.
+    const [expiration, setExpiration] = React.useState(Timestamp.today); // FIXME: forse qua ci vuole un numero, non una stringa.
     // this state is the status of this component. If it is submitting, the item is being added. If not it is already added.
     const [submitting, setSubmitting] = React.useState(false);
 

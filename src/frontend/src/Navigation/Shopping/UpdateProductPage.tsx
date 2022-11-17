@@ -31,7 +31,7 @@ interface UpdateFormProps {
 
 // here we destructure the props to get the single value from the field of the interface
 function UpdateForm({item}: UpdateFormProps) {
-    const defaultExpiration = new Timestamp(item.expiration.seconds, 0).getOrderedDateString();
+    const defaultExpiration = Timestamp.today();
     const [itemName, setItemName] = React.useState(item.product_name);
     const [submitting, setSubmitting] = React.useState(true);
     const [type, setType] = React.useState(item.type);
