@@ -69,7 +69,7 @@ export function Recipes() {
                             <MDBCardBody>
                                 <MDBCardTitle>{item.title}</MDBCardTitle>
                                 <MDBCardText>
-                                    Missed Ingredients:<br/>
+                                    Missing Ingredients:<br/>
                                     {item.missed_ingredients.slice(0,10).map((ingredient, index, row) => showListIngredients(ingredient, index, row))}
                                 </MDBCardText>
                                 <MDBBtn href={item.url} color="success">Prepare...</MDBBtn>

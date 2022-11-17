@@ -5,9 +5,10 @@ import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
+import {NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../Widgets/FormWidgets";
 
 
-export function Storage(){
+export function Storage() {
     const [loading, setLoading] = React.useState(false)
     const [items, setItems] = React.useState({
         id: 0,
@@ -51,7 +52,7 @@ export function Storage(){
             const newState = items.products.map(obj => {
                 // if id is corresponding, update quantity property
                 if (obj.product_name === usedItem.product_name && obj.type === usedItem.type && obj.unit === usedItem.unit) {
-                    return {...obj, quantity: obj.quantity-usedItem.quantity};
+                    return {...obj, quantity: obj.quantity - usedItem.quantity};
                 }
 
                 // otherwise return object as is
@@ -97,7 +98,7 @@ export function Storage(){
     const navigate = useNavigate();
 
     const toAddPantryPage = () => {
-        console.log("items: "+items)
+        console.log("items: " + items)
         navigate('/addPantryPage', {
             state: {
                 items: {items}
@@ -106,7 +107,7 @@ export function Storage(){
     }
 
     const toUsePantryPage = () => {
-        console.log("items: "+items)
+        console.log("items: " + items)
         navigate('/usePantryPage', {
             state: {
                 items: {items}
@@ -115,42 +116,42 @@ export function Storage(){
     }
 
     return (
-      <Container>
-          <Navbar/>
-          <PageHeader pageName="My storage"/>
-          <Row>
-              <Col>
-                  <Row className="mb-3">
-                      <MDBCard className="form">
-                          <MDBCardBody>
-                              <h2>Use item</h2>
-                              <UseForm onUseItem={handleUseItems}/>
-                          </MDBCardBody>
-                      </MDBCard>
-                  </Row>
-                  <Row>
-                      <MDBCard className="form">
-                          <MDBCardBody>
-                              <h2>Other actions</h2>
-                              <ButtonGroup as={Col}>
-                                  <Button
-                                      size="sm"
-                                      variant="success"
-                                      onClick={() => toAddPantryPage()}
-                                      aria-label="Add in pantry"
-                                  >
-                                      Add item
-                                  </Button>
-                              </ButtonGroup>
-                          </MDBCardBody>
-                      </MDBCard>
-                  </Row>
-              </Col>
-              <Col>
-                  <PantryView items={items} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
-              </Col>
-          </Row>
-      </Container>
+        <Container>
+            <Navbar/>
+            <PageHeader pageName="My storage"/>
+            <Row>
+                <Col>
+                    <Row className="mb-3">
+                        <MDBCard className="form">
+                            <MDBCardBody>
+                                <h2>Use item</h2>
+                                <UseForm onUseItem={handleUseItems}/>
+                            </MDBCardBody>
+                        </MDBCard>
+                    </Row>
+                    <Row>
+                        <MDBCard className="form">
+                            <MDBCardBody>
+                                <h2>Other actions</h2>
+                                <ButtonGroup as={Col}>
+                                    <Button
+                                        size="sm"
+                                        variant="success"
+                                        onClick={() => toAddPantryPage()}
+                                        aria-label="Add in pantry"
+                                    >
+                                        Add item
+                                    </Button>
+                                </ButtonGroup>
+                            </MDBCardBody>
+                        </MDBCard>
+                    </Row>
+                </Col>
+                <Col>
+                    <PantryView items={items} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
+                </Col>
+            </Row>
+        </Container>
     );
 }
 
@@ -217,64 +218,25 @@ export function UseForm({onUseItem}) {
             })
     }
 
-    return(
+    return (
         <Form onSubmit={submitUseItem}>
             <InputGroup className="mb-3">
                 {/*This is needed to write the name of the product*/}
                 <Row className="mb-3">
-                    <Form.Group as={Col} controlId="formGridName">
-                        <Form.Label>Name</Form.Label>
-                        <Form.Control
-                            value={itemName.trim()}
-                            onChange={e => setItemName(e.target.value)}
-                            type="text"
-                            placeholder="New Item"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
+                    <NameInput itemName={itemName} setItemName={setItemName} />
                 </Row>
                 <Row className="mb-3">
-                    <Form.Group as={Col} controlId="formQuantity">
-                        <Form.Label>Quantity</Form.Label>
-                        <Form.Control
-                            value={quantity.valueOf()}
-                            onChange={e => setQuantity(isNaN(parseInt(e.target.value)) ? 0 : parseInt(e.target.value))}
-                            type="number"
-                            placeholder="0"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
-                    <Form.Group as={Col} controlId="formSelectUnit">
-                        <Form.Label>Unit</Form.Label>
-                        <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))}>
-                            <option>Select unit...</option>
-                            <option>Bottle</option>
-                            <option>Packet</option>
-                            <option>Kg</option>
-                            <option>Grams</option>
-                        </Form.Control>
-                    </Form.Group>
+                    <QuantityInput quantity={quantity} setQuantity={setQuantity} />
+                    <UnitSelect unit={unit} setUnit={setUnit} />
                 </Row>
                 <Row>
-                    <Form.Group as={Col} controlId="formSelectType">
-                        <Form.Label>Type</Form.Label>
-                        {/*Il value è della select*/}
-                        <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))}>
-                            <option>Select product type...</option>
-                            <option>Vegetable</option>
-                            <option>Fruit</option>
-                            <option>Meat</option>
-                            <option>Drink</option>
-                            <option>Fish</option>
-                            <option>Other</option>
-                        </Form.Control>
-                    </Form.Group>
+                    <ProductTypeSelect type={type} setType={setType} />
                 </Row>
                 <Button style={{'margin': '20px'}}
-                    type="submit"
-                    variant="success"
-                    disabled={!itemName.trim().length}
-                    className={submitting ? 'disabled' : ''}
+                        type="submit"
+                        variant="success"
+                        disabled={!itemName.trim().length}
+                        className={submitting ? 'disabled' : ''}
                 >
                     {submitting ? 'Using item...' : 'Use Item'}
                 </Button>
@@ -285,7 +247,7 @@ export function UseForm({onUseItem}) {
 
 
 export function PantryView({items, voidMessage, handleRemove}) {
-    return(
+    return (
         <div className="fixed scrollable">
             <table className="table align-middle mb-0 bg-white">
                 <thead className="bg-light">
@@ -337,7 +299,7 @@ export function PantryElement({item, onItemRemoval}) {
         });
     }
 
-    return(
+    return (
         <tr>
             <td>
                 <div className="d-flex align-items-center">
@@ -345,7 +307,7 @@ export function PantryElement({item, onItemRemoval}) {
                         src={ProductType.imageFromType(item.type)}
                         alt=""
                         className="rounded-circle"
-                        style={{ 'width': '45px', 'height': '45px' }}
+                        style={{'width': '45px', 'height': '45px'}}
                     />
                     <div className="ms-3">
                         <p className="fw-bold mb-1">{item.item_name}</p>

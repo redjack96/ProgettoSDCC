@@ -5,6 +5,7 @@ import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../../Ser
 import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
+import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../../Widgets/FormWidgets";
 
 // this is called by the route /updateProductPage by the ItemDisplay's Update button
 function UpdateProductPage() {
@@ -12,7 +13,7 @@ function UpdateProductPage() {
     const productName = location.state.item.product_name;
     return (
         <Container>
-            <Navbar />
+            <Navbar/>
             <PageHeader pageName="Update product in list"/>
             <MDBCard className="form">
                 <MDBCardBody>
@@ -63,74 +64,17 @@ function UpdateForm({item}: UpdateFormProps) {
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
-                <Form.Group as={Col} controlId="formGridName">
-                    <Form.Label>Product Name</Form.Label>
-                    <Form.Control
-                        value={itemName}
-                        onChange={e => setItemName(e.target.value)}
-                        type="text"
-                        placeholder="New Item"
-                        aria-describedby="basic-addon1"
-                    >
-                    </Form.Control>
-                </Form.Group>
-                <Form.Group as={Col} controlId="formExpirationDate">
-                    <Form.Label>Expiration Date</Form.Label>
-                    <Form.Control
-                        value={expiration}
-                        onChange={e => {
-                            console.log(e.target.value);
-                            return setExpiration(e.target.value);
-                        }}
-                        type="date"
-                    />
-                </Form.Group>
+                <NameInput itemName={itemName} setItemName={setItemName}/>
+                <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
             </Row>
             <Row className="mb-3">
-                <Form.Group as={Col} controlId="formQuantity">
-                    <Form.Label>Quantity</Form.Label>
-                    <Form.Control
-                        value={quantity.valueOf()}
-                        onChange={e => setQuantity(parseInt(e.target.value))}
-                        type="number"
-                        placeholder="0"
-                        aria-describedby="basic-addon1"
-                    />
-                </Form.Group>
-                <Form.Group as={Col} controlId="formSelectUnit">
-                    <Form.Label>Unit</Form.Label>
-                    <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}>
-                        <option>Select unit...</option>
-                        <option>Bottle</option>
-                        <option>Packet</option>
-                        <option>Kg</option>
-                        <option>Grams</option>
-                    </Form.Control>
-                </Form.Group>
-                <Form.Group as={Col} controlId="formSelectType">
-                    <Form.Label>Type</Form.Label>
-                    {/*Il value è della select*/}
-                    <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}>
-                        <option>Select product type...</option>
-                        <option>Vegetable</option>
-                        <option>Fruit</option>
-                        <option>Meat</option>
-                        <option>Drink</option>
-                        <option>Fish</option>
-                        <option>Other</option>
-                    </Form.Control>
-                </Form.Group>
+                <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
+                <UnitSelect unit={unit} setUnit={setUnit}/>
+                <ProductTypeSelect type={type} setType={setType}/>
             </Row>
             <Container>
                 <Row className="mb-3">
-                    <Button
-                        type="submit"
-                        variant="success"
-                        disabled={!itemName.trim().length}
-                        className={submitting ? 'disabled' : ''}
-                    >
-                        Update
-                    </Button>
+                    <SubmitButton itemName={itemName} submitting={submitting} buttonText="Update"/>
                 </Row>
             </Container>
         </InputGroup>
