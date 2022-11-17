@@ -31,55 +31,9 @@ const Navbar = () => {
     const [showBasic, setShowBasic] = useState(false);
 
     return (
-        // <nav className="navbar navbar-expand-lg navbar-light bg-light">
-        //     <a className="navbar-brand" href="#">
-        //         S.D.C.C ShoppingList
-        //     </a>
-        //     <button
-        //         className="navbar-toggler"
-        //         type="button"
-        //         data-toggle="collapse"
-        //         data-target="#navbarNavDropdown"
-        //         aria-controls="navbarNavDropdown"
-        //         aria-expanded="false"
-        //         aria-label="Toggle navigation"
-        //     >
-        //         <span className="navbar-toggler-icon"></span>
-        //     </button>
-        //
-        //     <div className="collapse navbar-collapse" id="navbarNavDropdown">
-        //         <ul className="navbar-nav">
-        //             <li className="nav-item active">
-        //                 <a className="nav-link" href="/">
-        //                     Shopping List <span className="sr-only">(current)</span>
-        //                 </a>
-        //             </li>
-        //             <li className="nav-item">
-        //                 <a className="nav-link" href="/productStoragePage">
-        //                     Storage
-        //                 </a>
-        //             </li>
-        //             <li className="nav-item">
-        //                 <a className="nav-link" href="/recipesPage">
-        //                     Recipes
-        //                 </a>
-        //             </li>
-        //             <li className="nav-item">
-        //                 <a className="nav-link" href="/consumptionsPage">
-        //                     Consumption
-        //                 </a>
-        //             </li>
-        //             <li className="nav-item">
-        //                 <a className="nav-link" href="/summaryPage">
-        //                     Summary
-        //                 </a>
-        //             </li>
-        //         </ul>
-        //     </div>
-        // </nav>
-        <MDBNavbar expand='lg' light bgColor='light'>
+        <MDBNavbar expand='lg' light bgColor='white'>
             <MDBContainer fluid>
-                <MDBNavbarBrand href='#'>S.D.C.C-S</MDBNavbarBrand>
+                <MDBNavbarBrand tag="span" className='mb-0 h1' href='#'>S.D.C.C-S</MDBNavbarBrand>
 
                 <MDBNavbarToggler
                     aria-controls='navbarSupportedContent'
@@ -104,10 +58,7 @@ const Navbar = () => {
                             <MDBNavbarLink href='/recipesPage'>Recipes</MDBNavbarLink>
                         </MDBNavbarItem>
                         <MDBNavbarItem>
-                            <MDBNavbarLink href='/summaryPage'>Summary</MDBNavbarLink>
-                        </MDBNavbarItem>
-                        <MDBNavbarItem>
-                            <MDBNavbarLink href='/consumptionsPage'>Consumption</MDBNavbarLink>
+                            <MDBNavbarLink href='/statisticsPage'>Statistics</MDBNavbarLink>
                         </MDBNavbarItem>
                     </MDBNavbarNav>
                 </MDBCollapse>

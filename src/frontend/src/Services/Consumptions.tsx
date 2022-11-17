@@ -21,9 +21,6 @@ import Navbar from "../Navigation/Utils/Navbar";
 
 export function Consumptions() {
     return(
-        <Container>
-            <Navbar/>
-            <p>Consumptions</p>
-        </Container>
+        <p>Consumption</p>
     )
 }

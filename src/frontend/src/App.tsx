@@ -10,6 +10,7 @@ import Home from "./Services/Home";
 import UpdateProductPage from "./Navigation/Shopping/UpdateProductPage";
 import {UpdatePantryPage} from "./Navigation/Storage/UpdatePantryPage";
 import {AddPantryPage} from "./Navigation/Storage/AddPantryPage";
+import {Statistics} from "./Navigation/Statistics/Statistics";
 
 
 
@@ -27,8 +28,7 @@ export function App() {
                     <Route path="/updatePantryPage" element={<UpdatePantryPage />}/>
                     <Route path="/addPantryPage" element={<AddPantryPage />}/>
                     <Route path="/recipesPage" element={<Recipes />}/>
-                    <Route path="/summaryPage" element={<Summary />}/>
-                    <Route path="/consumptionsPage" element={<Consumptions />}/>
+                    <Route path="/statisticsPage" element={<Statistics />}/>
                     {/*For react-router < v6, use Redirect instead of Navigate AND it cannot be child of Routes! It must be used where needed (in a button onClick={() => navigate("/")}, where const navigate = useNavigate();)*/}
                     {/*<Navigate to={"/"}/>*/}
                 </Routes>

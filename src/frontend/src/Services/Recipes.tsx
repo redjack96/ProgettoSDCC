@@ -4,18 +4,7 @@ import {
     MDBBtn,
     MDBCard,
     MDBCardBody,
-    MDBCardHeader,
-    MDBCardImage, MDBCardText, MDBCardTitle,
-    MDBCol,
-    MDBContainer,
-    MDBIcon,
-    MDBInput,
-    MDBListGroup,
-    MDBListGroupItem,
-    MDBRipple,
-    MDBRow,
-    MDBTooltip,
-    MDBTypography,
+    MDBCardImage, MDBCardText, MDBCardTitle, MDBCol,
 } from "mdb-react-ui-kit";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
@@ -74,17 +63,19 @@ export function Recipes() {
                     <p className="text-center">{voidMessage}</p>
                 )}
                 {items.recipes.map(item => (
-                    <MDBCard>
-                        <MDBCardImage src={item.img} position='top' alt='...' />
-                        <MDBCardBody>
-                            <MDBCardTitle>{item.title}</MDBCardTitle>
-                            <MDBCardText>
-                                Missed Ingredients:<br/>
-                                {item.missed_ingredients.slice(0,10).map((ingredient, index, row) => showListIngredients(ingredient, index, row))}
-                            </MDBCardText>
-                            <MDBBtn href={item.url} color="success">Prepare...</MDBBtn>
-                        </MDBCardBody>
-                    </MDBCard>
+                    <MDBCol>
+                        <MDBCard>
+                            <MDBCardImage src={item.img} position='top' alt='...' />
+                            <MDBCardBody>
+                                <MDBCardTitle>{item.title}</MDBCardTitle>
+                                <MDBCardText>
+                                    Missed Ingredients:<br/>
+                                    {item.missed_ingredients.slice(0,10).map((ingredient, index, row) => showListIngredients(ingredient, index, row))}
+                                </MDBCardText>
+                                <MDBBtn href={item.url} color="success">Prepare...</MDBBtn>
+                            </MDBCardBody>
+                        </MDBCard>
+                    </MDBCol>
                 ))}
             </Row>
         </Container>
