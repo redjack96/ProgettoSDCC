@@ -1,6 +1,5 @@
 package com.sdcc.shoppinglist.server;
 
-import com.sdcc.shoppinglist.server.utils.Product;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -8,20 +7,21 @@ import notifications.NotificationGrpc;
 import notifications.Notifications;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sdcc.shoppinglist.server.NotificationConsumer.EXPIRED;
-
 public class NotificationServer implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(NotificationServer.class.getSimpleName());
-    public static final int PORT = 8005;
+    public final int port;
+    public final String address;
 
     @Override
     public void run() {
@@ -38,10 +38,20 @@ public class NotificationServer implements Runnable {
 
     public NotificationServer() {
         LOGGER.setLevel(Level.INFO);
+        Properties prop = new Properties();
+        try {
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            InputStream stream = loader.getResourceAsStream("config.properties");
+            prop.load(stream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.port = Integer.parseInt(prop.getProperty("NotificationPort"));
+        this.address = prop.getProperty("NotificationsAddress");
     }
 
     private void start() throws IOException {
-        SocketAddress address = new InetSocketAddress("notifications", PORT);
+        SocketAddress address = new InetSocketAddress("notifications", port);
         this.server = NettyServerBuilder.forAddress(address)
                 .addService(new NotificationsImpl())
                 .build()

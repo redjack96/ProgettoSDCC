@@ -70,7 +70,6 @@ services:
     #      ENVIRONMENT: local
     #      INTERNAL_KAFKA_ADDR: 'kafka:9092'
     volumes:
-      - "./src/proto:/notifications/proto"
       - "./config.properties:/notifications/src/main/resources/config.properties"
     depends_on:
       - product_storage
