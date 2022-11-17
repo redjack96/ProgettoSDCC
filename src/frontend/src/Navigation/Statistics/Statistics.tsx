@@ -8,6 +8,7 @@ import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {Summary} from "../../Services/Summary";
 import {Consumptions} from "../../Services/Consumptions";
+import {Notifications} from "../../Services/Notifications";
 
 export function Statistics() {
     return(
@@ -15,9 +16,9 @@ export function Statistics() {
             <Navbar/>
             <PageHeader pageName="Statistics"/>
             <Row className="mb-3">
-                <Col sm={8}>
+                <Col>
                     <MDBCard className="form">
-                        <MDBCardBody>
+                        <MDBCardBody className="pb-5">
                             <Col>
                                 <h2>Summary</h2>
                                 <Summary />
@@ -25,23 +26,28 @@ export function Statistics() {
                         </MDBCardBody>
                     </MDBCard>
                 </Col>
-                <Col>
+                <Col sm={5}>
                     <MDBCard className="form">
                         <MDBCardBody>
-                            <Col className="border-right">
-                                <h2>Notifications</h2>
+                            <Col>
+                                <h2>Consumption</h2>
+                                <Consumptions/>
                             </Col>
                         </MDBCardBody>
                     </MDBCard>
                 </Col>
             </Row>
             <Row className="mb-3">
-                <MDBCard className="form">
-                    <MDBCardBody>
-                        <h2>Consumption</h2>
-                        <Consumptions/>
-                    </MDBCardBody>
-                </MDBCard>
+                <Col mb={2}>
+                    <MDBCard className="form">
+                        <MDBCardBody>
+                            <Col className="border-right">
+                                <h2>Notifications</h2>
+                                <Notifications />
+                            </Col>
+                        </MDBCardBody>
+                    </MDBCard>
+                </Col>
             </Row>
         </Container>
     )

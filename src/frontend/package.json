@@ -21,6 +21,7 @@
     "react-bootstrap": "^2.5.0",
     "mdb-react-ui-kit":"^5.0.0",
     "mdb-ui-kit": "^6.0.0",
+    "recharts":"^2.1.16",
     "react-helmet": "^6.1.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.3",

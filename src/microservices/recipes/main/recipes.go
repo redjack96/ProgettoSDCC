@@ -82,8 +82,7 @@ func (s *serverRecipes) GetRecipesFromPantry(_ context.Context, _ *pb.RecipesReq
 	// Query Spoonacular API using the str
 	recipeGeneral := getFromAPI("https://api.spoonacular.com/recipes/findByIngredients" +
 		"?apiKey=053dc1707c6d4a9aa63b246bb543cc1d" +
-		"&ingredients=" + str +
-		"&ranking=" + string(rune(1))) // minimize missing ingredients
+		"&ingredients=" + str + "") // minimize missing ingredients
 	generalList := unmarshalToListGeneralInfo(recipeGeneral)
 	urlList := unmarshalToUrlInfo(generalList)
 	recipes := convertToProtobuf(generalList, urlList)
