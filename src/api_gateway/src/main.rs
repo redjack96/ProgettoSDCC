@@ -9,9 +9,9 @@ use api_gateway::shopping_list::shopping_list_client::ShoppingListClient;
 use api_gateway::shopping_list::{Product, ProductKey, ProductUpdate, ProductType, Unit, GetListRequest, BuyRequest, Timestamp, Response as OurResponse, ProductList};
 use api_gateway::product_storage::{ItemName, Pantry, PantryMessage};
 use api_gateway::summary::{SummaryData, SummaryRequest};
-use api_gateway::recipes::{RecipeList, RecipesRequest};
+use api_gateway::recipes::{Ingredient, IngredientsList, RecipeList, RecipesRequest};
 use api_gateway::product_storage::{Item, UsedItem};
-use actix_web::{get, post, App, HttpResponse, HttpServer, Responder, HttpRequest};
+use actix_web::{get, post, App, HttpResponse, HttpServer, Responder, HttpRequest, web};
 use actix_web::web::Query;
 use failsafe::{Config, StateMachine};
 use failsafe::backoff::EqualJittered;
@@ -66,17 +66,17 @@ fn our_timestamp(their_timestamp: prost_types::Timestamp) -> Timestamp {
     }
 }
 
-fn json_response(json: serde_json::Value) -> HttpResponse {
-    HttpResponse::Ok()
-        .insert_header(("Access-Control-Allow-Origin", "*"))
-        .body(json.to_string())
-}
-
-fn str_response(str: String) -> HttpResponse {
-    HttpResponse::Ok()
-        .insert_header(("Access-Control-Allow-Origin", "*"))
-        .body(str)
-}
+// fn json_response(json: serde_json::Value) -> HttpResponse {
+//     HttpResponse::Ok()
+//         .insert_header(("Access-Control-Allow-Origin", "*"))
+//         .body(json.to_string())
+// }
+//
+// fn str_response(str: String) -> HttpResponse {
+//     HttpResponse::Ok()
+//         .insert_header(("Access-Control-Allow-Origin", "*"))
+//         .body(str)
+// }
 
 fn to_json_response<T>(obj: T) -> HttpResponse where T: Serialize {
     let string = serde_json::to_string_pretty(&obj).unwrap_or_default();
@@ -354,7 +354,7 @@ async fn buy_products_in_cart() -> impl Responder {
     // Sending request and waiting for response
     match CIRCUIT_BREAKER.lock().await.call(client.buy_all_products_in_cart(request)).await {
         Ok(resp) => to_json_response(resp.into_inner()),
-        Err(e ) => to_json_error(e),
+        Err(e) => to_json_error(e),
     }
 }
 
@@ -441,7 +441,7 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     to_json_response(response)
 }
 
-// FIXME: aggiornare solo un campo alla volta, dato nome, unit e type con campi: valore e campo... (forse)
+// FIXME: aggiornare OPZIONALMENTE almeno uno tra quantity, expiration, lastUsed, useNumber, totalUseNumber timesIsBought buyDate. Usa Query!!
 #[post("/updateProductInStorage/{name}/{quantity}/{unit}/{type}/{expiration}/{lastUsed}/{useNumber}/{totalUseNumber}/{timesIsBought}/{buyDate}")]
 async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
@@ -574,10 +574,10 @@ async fn get_notifications() -> impl Responder {
     let mut client = NotificationClient::new(channel);
     println!("gRPC client created");
 
-    let request = tonic::Request::new(NotificationRequest{});
+    let request = tonic::Request::new(NotificationRequest {});
     let response = CIRCUIT_BREAKER.lock().await.call(client.get_notifications(request))
         .await
-        .unwrap_or(Response::new(NotificationList{
+        .unwrap_or(Response::new(NotificationList {
             notification: vec![]
         })).into_inner();
 
@@ -710,6 +710,35 @@ async fn get_recipes_from_pantry() -> impl Responder {
     to_json_response(response)
 }
 
+#[get("/getRecipesWith/{commaSeparatedIngredients}")]
+async fn get_recipes_from_ingredients(strings: web::Path<String>) -> impl Responder {
+    let configs = get_properties();
+    let result = get_channel(&configs.recipes_address, configs.recipes_port).await;
+    if let Err(err) = result {
+        return to_json_unavailable(err);
+    }
+    let channel = result.unwrap();
+    println!("Channel to recipes created");
+    // Create a gRPC client for ProductStorage
+    let mut client = RecipesClient::new(channel);
+    println!("gRPC client created");
+
+    let ingredients = strings.into_inner();
+
+    let request = tonic::Request::new(IngredientsList {
+        ingredients_list: ingredients.split(",").map(|s| Ingredient { name: s.to_string() }).collect(),
+    });
+    println!("Request created");
+
+    // Invio la richiesta e attendo la risposta:
+    let response = CIRCUIT_BREAKER.lock().await.call(client.get_recipes_from_ingredients(request))
+        .await
+        .unwrap_or(Response::new(RecipeList { recipes: vec![] }))
+        .into_inner();
+
+    to_json_response(response)
+}
+
 /** CONSUMPTIONS APIS **/
 
 // // runs an online training method with the newly added or used product from product storage
@@ -775,6 +804,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_month_summary)
             .service(get_total_summary)
             .service(get_recipes_from_pantry)
+            .service(get_recipes_from_ingredients)
             .service(predict)
     }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
         .run()
