@@ -1,0 +1,20 @@
+{
+  "name": "progettosdcc",
+  "version": "1.0.0",
+  "description": "Smart Distributed Capable & Consumption-Aware Shopping list.  A smart automated shopping list, built with microservices.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redjack96/ProgettoSDCC.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/redjack96/ProgettoSDCC/issues"
+  },
+  "homepage": "https://github.com/redjack96/ProgettoSDCC#readme"
+}
