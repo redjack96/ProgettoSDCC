@@ -29,7 +29,8 @@ export function UpdatePantryPage() {
 
 // here we destructure the props to get the single value from the field of the interface
 function UpdatePantryForm({item}) {
-    const defaultExpiration = new Timestamp(item.expiration.seconds, 0).getOrderedDateString();
+    const defaultExpiration = Timestamp.today();
+    console.log(defaultExpiration);
     const [itemName, setItemName] = React.useState(item.item_name);
     const [submitting, setSubmitting] = React.useState(true);
     const [type, setType] = React.useState(item.type);
@@ -37,11 +38,11 @@ function UpdatePantryForm({item}) {
     const [quantity, setQuantity] = React.useState(item.quantity);
     // here we cannot use directly item.expiration.getOrderedDateString(), because Javascript doesn't know it is an object, so it doesn't even know the existence of the method!
     const [expiration, setExpiration] = React.useState(defaultExpiration);
-    const [lastUsed, setLastUsed] = React.useState(item.lastUsed);
+    const [lastUsed, setLastUsed] = React.useState(Timestamp.today());
     const [useNumber, setUseNumber] = React.useState(item.useNumber);
     const [totalUseNumber, setTotalUseNumber] = React.useState(item.totalUseNumber);
     const [timesBought, setTimesBought] = React.useState(item.timesBought);
-    const [buyDate, setBuyDate] = React.useState(item.buyDate);
+    const [buyDate, setBuyDate] = React.useState(Timestamp.today());
 
     // this is used to return to home when clicking update button
     const navigate = useNavigate();

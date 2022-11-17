@@ -1,7 +1,5 @@
 package com.sdcc.shoppinglist.server;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import com.sdcc.shoppinglist.summary.Period;
 import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.summary.SummaryGrpc;
@@ -9,17 +7,13 @@ import com.sdcc.shoppinglist.summary.SummaryRequest;
 import com.sdcc.shoppinglist.utils.LogEntry;
 import com.sdcc.shoppinglist.utils.SummaryBuilder;
 import com.sdcc.shoppinglist.utils.TimeWindow;
-import consumptions.Consumptions;
-import consumptions.EstimatorGrpc;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Date;
+import java.io.InputStream;
 import java.util.List;
-import java.util.concurrent.Executors;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.IOException;
@@ -32,16 +26,27 @@ import java.util.concurrent.TimeUnit;
  */
 public class SummaryServer {
     private static final Logger LOGGER = Logger.getLogger(SummaryServer.class.getSimpleName());
-    public static final int PORT = 8006;
+    public final int port;
+    public final String address;
     private static InfluxSink influx;
     private Server server;
 
     public SummaryServer() {
         LOGGER.setLevel(Level.INFO);
+        Properties prop = new Properties();
+        try {
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            InputStream stream = loader.getResourceAsStream("config.properties");
+            prop.load(stream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.port = Integer.parseInt(prop.getProperty("SummaryPort"));
+        this.address = prop.getProperty("SummaryAddress");
     }
 
     private void start() throws IOException {
-        SocketAddress address = new InetSocketAddress("summary", PORT);
+        SocketAddress address = new InetSocketAddress(this.address, this.port);
         this.server = NettyServerBuilder.forAddress(address)
                 .addService(new SummaryImpl())
                 .build()
