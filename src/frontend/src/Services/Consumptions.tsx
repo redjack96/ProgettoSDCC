@@ -6,6 +6,7 @@ import {API_GATEWAY_ADDRESS} from "./Home";
 export function Consumptions() {
     const COLORS = ["#8884d8", "#82ca9d", "#FFBB28", "#FF8042", "#AF19FF"];
     const [loading, setLoading] = React.useState(false)
+    const [voidMessage, setVoidMessage] = React.useState("No consumption data available.");
     const [consData, setConsData] = useState({
         predicted: []
     })
@@ -22,12 +23,14 @@ export function Consumptions() {
                 })
                 .then(itemsOrError => {
                     try {
-                        setConsData(itemsOrError)
+                        setConsData(itemsOrError);
+                        setVoidMessage("No consumption data available.");
                     } catch {
-                        console.log("Error: shopping_list service is down")
+                        console.log("Error: consumption service is down")
                         setConsData({
                             predicted: []
-                        })
+                        });
+                        setVoidMessage(itemsOrError.msg);
                     }
                 })
                 .catch(e => console.log("Errore: " + e))

@@ -1,24 +1,5 @@
 import React, {useState} from "react";
 import {Alert, Button, Col, Container, Row} from "react-bootstrap";
-import {
-    MDBBtn,
-    MDBCard,
-    MDBCardBody,
-    MDBCardHeader,
-    MDBCardImage,
-    MDBCol,
-    MDBContainer,
-    MDBIcon,
-    MDBInput,
-    MDBListGroup,
-    MDBListGroupItem,
-    MDBRipple,
-    MDBRow,
-    MDBTooltip,
-    MDBTypography,
-} from "mdb-react-ui-kit";
-import Navbar from "../Navigation/Utils/Navbar";
-import {ResponsiveContainer} from "recharts";
 import {API_GATEWAY_ADDRESS} from "./Home";
 
 export function Notifications() {
@@ -44,7 +25,7 @@ export function Notifications() {
                         setNotifications(itemsOrError)
                         setVoidMessage("Nothing to notify.")
                     } catch {
-                        console.log("Error: shopping_list service is down")
+                        console.log("Error: Notifications service is down")
                         setNotifications({
                             notification: []
                         })
