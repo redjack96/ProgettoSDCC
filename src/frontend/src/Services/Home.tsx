@@ -274,29 +274,23 @@ export namespace ProductType {
     export function imageFromType(typeInt: number) {
         switch (typeInt) {
             case 0: {
-                console.log("Meat");
                 return images.meat;
             }
             case 1: {
-                console.log("Fish");
                 return images.fish;
             }
 
             case 2: {
-                console.log("Fruit");
                 return images.fruit;
             }
 
             case 3: {
-                console.log("Veg");
                 return images.veggies;
             }
             case 4: {
-                console.log("Drink");
                 return images.drinks;
             }
             default: {
-                console.log("Other");
                 return images.other;
             }
         }
@@ -341,10 +335,28 @@ export class Timestamp {
 
     public static today(): string {
         let today = new Date();
-        let day = today.getDate().toString();
+        let day = today.getDate();
         let month = today.getMonth();
         let year = today.getFullYear()
         return year + "-" + month + "-" + day;
+    }
+
+    public static todayPlus(years: number, months: number, days: number): string {
+        let today = new Date();
+        today.setDate(today.getDate() + days);
+        today.setFullYear(today.getFullYear() + years);
+        today.setMonth(today.getMonth() + months);
+        let st = today.getFullYear() + "-" + today.getMonth() + "-" + today.getDate();
+        console.log("today plus", st);
+        return st;
+    }
+
+    public static todayMinus(years: number, months: number, days: number): string {
+        let today = new Date();
+        today.setDate(today.getDate() - days);
+        today.setFullYear(today.getFullYear() - years);
+        today.setMonth(today.getMonth() - months);
+        return today.getFullYear() + "-" + today.getMonth() + "-" + today.getDate();
     }
 
     static default() {
@@ -419,16 +431,16 @@ function AddItemForm({onNewItem}) {
         <Form onSubmit={submitNewItem}>
             <InputGroup>
                 <Row className="mb-3">
-                    <NameInput itemName={itemName} setItemName={setItemName} />
-                    <ExpirationInput expiration={expiration} setExpiration={setExpiration} />
+                    <NameInput itemName={itemName} setItemName={setItemName}/>
+                    <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
                 </Row>
                 <Row className="mb-3">
-                    <QuantityInput quantity={quantity} setQuantity={setQuantity} />
-                    <UnitSelect unit={unit} setUnit={setUnit} />
+                    <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
+                    <UnitSelect unit={unit} setUnit={setUnit}/>
                 </Row>
                 <Row className="mb-3">
-                    <ProductTypeSelect type={type} setType={setType} />
-                    <Col md="auto" style={{'margin':'30px'}}>
+                    <ProductTypeSelect type={type} setType={setType}/>
+                    <Col md="auto" style={{'margin': '30px'}}>
                         <Button
                             type="submit"
                             variant="success"

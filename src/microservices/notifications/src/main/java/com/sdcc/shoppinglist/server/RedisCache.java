@@ -16,7 +16,7 @@ public class RedisCache {
     private static final Logger LOGGER = Logger.getLogger(RedisCache.class.getSimpleName());
     private final Jedis jedis;
 
-    public static final int TEN_MINUTES = 10 * 60;
+    public static final int THREE_MINUTES_TEST = 3 * 60;
     private final int expiration;
 
     public int getExpiration() {
@@ -25,7 +25,7 @@ public class RedisCache {
 
     public RedisCache() {
         this.jedis = new Jedis("redis-notification", 6379);
-        this.expiration = TEN_MINUTES;
+        this.expiration = THREE_MINUTES_TEST;
     }
 
     public void cleanup() {
@@ -87,12 +87,11 @@ public class RedisCache {
             return "";
         }
         LOGGER.info(">>>>>>>>>>>>>>>>>>>>>" + Arrays.toString(newNotifications));
-        jedis.srem(setKey, newNotifications);
+        // jedis.srem(setKey, newNotifications);
         // also adds them to the set of the OLD values, if not already present
-        var setKeyOld = createKeyForSet(topic, false);
-        jedis.sadd(setKeyOld, newNotifications);
-        // WE
-        jedis.expire(setKeyOld, this.expiration);
+        // var setKeyOld = createKeyForSet(topic, false);
+        // jedis.sadd(setKeyOld, newNotifications);
+        jedis.expire(setKey, this.expiration);
 
         StringBuilder s = new StringBuilder();
         for (int i = 0, size = newNotifications.length; i < size; i++) {

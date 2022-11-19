@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import {Alert, Button, Col, Container, Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS} from "./Home";
+import {AlertExpired, AlertFinished} from "../Widgets/NotificationWidgets";
 
 export function Notifications() {
     const [notifications, setNotifications] = useState({
@@ -26,9 +27,6 @@ export function Notifications() {
                 .then(itemsOrError => {
                     try {
                         setNotifications(itemsOrError)
-                        if (notifications.notification.length > 0) {
-                            setViewedNotifications(itemsOrError);
-                        }
                         setVoidMessage("Nothing to notify.")
                     } catch {
                         console.log("Error: Notifications service is down")
@@ -37,62 +35,69 @@ export function Notifications() {
                         })
                         setVoidMessage(itemsOrError.msg)
                     }
+                    return itemsOrError;
+                })
+                .then(value => {
+                    console.log("value", value);
+                    try {
+                        if (value.notification.length > 0) {
+                            setViewedNotifications(value);
+                        }
+                        setVoidMessage("Nothing to notify.")
+                    } catch {
+                        console.log("Error: Notifications service is down")
+                        setViewedNotifications({
+                            notification: []
+                        })
+                        setVoidMessage(value.msg)
+                    }
                 })
                 .catch(e => console.log("Errore: " + e))
             console.log(notifications);
         }
-    }, [notifications]);
+    }, [notifications, viewedNotifications]);
 
-    return(
+    const onDismiss = notification => {
+        let index = viewedNotifications.notification.indexOf(notification);
+        console.log(index);
+        viewedNotifications.notification.splice(index, 1);
+        console.log("before set", viewedNotifications);
+        setViewedNotifications(viewedNotifications);
+        console.log("after set", viewedNotifications);
+    }
+
+    return (
         <React.Fragment>
-                {viewedNotifications.notification.length === 0 && (
-                    <p className="text-center">{voidMessage}</p>
-                )}
-                {viewedNotifications.notification.length == 1 && (
-                    <React.Fragment>
-                        {viewedNotifications.notification[0].startsWith("The following") && (
-                            <Alert key='warning1' variant='warning'>
-                                {viewedNotifications.notification[0]}
-                            </Alert>
-                        )}
-                        {viewedNotifications.notification[0].startsWith("You run out") && (
-                            <Alert key='warning2' variant='warning'>
-                                <Col>
-                                    {viewedNotifications.notification[0]}
-                                    <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
-                                </Col>
-                            </Alert>
-                        )}
-                    </React.Fragment>
-                )}
+            {viewedNotifications.notification.length === 0 && (
+                <p className="text-center">{voidMessage}</p>
+            )}
+            {viewedNotifications.notification.length == 1 && (
+                <React.Fragment>
+                    {viewedNotifications.notification[0].startsWith("The following") && (
+                        <AlertExpired notification={viewedNotifications.notification[0]} onDismiss={() => onDismiss(viewedNotifications.notification[0])}/>
+                    )}
+                    {viewedNotifications.notification[0].startsWith("You run out") && (
+                        <AlertFinished notification={viewedNotifications.notification[0]}
+                                       onDismiss={() => onDismiss(viewedNotifications.notification[0])}/>
+                    )}
+                </React.Fragment>
+            )}
 
             {viewedNotifications.notification.length == 2 && (
                 <React.Fragment>
                     {viewedNotifications.notification[0].startsWith("The following") && (
-                        <Alert key='warning1' variant='warning'>
-                            {viewedNotifications.notification[0]}
-                        </Alert>
+                        <AlertExpired notification={viewedNotifications.notification[0]} onDismiss={() => onDismiss(viewedNotifications.notification[0])}/>
                     )}
                     {viewedNotifications.notification[0].startsWith("You run out") && (
-                        <Alert key='warning2' variant='warning'>
-                            <Col>
-                                {viewedNotifications.notification[0]}
-                                <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
-                            </Col>
-                        </Alert>
+                        <AlertFinished notification={viewedNotifications.notification[0]}
+                                       onDismiss={() => onDismiss(viewedNotifications.notification[0])}/>
                     )}
                     {viewedNotifications.notification[1].startsWith("The following") && (
-                        <Alert key='warning1' variant='warning'>
-                            {viewedNotifications.notification[1]}
-                        </Alert>
+                        <AlertExpired notification={viewedNotifications.notification[1]} onDismiss={() => onDismiss(viewedNotifications.notification[1])}/>
                     )}
                     {viewedNotifications.notification[1].startsWith("You run out") && (
-                        <Alert key='warning2' variant='warning'>
-                            <Col>
-                                {viewedNotifications.notification[1]}
-                                <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
-                            </Col>
-                        </Alert>
+                        <AlertFinished notification={viewedNotifications.notification[1]}
+                                       onDismiss={() => onDismiss(viewedNotifications.notification[1])}/>
                     )}
                 </React.Fragment>
             )}
