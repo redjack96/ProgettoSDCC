@@ -431,15 +431,15 @@ function AddItemForm({onNewItem}) {
         <Form onSubmit={submitNewItem}>
             <InputGroup>
                 <Row className="mb-3">
-                    <NameInput itemName={itemName} setItemName={setItemName}/>
+                    <NameInput itemName={itemName} setItemName={setItemName}isUpdate={false}/>
                     <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
                 </Row>
                 <Row className="mb-3">
                     <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
-                    <UnitSelect unit={unit} setUnit={setUnit}/>
+                    <UnitSelect unit={unit} setUnit={setUnit}isUpdate={false}/>
                 </Row>
                 <Row className="mb-3">
-                    <ProductTypeSelect type={type} setType={setType}/>
+                    <ProductTypeSelect type={type} setType={setType}isUpdate={false}/>
                     <Col md="auto" style={{'margin': '30px'}}>
                         <Button
                             type="submit"

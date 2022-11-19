@@ -64,13 +64,13 @@ function UpdateForm({item}: UpdateFormProps) {
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
-                <NameInput itemName={itemName} setItemName={setItemName}/>
+                <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
                 <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
             </Row>
             <Row className="mb-3">
                 <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
-                <UnitSelect unit={unit} setUnit={setUnit}/>
-                <ProductTypeSelect type={type} setType={setType}/>
+                <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
+                <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
             </Row>
             <Container>
                 <Row className="mb-3">

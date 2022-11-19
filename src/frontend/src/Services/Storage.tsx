@@ -223,14 +223,14 @@ export function UseForm({onUseItem}) {
             <InputGroup className="mb-3">
                 {/*This is needed to write the name of the product*/}
                 <Row className="mb-3">
-                    <NameInput itemName={itemName} setItemName={setItemName} />
+                    <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
                 </Row>
                 <Row className="mb-3">
                     <QuantityInput quantity={quantity} setQuantity={setQuantity} />
-                    <UnitSelect unit={unit} setUnit={setUnit} />
+                    <UnitSelect unit={unit} setUnit={setUnit} isUpdate={false}/>
                 </Row>
                 <Row>
-                    <ProductTypeSelect type={type} setType={setType} />
+                    <ProductTypeSelect type={type} setType={setType} isUpdate={false}/>
                 </Row>
                 <Button style={{'margin': '20px'}}
                         type="submit"
