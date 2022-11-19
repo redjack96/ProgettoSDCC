@@ -14,6 +14,30 @@ import {
 } from 'mdb-react-ui-kit';
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, UnitSelect} from "../Widgets/FormWidgets";
 
+function getList(setItems, setVoidMessage) {
+    fetch(API_GATEWAY_ADDRESS + '/getList')
+        .then(r => {
+            let x = r.json();
+            console.log(x);
+            return x;
+        })
+        .then(itemsOrError => {
+            if (itemsOrError.hasOwnProperty('products')) {
+                setItems(itemsOrError)
+                setVoidMessage("Nothing added to List! Add one when you're ready!")
+            } else if (itemsOrError.hasOwnProperty('msg')) {
+                console.log("Error: shopping_list service is down")
+                setItems({
+                    id: 0,
+                    name: "",
+                    products: []
+                })
+                setVoidMessage(itemsOrError.msg)
+            }
+        })
+        .catch(e => console.log("Errore: " + e))
+}
+
 function Home() {
     const [loading, setLoading] = React.useState(false)
     const [voidMessage, setVoidMessage] = React.useState("Nothing added to List! Add one when you're ready!");
@@ -28,27 +52,7 @@ function Home() {
         if (!loading) {
             console.log("reloading list from server");
             setLoading(true);
-            fetch(API_GATEWAY_ADDRESS + '/getList')
-                .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
-                })
-                .then(itemsOrError => {
-                    try {
-                        setItems(itemsOrError)
-                        setVoidMessage("Nothing added to List! Add one when you're ready!")
-                    } catch {
-                        console.log("Error: shopping_list service is down")
-                        setItems({
-                            id: 0,
-                            name: "",
-                            products: []
-                        })
-                        setVoidMessage(itemsOrError.msg)
-                    }
-                })
-                .catch(e => console.log("Errore: " + e))
+            getList(setItems, setVoidMessage);
         }
     }, [items]);
 
@@ -98,29 +102,8 @@ function Home() {
                 .catch(e => console.log("Errore: " + e))
 
             console.log("reloading list from server");
-            fetch(API_GATEWAY_ADDRESS + '/getList')
-                .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
-                })
-                .then(itemsOrError => {
-                    try {
-                        setItems(itemsOrError)
-                        setVoidMessage("Nothing added to List! Add one when you're ready!")
-                    } catch {
-                        console.log("Error: shopping_list service is down")
-                        setItems({
-                            id: 0,
-                            name: "",
-                            products: []
-                        })
-                        setVoidMessage(itemsOrError.msg)
-                    }
-                })
-                .catch(e => console.log("Errore: " + e))
-        }
-        , [items])
+            getList(setItems, setVoidMessage);
+        }, [items])
 
     // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
     const onNewItem = React.useCallback(
@@ -148,39 +131,45 @@ function Home() {
         <Container>
             <Navbar/>
             <PageHeader pageName="Shopping list"/>
-            <Row>
-                <Col>
-                    <Row className="mb-3">
-                        <MDBCard className="form">
-                            <MDBCardBody>
-                                <h2>Add new item</h2>
-                                <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
-                            </MDBCardBody>
-                        </MDBCard>
-                    </Row>
-                    <Row className="mb-3">
-                        <MDBCard className="form">
-                            <MDBCardBody>
-                                <h2>Buy something</h2>
-                                <ButtonGroup as={Col}>
-                                    <Button
-                                        size="sm"
-                                        variant="success"
-                                        onClick={onBuyAll}
-                                        aria-label="Buy in cart"
-                                        disabled={!items.products.length}
-                                    >
-                                        Buy all in cart
-                                    </Button>
-                                </ButtonGroup>
-                            </MDBCardBody>
-                        </MDBCard>
-                    </Row>
-                </Col>
-                <Col className="fixed scrollable">
-                    <ShoppingList items={items} handleRemoval={onItemRemoval} handleUpdate={onItemUpdate} voidMessage={voidMessage}/>
-                </Col>
-            </Row>
+            <Container className="overflow-hidden">
+                <Row>
+                    <Col>
+                        <Row className="mb-3">
+                            <MDBCard className="form">
+                                <MDBCardBody>
+                                    <h2>Add new item</h2>
+                                    <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
+                                </MDBCardBody>
+                            </MDBCard>
+                        </Row>
+                        <Row className="mb-3">
+                            <MDBCard className="form">
+                                <MDBCardBody>
+                                    <h2>Buy Products</h2>
+                                    <ButtonGroup>
+                                        <Button
+                                            size="sm"
+                                            variant="success"
+                                            onClick={onBuyAll}
+                                            aria-label="Buy in cart"
+                                            disabled={!items.products.length}
+                                        >
+                                            Buy all in cart
+                                        </Button>
+                                    </ButtonGroup>
+                                </MDBCardBody>
+                            </MDBCard>
+                        </Row>
+                    </Col>
+                    <Col className="wrapper">
+                       {/* <MDBCard>
+                            <MDBCardBody  className="wrapper">*/}
+                                <ShoppingList items={items} handleRemoval={onItemRemoval} handleUpdate={onItemUpdate} voidMessage={voidMessage}/>
+                            {/*</MDBCardBody>
+                        </MDBCard>*/}
+                    </Col>
+                </Row>
+            </Container>
         </Container>
     );
 }
@@ -373,8 +362,7 @@ export class Timestamp {
 
 function ShoppingList({items, voidMessage, handleUpdate, handleRemoval}) {
     return (
-        <React.Fragment>
-            <br/><br/>
+        <Container className="tableContainer">
             {items.products.length === 0 && (
                 <p className="text-center">{voidMessage}</p>
             )}
@@ -386,8 +374,7 @@ function ShoppingList({items, voidMessage, handleUpdate, handleRemoval}) {
                     onItemRemoval={handleRemoval}
                 />
             ))}
-            <br/>
-        </React.Fragment>
+        </Container>
     );
 }
 
@@ -431,15 +418,15 @@ function AddItemForm({onNewItem}) {
         <Form onSubmit={submitNewItem}>
             <InputGroup>
                 <Row className="mb-3">
-                    <NameInput itemName={itemName} setItemName={setItemName}isUpdate={false}/>
+                    <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
                     <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
                 </Row>
                 <Row className="mb-3">
                     <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
-                    <UnitSelect unit={unit} setUnit={setUnit}isUpdate={false}/>
+                    <UnitSelect unit={unit} setUnit={setUnit} isUpdate={false}/>
                 </Row>
                 <Row className="mb-3">
-                    <ProductTypeSelect type={type} setType={setType}isUpdate={false}/>
+                    <ProductTypeSelect type={type} setType={setType} isUpdate={false}/>
                     <Col md="auto" style={{'margin': '30px'}}>
                         <Button
                             type="submit"
@@ -586,20 +573,13 @@ function ItemInfo({item}) {
             <Row className="card-body">
                 <Col>
                     <Row>
-                        <h6 className="font-weight-bold">Quantity:</h6>
-                        <h6>&nbsp;&nbsp;{item.quantity}</h6> {/*&nbsp; inserisce uno spazio*/}
+                        <h6><strong>Quantity:</strong> {item.quantity} {Unit.parseFromInt(item.unit)}</h6>
                     </Row>
                     <Row>
-                        <h6 className="font-weight-bold">Unit:</h6>
-                        <h6>&nbsp;&nbsp;{Unit.parseFromInt(item.unit)}</h6> {/*&nbsp; inserisce uno spazio*/}
+                        <h6><strong>Expiration:</strong> {extractAndReformatDateToShow(item.expiration)}</h6>
                     </Row>
                     <Row>
-                        <h6 className="font-weight-bold">Expiration:</h6>
-                        <h6>&nbsp;&nbsp;{extractAndReformatDateToShow(item.expiration)}</h6> {/*&nbsp; inserisce uno spazio*/}
-                    </Row>
-                    <Row>
-                        <h6 className="font-weight-bold">Added to Cart:</h6>
-                        <h6>&nbsp;&nbsp;{item.added_to_cart ? 'Yes' : 'No'}</h6> {/*&nbsp; inserisce uno spazio*/}
+                        <h6><strong>Added to Cart: </strong> {item.added_to_cart ? 'Yes' : 'No'}</h6>
                     </Row>
                 </Col>
                 <Col xs={3}>

@@ -33,7 +33,7 @@ const Navbar = () => {
     return (
         <MDBNavbar expand='lg' light bgColor='white'>
             <MDBContainer fluid>
-                <MDBNavbarBrand tag="span" className='mb-0 h1' href='#'>S.D.C.C-S</MDBNavbarBrand>
+                <MDBNavbarBrand tag="span" className='mb-0 h1' href='#'>S.D.C.C Shopping List</MDBNavbarBrand>
 
                 <MDBNavbarToggler
                     aria-controls='navbarSupportedContent'
