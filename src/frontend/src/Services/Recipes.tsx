@@ -4,7 +4,7 @@ import {
     MDBBtn,
     MDBCard,
     MDBCardBody,
-    MDBCardImage, MDBCardText, MDBCardTitle, MDBCol,
+    MDBCardImage, MDBCardText, MDBCardTitle, MDBCol, MDBSpinner,
 } from "mdb-react-ui-kit";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
@@ -60,7 +60,10 @@ export function Recipes() {
             <PageHeader pageName="Recipes"/>
             <Row xs={1} md={4} className="g-4 fixed scrollable">
                 {items.recipes.length === 0 && (
-                    <p className="text-center">{voidMessage}</p>
+                    // <p className="text-center">{voidMessage}</p>
+                    <MDBSpinner className="center p-5" color='success'>
+                        <span className='visually-hidden'>Loading...</span>
+                    </MDBSpinner>
                 )}
                 {items.recipes.map(item => (
                     <MDBCol>
