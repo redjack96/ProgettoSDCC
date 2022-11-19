@@ -171,6 +171,10 @@ label.star:before {
 	height: 500px;
 }
 
+.auto-max {
+    height: 100%;
+}
+
 /* User tag */
 .user-tag {
 	display: flex;
