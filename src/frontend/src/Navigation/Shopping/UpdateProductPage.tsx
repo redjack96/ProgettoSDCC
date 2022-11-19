@@ -65,13 +65,17 @@ function UpdateForm({item}: UpdateFormProps) {
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
                 <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
-                <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
-            </Row>
-            <Row className="mb-3">
-                <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
                 <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
                 <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
             </Row>
+        </InputGroup>
+        <InputGroup className="mb-3">
+            <Row className="mb-3">
+                <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
+                <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
+            </Row>
+        </InputGroup>
+        <InputGroup className="mb-3">
             <Container>
                 <Row className="mb-3">
                     <SubmitButton itemName={itemName} submitting={submitting} buttonText="Update"/>

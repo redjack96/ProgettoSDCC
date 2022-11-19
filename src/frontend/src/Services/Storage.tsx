@@ -6,6 +6,7 @@ import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 import {NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../Widgets/FormWidgets";
+import {AddPantryForm} from "../Navigation/Storage/AddPantryPage";
 
 
 export function Storage() {
@@ -93,27 +94,15 @@ export function Storage() {
         [items.products],
     );
 
-
-    /* Navigation functions */
-    const navigate = useNavigate();
-
-    const toAddPantryPage = () => {
-        console.log("items: " + items)
-        navigate('/addPantryPage', {
-            state: {
-                items: {items}
-            }
-        });
-    }
-
-    const toUsePantryPage = () => {
-        console.log("items: " + items)
-        navigate('/usePantryPage', {
-            state: {
-                items: {items}
-            }
-        });
-    }
+    const onAddItem = React.useCallback(
+        (newItem: PantryItem) => {
+            setItems({
+                ...items,
+                products: [...items.products, newItem]
+            });
+        },
+        [items],
+    );
 
     return (
         <Container>
@@ -132,17 +121,8 @@ export function Storage() {
                     <Row>
                         <MDBCard className="form">
                             <MDBCardBody>
-                                <h2>Other actions</h2>
-                                <ButtonGroup as={Col}>
-                                    <Button
-                                        size="sm"
-                                        variant="success"
-                                        onClick={() => toAddPantryPage()}
-                                        aria-label="Add in pantry"
-                                    >
-                                        Add item
-                                    </Button>
-                                </ButtonGroup>
+                                <h2>Add item</h2>
+                                <AddPantryForm onAdd={onAddItem}/>
                             </MDBCardBody>
                         </MDBCard>
                     </Row>
@@ -232,14 +212,20 @@ export function UseForm({onUseItem}) {
                 <Row>
                     <ProductTypeSelect type={type} setType={setType} isUpdate={false}/>
                 </Row>
-                <Button style={{'margin': '20px'}}
-                        type="submit"
-                        variant="success"
-                        disabled={!itemName.trim().length}
-                        className={submitting ? 'disabled' : ''}
-                >
-                    {submitting ? 'Using item...' : 'Use Item'}
-                </Button>
+            </InputGroup>
+            <InputGroup className="mb-3">
+                <Container>
+                    <Row className="mb-3">
+                        <Button
+                                type="submit"
+                                variant="success"
+                                disabled={!itemName.trim().length}
+                                className={submitting ? 'disabled' : ''}
+                        >
+                            {submitting ? 'Using item...' : 'Use Item'}
+                        </Button>
+                    </Row>
+                </Container>
             </InputGroup>
         </Form>
     )

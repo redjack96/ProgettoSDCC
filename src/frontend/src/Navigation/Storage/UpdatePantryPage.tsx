@@ -79,6 +79,13 @@ function UpdatePantryForm({item}) {
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
                 <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
+                <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
+                <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
+                <QuantityInput quantity={quantity} setQuantity={setQuantity} />
+            </Row>
+        </InputGroup>
+        <InputGroup>
+            <Row className="mb-3">
                 <ExpirationInput expiration={expiration} setExpiration={setExpiration} />
                 <Form.Group as={Col} controlId="formBuyDate">
                     <Form.Label>Buy Date</Form.Label>
@@ -100,17 +107,16 @@ function UpdatePantryForm({item}) {
                         type="date"
                     />
                 </Form.Group>
+                <TimesBoughtInput timesBought={timesBought} setTimesBought={setTimesBought}/>
             </Row>
+        </InputGroup>
+        <InputGroup className="mb-3">
             <Row className="mb-3">
-                <QuantityInput quantity={quantity} setQuantity={setQuantity} />
-                <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
-                <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
-                <Row className="mb-3">
-                    <UseNumberInput useNumber={useNumber} setUseNumber={setUseNumber}/>
-                    <TotalUseNumberInput totalUseNumber={totalUseNumber} setTotalUseNumber={setTotalUseNumber}/>
-                    <TimesBoughtInput timesBought={timesBought} setTimesBought={setTimesBought}/>
-                </Row>
+                <UseNumberInput useNumber={useNumber} setUseNumber={setUseNumber}/>
+                <TotalUseNumberInput totalUseNumber={totalUseNumber} setTotalUseNumber={setTotalUseNumber}/>
             </Row>
+        </InputGroup>
+        <InputGroup className="mb-3">
             <Container>
                 <Row className="mb-3">
                     <SubmitButton itemName={itemName} submitting={submitting} buttonText="Update"/>

@@ -32,7 +32,7 @@ export function AddPantryPage() {
     );
 }
 
-function AddPantryForm({onAdd}) {
+export function AddPantryForm({onAdd}) {
     const [itemName, setItemName] = React.useState('');
     const [quantity, setQuantity] = React.useState(1);
     const [type, setType] = React.useState(ProductType.Other);
@@ -74,6 +74,8 @@ function AddPantryForm({onAdd}) {
                 <UnitSelect unit={unit} setUnit={setUnit} isUpdate={false}/>
                 <ProductTypeSelect type={type} setType={setType} isUpdate={false}/>
             </Row>
+        </InputGroup>
+        <InputGroup className="mb-3">
             <Container>
                 <Row className="mb-3">
                     <SubmitButton itemName={itemName} submitting={submitting} buttonText="Add"/>

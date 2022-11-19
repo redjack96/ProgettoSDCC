@@ -7,7 +7,7 @@ import {polarToCartesian} from "recharts/types/util/PolarUtils";
 export function NameInput({itemName, setItemName, isUpdate}){
     return (
         <Form.Group as={Col} controlId="formGridName">
-            <Form.Label>Product Name</Form.Label>
+            <Form.Label>Name</Form.Label>
             {isUpdate === true && (
                 <Form.Control
                     value={itemName}
