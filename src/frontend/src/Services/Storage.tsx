@@ -7,6 +7,7 @@ import {PageHeader} from "../Navigation/Utils/PageHeader";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 import {NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../Widgets/FormWidgets";
 import {AddPantryForm} from "../Navigation/Storage/AddPantryPage";
+import {StatusAvailabilityBadge, StatusExpirationBadge} from "../Widgets/StatusBadge";
 
 
 export function Storage() {
@@ -306,7 +307,8 @@ export function PantryElement({item, onItemRemoval}) {
                 <p className="text-muted mb-0">{Unit.parseFromInt(item.unit)}</p>
             </td>
             <td>
-                <span className="badge badge-success rounded-pill d-inline">Active</span>
+                <StatusAvailabilityBadge itemQuantity={item.quantity}/>
+                <StatusExpirationBadge itemExpiration={item.expiration.seconds}/>
             </td>
             <td>
                 <ButtonGroup>
