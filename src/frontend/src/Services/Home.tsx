@@ -13,6 +13,7 @@ import {
     MDBBtn
 } from 'mdb-react-ui-kit';
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, UnitSelect} from "../Widgets/FormWidgets";
+import {ModalAlert, SimpleModalAlert} from "../Widgets/AlertWidgets";
 
 function getList(setItems, setVoidMessage) {
     fetch(API_GATEWAY_ADDRESS + '/getList')
@@ -39,7 +40,7 @@ function getList(setItems, setVoidMessage) {
 }
 
 function Home() {
-    const [loading, setLoading] = React.useState(false)
+    const [loading, setLoading] = React.useState(false);
     const [voidMessage, setVoidMessage] = React.useState("Nothing added to List! Add one when you're ready!");
     const [items, setItems] = React.useState({
         id: 0,
@@ -103,6 +104,8 @@ function Home() {
 
             console.log("reloading list from server");
             getList(setItems, setVoidMessage);
+            // show alert
+            setShowAlert(true);
         }, [items])
 
     // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
@@ -127,6 +130,9 @@ function Home() {
         },
         [items.products],
     );
+
+    let [showAlert, setShowAlert] = React.useState(false);
+
     return (
         <Container>
             <Navbar/>
@@ -157,6 +163,7 @@ function Home() {
                                             Buy all in cart
                                         </Button>
                                     </ButtonGroup>
+                                    <SimpleModalAlert showAlert={showAlert} setShowAlert={setShowAlert} message={"Added products to pantry."}/>
                                 </MDBCardBody>
                             </MDBCard>
                         </Row>

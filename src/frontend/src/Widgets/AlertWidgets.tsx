@@ -15,3 +15,16 @@ export function ModalAlert({showAlert, centralPart, setShowAlert}){
         </Modal.Footer>
     </Modal>);
 }
+
+export function SimpleModalAlert({showAlert, message, setShowAlert}) {
+    return(
+        <Modal show={showAlert}>
+            <Modal.Header closeButton>
+                <Modal.Title>{message}</Modal.Title>
+            </Modal.Header>
+            <Modal.Footer>
+                <Button variant="success" onClick={() => setShowAlert(false)}>Close</Button>
+            </Modal.Footer>
+        </Modal>
+    );
+}

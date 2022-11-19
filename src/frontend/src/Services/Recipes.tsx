@@ -60,7 +60,6 @@ export function Recipes() {
             <PageHeader pageName="Recipes"/>
             <Row xs={1} md={4} className="g-4 fixed scrollable">
                 {items.recipes.length === 0 && (
-                    // <p className="text-center">{voidMessage}</p>
                     <MDBSpinner className="center p-5" color='success'>
                         <span className='visually-hidden'>Loading...</span>
                     </MDBSpinner>
