@@ -327,7 +327,7 @@ export function PantryElement({item, onItemRemoval}) {
                         onClick={() => toUpdatePantryPage()}
                         aria-label="Update product in pantry"
                     >
-                        Update
+                        Details
                     </Button>
                 </ButtonGroup>
             </td>
