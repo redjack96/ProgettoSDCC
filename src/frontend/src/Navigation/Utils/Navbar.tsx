@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import {
     MDBBtn,
     MDBCollapse,
@@ -16,8 +16,12 @@ import {Col, Row} from "react-bootstrap";
 
 
 const Navbar = () => {
-    const navigate = useNavigate()
-
+    const navigate = useNavigate(); // once ready it returns the 'window.location' object
+    const location = useLocation();
+    const [url, setUrl] = useState(null);
+    React.useEffect(() => {
+        setUrl(location.pathname);
+    }, [location]);
     const toStoragePage = () => {
         navigate("/productStoragePage", {
             state: {}
@@ -56,18 +60,16 @@ const Navbar = () => {
                 <MDBCollapse navbar show={showBasic}>
                     <MDBNavbarNav className='mr-auto mb-2 mb-lg-0'>
                         <MDBNavbarItem>
-                            <MDBNavbarLink active aria-current='page' href='/'>
-                                Shopping List
-                            </MDBNavbarLink>
+                            <MDBNavbarLink className={(url === "/" ?" active" : "")} aria-current='page' href='/'>Shopping List</MDBNavbarLink>
                         </MDBNavbarItem>
                         <MDBNavbarItem>
-                            <MDBNavbarLink href='/productStoragePage'>Storage</MDBNavbarLink>
+                            <MDBNavbarLink className={(url === "/productStoragePage" ?" active" : "")} href='/productStoragePage'>Storage</MDBNavbarLink>
                         </MDBNavbarItem>
                         <MDBNavbarItem>
-                            <MDBNavbarLink href='/recipesPage'>Recipes</MDBNavbarLink>
+                            <MDBNavbarLink className={(url === "/recipesPage" ?" active" : "")} href='/recipesPage'>Recipes</MDBNavbarLink>
                         </MDBNavbarItem>
                         <MDBNavbarItem>
-                            <MDBNavbarLink href='/statisticsPage'>Statistics</MDBNavbarLink>
+                            <MDBNavbarLink className={(url === "/statisticsPage" ?" active" : "")} href='/statisticsPage'>Statistics</MDBNavbarLink>
                         </MDBNavbarItem>
                     </MDBNavbarNav>
                 </MDBCollapse>
