@@ -4,27 +4,101 @@ import {ProductType, Unit} from "../Services/Home";
 import {polarToCartesian} from "recharts/types/util/PolarUtils";
 
 
-export function NameInput({itemName, setItemName}){
+export function NameInput({itemName, setItemName, isUpdate}){
     return (
         <Form.Group as={Col} controlId="formGridName">
             <Form.Label>Product Name</Form.Label>
-            <Form.Control
-                value={itemName}
-                onChange={e => {
-                    let itemNameStr : string = e.target.value;
-                    itemNameStr = itemNameStr.replace(/[^A-Za-z]/g, '');
-                    let firstChar : string = itemNameStr.charAt(0).toUpperCase();
-                    let itemNameStrUppercase : string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
-                    setItemName(itemNameStrUppercase.trim())
-                }}
-                type="text"
-                placeholder="New Item"
-                aria-describedby="basic-addon1"
-            >
-            </Form.Control>
+            {isUpdate === true && (
+                <Form.Control
+                    value={itemName}
+                    onChange={e => {
+                        let itemNameStr : string = e.target.value;
+                        itemNameStr = itemNameStr.replace(/[^A-Za-z]/g, '');
+                        let firstChar : string = itemNameStr.charAt(0).toUpperCase();
+                        let itemNameStrUppercase : string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
+                        setItemName(itemNameStrUppercase.trim())
+                    }}
+                    type="text"
+                    placeholder="New Item"
+                    aria-describedby="basic-addon1"
+                disabled >
+                </Form.Control>
+            )}
+            {isUpdate == false && (
+                <Form.Control
+                    value={itemName}
+                    onChange={e => {
+                        let itemNameStr : string = e.target.value;
+                        itemNameStr = itemNameStr.replace(/[^A-Za-z]/g, '');
+                        let firstChar : string = itemNameStr.charAt(0).toUpperCase();
+                        let itemNameStrUppercase : string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
+                        setItemName(itemNameStrUppercase.trim())
+                    }}
+                    type="text"
+                    placeholder="New Item"
+                    aria-describedby="basic-addon1"
+                >
+                </Form.Control>
+            )}
         </Form.Group>
     );
 }
+
+export function UnitSelect({unit, setUnit, isUpdate}){
+    return (<Form.Group as={Col} controlId="formSelectUnit">
+        <Form.Label>Unit</Form.Label>
+        {isUpdate === true && (
+            <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}
+                          disabled >
+                <option>Select unit...</option>
+                <option>Bottle</option>
+                <option>Packet</option>
+                <option>Kg</option>
+                <option>Grams</option>
+            </Form.Control>
+        )}
+        {isUpdate == false && (
+            <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}>
+                <option>Select unit...</option>
+                <option>Bottle</option>
+                <option>Packet</option>
+                <option>Kg</option>
+                <option>Grams</option>
+            </Form.Control>
+        )}
+    </Form.Group>);
+}
+
+export function ProductTypeSelect({type, setType, isUpdate}){
+    return (<Form.Group as={Col} controlId="formSelectType">
+        <Form.Label>Type</Form.Label>
+        {/*Il value è della select*/}
+        {isUpdate === true && (
+            <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}
+            disabled >
+                <option>Select product type...</option>
+                <option>Vegetable</option>
+                <option>Fruit</option>
+                <option>Meat</option>
+                <option>Drink</option>
+                <option>Fish</option>
+                <option>Other</option>
+            </Form.Control>
+        )}
+        {isUpdate === false && (
+            <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}>
+                <option>Select product type...</option>
+                <option>Vegetable</option>
+                <option>Fruit</option>
+                <option>Meat</option>
+                <option>Drink</option>
+                <option>Fish</option>
+                <option>Other</option>
+            </Form.Control>
+        )}
+    </Form.Group>);
+}
+
 
 export function ExpirationInput({expiration, setExpiration}) {
     return (<Form.Group as={Col} controlId="formExpirationDate">
@@ -108,35 +182,6 @@ export function TimesBoughtInput({timesBought, setTimesBought}) {
             />
         </Form.Group>
     );
-}
-
-export function UnitSelect({unit, setUnit}){
-    return (<Form.Group as={Col} controlId="formSelectUnit">
-        <Form.Label>Unit</Form.Label>
-        <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}>
-            <option>Select unit...</option>
-            <option>Bottle</option>
-            <option>Packet</option>
-            <option>Kg</option>
-            <option>Grams</option>
-        </Form.Control>
-    </Form.Group>);
-}
-
-export function ProductTypeSelect({type, setType}){
-    return (<Form.Group as={Col} controlId="formSelectType">
-        <Form.Label>Type</Form.Label>
-        {/*Il value è della select*/}
-        <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}>
-            <option>Select product type...</option>
-            <option>Vegetable</option>
-            <option>Fruit</option>
-            <option>Meat</option>
-            <option>Drink</option>
-            <option>Fish</option>
-            <option>Other</option>
-        </Form.Control>
-    </Form.Group>);
 }
 
 export function SubmitButton({itemName, submitting, buttonText}){
