@@ -10,6 +10,7 @@ import {
     MDBNavbarNav,
     MDBNavbarToggler, MDBRow
 } from "mdb-react-ui-kit";
+import images from "../../Images/images";
 import {Col, Row} from "react-bootstrap";
 // import {Storage} from "../Services/Storage"
 
@@ -33,7 +34,15 @@ const Navbar = () => {
     return (
         <MDBNavbar expand='lg' light bgColor='white'>
             <MDBContainer fluid>
-                <MDBNavbarBrand tag="span" className='mb-0 h1' href='#'>S.D.C.C Shopping List</MDBNavbarBrand>
+                <MDBNavbarBrand tag="span" className='mb-0 h1' href='#'>
+                    <img
+                        src={images.zucchetta}
+                        height='30'
+                        alt=''
+                        loading='lazy'
+                    />
+                    S.D.C.C Shopping List
+                </MDBNavbarBrand>
 
                 <MDBNavbarToggler
                     aria-controls='navbarSupportedContent'
