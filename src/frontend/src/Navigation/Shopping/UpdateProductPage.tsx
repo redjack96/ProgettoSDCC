@@ -6,6 +6,7 @@ import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../../Widgets/FormWidgets";
+import {Grid} from "@mui/material";
 
 // this is called by the route /updateProductPage by the ItemDisplay's Update button
 function UpdateProductPage() {
@@ -63,24 +64,26 @@ function UpdateForm({item}: UpdateFormProps) {
     return (<Form onSubmit={() => toHome()}>
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
-            <Row className="mb-3">
-                <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
-                <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
-                <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
-            </Row>
-        </InputGroup>
-        <InputGroup className="mb-3">
-            <Row className="mb-3">
-                <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
-                <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
-            </Row>
-        </InputGroup>
-        <InputGroup className="mb-3">
-            <Container>
-                <Row className="mb-3">
+            <Grid container>
+                <Grid item className="mb-3">
+                    <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
+                </Grid>
+                <Grid item className="mb-3">
+                    <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
+                </Grid>
+                <Grid item className="mb-3">
+                    <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
+                </Grid>
+                <Grid item className="mb-3">
+                    <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
+                </Grid>
+                <Grid item className="mb-3">
+                    <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
+                </Grid>
+                <Grid item className="mb-3">
                     <SubmitButton itemName={itemName} submitting={submitting} buttonText="Update"/>
-                </Row>
-            </Container>
+                </Grid>
+            </Grid>
         </InputGroup>
     </Form>);
 }

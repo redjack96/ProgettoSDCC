@@ -48,23 +48,22 @@ export function UnitSelect({unit, setUnit, isUpdate}){
     return (<Form.Group as={Col} controlId="formSelectUnit">
         <Form.Label>Unit</Form.Label>
         {isUpdate === true && (
-            <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}
-                          disabled >
+            <Form.Select as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)} disabled >
                 <option>Select unit...</option>
                 <option>Bottle</option>
                 <option>Packet</option>
                 <option>Kg</option>
                 <option>Grams</option>
-            </Form.Control>
+            </Form.Select>
         )}
         {isUpdate == false && (
-            <Form.Control as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}>
+            <Form.Select as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}>
                 <option>Select unit...</option>
                 <option>Bottle</option>
                 <option>Packet</option>
                 <option>Kg</option>
                 <option>Grams</option>
-            </Form.Control>
+            </Form.Select>
         )}
     </Form.Group>);
 }
@@ -74,7 +73,7 @@ export function ProductTypeSelect({type, setType, isUpdate}){
         <Form.Label>Type</Form.Label>
         {/*Il value è della select*/}
         {isUpdate === true && (
-            <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}
+            <Form.Select onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}
             disabled >
                 <option>Select product type...</option>
                 <option>Vegetable</option>
@@ -83,10 +82,10 @@ export function ProductTypeSelect({type, setType, isUpdate}){
                 <option>Drink</option>
                 <option>Fish</option>
                 <option>Other</option>
-            </Form.Control>
+            </Form.Select>
         )}
         {isUpdate === false && (
-            <Form.Control as="select" onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}>
+            <Form.Select onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}>
                 <option>Select product type...</option>
                 <option>Vegetable</option>
                 <option>Fruit</option>
@@ -94,7 +93,7 @@ export function ProductTypeSelect({type, setType, isUpdate}){
                 <option>Drink</option>
                 <option>Fish</option>
                 <option>Other</option>
-            </Form.Control>
+            </Form.Select>
         )}
     </Form.Group>);
 }

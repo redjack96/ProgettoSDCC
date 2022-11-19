@@ -14,6 +14,8 @@ import {
 } from 'mdb-react-ui-kit';
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, UnitSelect} from "../Widgets/FormWidgets";
 import {ModalAlert, SimpleModalAlert} from "../Widgets/AlertWidgets";
+import {ResponsiveContainer} from 'recharts';
+import {Grid} from "@mui/material";
 
 function getList(setItems, setVoidMessage) {
     fetch(API_GATEWAY_ADDRESS + '/getList')
@@ -137,52 +139,44 @@ function Home() {
         <Container>
             <Navbar/>
             <PageHeader pageName="Shopping list"/>
-            <Container className="overflow-hidden">
-                <Row>
-                    <Col>
-                        <Row className="mb-3">
-                            <MDBCard className="form">
-                                <MDBCardBody>
-                                    <h2>Add new item</h2>
-                                    <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
-                                </MDBCardBody>
-                            </MDBCard>
-                        </Row>
-                        <Row className="mb-3">
-                            <MDBCard className="form">
-                                <MDBCardBody>
-                                    <h2>Buy Products</h2>
-                                    <ButtonGroup>
-                                        <Button
-                                            size="sm"
-                                            variant="success"
-                                            onClick={onBuyAll}
-                                            aria-label="Buy in cart"
-                                            disabled={!items.products.length}
-                                        >
-                                            Buy all in cart
-                                        </Button>
-                                    </ButtonGroup>
-                                    <SimpleModalAlert showAlert={showAlert} setShowAlert={setShowAlert} message={"Added products to pantry."}/>
-                                </MDBCardBody>
-                            </MDBCard>
-                        </Row>
-                    </Col>
-                    <Col className="wrapper">
-                       {/* <MDBCard>
-                            <MDBCardBody  className="wrapper">*/}
-                                <ShoppingList items={items} handleRemoval={onItemRemoval} handleUpdate={onItemUpdate} voidMessage={voidMessage}/>
-                            {/*</MDBCardBody>
-                        </MDBCard>*/}
-                    </Col>
-                </Row>
-            </Container>
+            <Row spacing={2}>
+                <Col xl={6}>
+                    <MDBCard className="form mb-3">
+                        <MDBCardBody>
+                            <h2>Add new item</h2>
+                            <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
+                        </MDBCardBody>
+                    </MDBCard>
+                    <MDBCard className="form mb-3">
+                        <MDBCardBody>
+                            <h2>Buy Products</h2>
+                            <Row>
+                                <Button
+                                    className="mt-3"
+                                    variant="success"
+                                    onClick={onBuyAll}
+                                    aria-label="Buy Products in cart"
+                                    disabled={!items.products.length}
+                                >
+                                    Buy all in cart
+                                </Button>
+                            </Row>
+                            <SimpleModalAlert showAlert={showAlert} setShowAlert={setShowAlert} message={"Added products to pantry."}/>
+                        </MDBCardBody>
+                    </MDBCard>
+                </Col>
+                <Col xl={6} className="wrapper">
+
+                    <ShoppingList items={items} handleRemoval={onItemRemoval} handleUpdate={onItemUpdate} voidMessage={voidMessage}/>
+
+                </Col>
+            </Row>
         </Container>
     );
 }
 
 
-export const API_GATEWAY_ADDRESS = "http://localhost:8007"
+export const API_GATEWAY_ADDRESS = "http://192.168.1.9:8007"
 // TODO: Qua bisogna mettere un indirizzo diverso da localhost!!! Forse dobbiamo usare AWS.
 //  Puoi provare sul tuo cellulare (connesso alla stessa rete) se sostituisci localhost con l'ip assegnato dal router wifi (es. 192.168.1.9)
 
@@ -369,7 +363,7 @@ export class Timestamp {
 
 function ShoppingList({items, voidMessage, handleUpdate, handleRemoval}) {
     return (
-        <Container className="tableContainer">
+        <Container className="cardContainer">
             {items.products.length === 0 && (
                 <p className="text-center">{voidMessage}</p>
             )}
@@ -423,29 +417,37 @@ function AddItemForm({onNewItem}) {
     // TODO: We will need to add also the quantity, type and expiration fields.
     return (
         <Form onSubmit={submitNewItem}>
-            <InputGroup>
+            <Col>
                 <Row className="mb-3">
-                    <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
-                    <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
-                </Row>
-                <Row className="mb-3">
-                    <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
-                    <UnitSelect unit={unit} setUnit={setUnit} isUpdate={false}/>
-                </Row>
-                <Row className="mb-3">
-                    <ProductTypeSelect type={type} setType={setType} isUpdate={false}/>
-                    <Col md="auto" style={{'margin': '30px'}}>
-                        <Button
-                            type="submit"
-                            variant="success"
-                            disabled={!itemName.trim().length}
-                            className={submitting ? 'disabled' : ''}
-                        >
-                            {submitting ? 'Adding...' : 'Add to shopping list'}
-                        </Button>
+                    <Col>
+                        <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
+                    </Col>
+                    <Col>
+                        <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
+                    </Col>
+                    <Col>
+                        <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
                     </Col>
                 </Row>
-            </InputGroup>
+                <Row className="mb-3">
+                    <Col>
+                        <UnitSelect unit={unit} setUnit={setUnit} isUpdate={false}/>
+                    </Col>
+                    <Col>
+                        <ProductTypeSelect type={type} setType={setType} isUpdate={false}/>
+                    </Col>
+                </Row>
+                <Row className="mt-3">
+                    <Button
+                        type="submit"
+                        variant="success"
+                        disabled={!itemName.trim().length}
+                        className={submitting ? 'disabled' : ''}
+                    >
+                        {submitting ? 'Adding...' : 'Add to list'}
+                    </Button>
+                </Row>
+            </Col>
         </Form>
     )
 }
@@ -506,54 +508,52 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
 
     console.log("item is added to cart? " + item.added_to_cart);
     return (
-        <div className="col center">
-            <div className="card">
-                {/*<img src="../res/images/Avenue-of-the-Baobobs-Madagascar 2.png" className="card-img-top" alt="product-image"/>*/}
-                <div className="card-body">
-                    <ItemInfo item={item}/>
-                    {/*<button type="submit" name="viewinfo" className="btn btn-primary" value="${btninfoid}">More Info...</button>*/}
-                    {/*<AddButton/>*/}
-                    <Container>
-                        <ButtonGroup>
-                            <Button
-                                size="sm"
-                                variant="danger"
-                                onClick={removeItem}
-                                aria-label="Rimuovi il prodotto"
-                            >
-                                Remove
-                            </Button>
-                            {/*<Checkbox label={"Add to cart"} onFunc={addToCart} offFunc={removeFromCart}/>*/}
-                            <Button
-                                size="sm"
-                                variant="outline-info"
-                                onClick={addToCart}
-                                aria-label="Add to cart"
-                            >
-                                Add to cart
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline-info"
-                                onClick={removeFromCart}
-                                aria-label="Remove From Cart"
-                            >
-                                Remove from cart
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline-info"
-                                onClick={() => toProductPage()}
-                                aria-label="Update Product"
-                            >
-                                Update
-                            </Button>
-                        </ButtonGroup>
+        <MDBCard className="mb-3">
+            {/*<img src="../res/images/Avenue-of-the-Baobobs-Madagascar 2.png" className="card-img-top" alt="product-image"/>*/}
+            <MDBCardBody className="card-body">
+                <ItemInfo item={item}/>
+                {/*<button type="submit" name="viewinfo" className="btn btn-primary" value="${btninfoid}">More Info...</button>*/}
+                {/*<AddButton/>*/}
+                <Container>
+                    <ButtonGroup>
+                        <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={removeItem}
+                            aria-label="Rimuovi il prodotto"
+                        >
+                            Remove
+                        </Button>
+                        {/*<Checkbox label={"Add to cart"} onFunc={addToCart} offFunc={removeFromCart}/>*/}
+                        <Button
+                            size="sm"
+                            variant="outline-info"
+                            onClick={addToCart}
+                            aria-label="Add to cart"
+                        >
+                            Add to cart
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline-info"
+                            onClick={removeFromCart}
+                            aria-label="Remove From Cart"
+                        >
+                            Remove from cart
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline-info"
+                            onClick={() => toProductPage()}
+                            aria-label="Update Product"
+                        >
+                            Update
+                        </Button>
+                    </ButtonGroup>
 
-                    </Container>
-                </div>
-            </div>
-        </div>
+                </Container>
+            </MDBCardBody>
+        </MDBCard>
     );
 }
 
