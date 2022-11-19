@@ -84,6 +84,12 @@ img.resize {
     height: auto;
 }
 
+.content-container {
+    height: available;
+    width: 300px;
+    overflow: auto;
+}
+
 /* Long card displayer */
 
 .long-card h1 {
@@ -156,6 +162,31 @@ label.star:before {
 
 }
 
+.wrapper{
+    position:relative;
+}
+
+.tableContainer{
+    position:absolute;
+    top:0px;
+    bottom:0;
+    left:30px;
+    flex: 1 1 auto;
+    border-radius: 20px;
+    display: flex;
+    flex-flow: column;
+    padding: 0 10px 10px 10px;
+    overflow: scroll;
+}
+
+Table thead{
+    position: sticky;
+    top: 0px;
+    background: #000;
+    margin: auto;
+    z-index: 4000; /*THIS PUTS IT ON TOP OF EVERYTHING!*/
+}
+
 .description{
 	width: inherit;
 	word-wrap: break-word;
@@ -168,7 +199,7 @@ label.star:before {
 
 /* Fixed height */
 .fixed {
-	height: 500px;
+	height: 100%;
 }
 
 /* User tag */

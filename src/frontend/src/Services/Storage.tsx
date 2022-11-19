@@ -1,13 +1,14 @@
 import React from "react";
-import {Button, ButtonGroup, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Container, Form, InputGroup, Row, Table} from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
-import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
+import {MDBCard, MDBCardBody, MDBTableHead} from "mdb-react-ui-kit";
 import {NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../Widgets/FormWidgets";
 import {AddPantryForm} from "../Navigation/Storage/AddPantryPage";
 import {StatusAvailabilityBadge, StatusExpirationBadge} from "../Widgets/StatusBadge";
+import {TableBody, TableHead, TableRow} from "@mui/material";
 
 
 export function Storage() {
@@ -128,7 +129,7 @@ export function Storage() {
                         </MDBCard>
                     </Row>
                 </Col>
-                <Col>
+                <Col className="wrapper">
                     <PantryView items={items} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
                 </Col>
             </Row>
@@ -207,7 +208,7 @@ export function UseForm({onUseItem}) {
                     <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
                 </Row>
                 <Row className="mb-3">
-                    <QuantityInput quantity={quantity} setQuantity={setQuantity} />
+                    <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
                     <UnitSelect unit={unit} setUnit={setUnit} isUpdate={false}/>
                 </Row>
                 <Row>
@@ -218,10 +219,10 @@ export function UseForm({onUseItem}) {
                 <Container>
                     <Row className="mb-3">
                         <Button
-                                type="submit"
-                                variant="success"
-                                disabled={!itemName.trim().length}
-                                className={submitting ? 'disabled' : ''}
+                            type="submit"
+                            variant="success"
+                            disabled={!itemName.trim().length}
+                            className={submitting ? 'disabled' : ''}
                         >
                             {submitting ? 'Using item...' : 'Use Item'}
                         </Button>
@@ -235,17 +236,17 @@ export function UseForm({onUseItem}) {
 
 export function PantryView({items, voidMessage, handleRemove}) {
     return (
-        <div className="fixed scrollable">
-            <table className="table align-middle mb-0 bg-white">
-                <thead className="bg-light">
-                <tr>
+        <div className="tableContainer">
+            <Table className="table align-middle mb-0 bg-white">
+                <TableHead className="bg-light">
+                <TableRow>
                     <th>Name</th>
                     <th>Quantity</th>
                     <th>Status</th>
                     <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
+                </TableRow>
+                </TableHead>
+                <TableBody>
                 {/*map items nel pantry in pantry element come in shopping list*/}
                 {items.products.length === 0 && (
                     <p className="text-center">{voidMessage}</p>
@@ -257,8 +258,8 @@ export function PantryView({items, voidMessage, handleRemove}) {
                         key={items.products.indexOf(item)}
                     />
                 ))}
-                </tbody>
-            </table>
+                </TableBody>
+            </Table>
         </div>
     )
 }
