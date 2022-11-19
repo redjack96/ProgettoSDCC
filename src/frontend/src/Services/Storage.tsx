@@ -114,16 +114,16 @@ export function Storage() {
                     <Row className="mb-3">
                         <MDBCard className="form">
                             <MDBCardBody>
-                                <h2>Use item</h2>
-                                <UseForm onUseItem={handleUseItems}/>
+                                <h2>Add item</h2>
+                                <AddPantryForm onAdd={onAddItem}/>
                             </MDBCardBody>
                         </MDBCard>
                     </Row>
                     <Row>
                         <MDBCard className="form">
                             <MDBCardBody>
-                                <h2>Add item</h2>
-                                <AddPantryForm onAdd={onAddItem}/>
+                                <h2>Use item</h2>
+                                <UseForm onUseItem={handleUseItems}/>
                             </MDBCardBody>
                         </MDBCard>
                     </Row>
