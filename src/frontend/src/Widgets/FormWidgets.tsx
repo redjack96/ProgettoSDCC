@@ -1,6 +1,7 @@
 import {Button, Col, Form} from "react-bootstrap";
 import React from "react";
 import {ProductType, Unit} from "../Services/Home";
+import {polarToCartesian} from "recharts/types/util/PolarUtils";
 
 
 export function NameInput({itemName, setItemName}){
@@ -53,6 +54,60 @@ export function QuantityInput({quantity, setQuantity}){
             aria-describedby="basic-addon1"
         />
     </Form.Group>);
+}
+
+export function UseNumberInput({useNumber, setUseNumber}) {
+    return(
+        <Form.Group as={Col} controlId="formUseNumber">
+            <Form.Label>Uses</Form.Label>
+            <Form.Control
+                value={useNumber}
+                onChange={event => {
+                    let inputUseNumber = parseInt(event.target.value);
+                    setUseNumber(inputUseNumber < 0 ? 0 : inputUseNumber);
+                }}
+                type="number"
+                placeholder="0"
+                aria-describedby="basic-addon1"
+            />
+        </Form.Group>
+    );
+}
+
+export function TotalUseNumberInput({totalUseNumber, setTotalUseNumber}) {
+    return(
+        <Form.Group as={Col} controlId="formTotalUseNumber">
+            <Form.Label>Total Uses</Form.Label>
+            <Form.Control
+                value={totalUseNumber}
+                onChange={event => {
+                    let inputTotalUseNumber = parseInt(event.target.value);
+                    setTotalUseNumber(inputTotalUseNumber < 0 ? 0 : inputTotalUseNumber);
+                }}
+                type="number"
+                placeholder="0"
+                aria-describedby="basic-addon1"
+            />
+        </Form.Group>
+    )
+}
+
+export function TimesBoughtInput({timesBought, setTimesBought}) {
+    return(
+        <Form.Group as={Col} controlId="formTimesBought">
+            <Form.Label>Times Bought</Form.Label>
+            <Form.Control
+                value={timesBought}
+                onChange={event => {
+                    let inputTimesBought = parseInt(event.target.value);
+                    setTimesBought(inputTimesBought < 0 ? 0 : inputTimesBought);
+                }}
+                type="number"
+                placeholder="0"
+                aria-describedby="basic-addon1"
+            />
+        </Form.Group>
+    );
 }
 
 export function UnitSelect({unit, setUnit}){

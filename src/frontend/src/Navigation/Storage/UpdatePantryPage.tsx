@@ -6,7 +6,15 @@ import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/Home";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
-import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../../Widgets/FormWidgets";
+import {
+    ExpirationInput,
+    NameInput,
+    ProductTypeSelect,
+    QuantityInput,
+    SubmitButton, TimesBoughtInput, TotalUseNumberInput,
+    UnitSelect,
+    UseNumberInput
+} from "../../Widgets/FormWidgets";
 
 export function UpdatePantryPage() {
     const {state} = useLocation();
@@ -98,36 +106,9 @@ function UpdatePantryForm({item}) {
                 <UnitSelect unit={unit} setUnit={setUnit} />
                 <ProductTypeSelect type={type} setType={setType} />
                 <Row className="mb-3">
-                    <Form.Group as={Col} controlId="formUseNumber">
-                        <Form.Label>Uses</Form.Label>
-                        <Form.Control
-                            value={useNumber}
-                            onChange={event => setUseNumber(event.target.value)}
-                            type="number"
-                            placeholder="0"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
-                    <Form.Group as={Col} controlId="formTotalUseNumber">
-                        <Form.Label>Total Uses</Form.Label>
-                        <Form.Control
-                            value={totalUseNumber}
-                            onChange={event => setTotalUseNumber(event.target.value)}
-                            type="number"
-                            placeholder="0"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
-                    <Form.Group as={Col} controlId="formTimesBought">
-                        <Form.Label>Times Bought</Form.Label>
-                        <Form.Control
-                            value={timesBought}
-                            onChange={event => setTimesBought(event.target.value)}
-                            type="number"
-                            placeholder="0"
-                            aria-describedby="basic-addon1"
-                        />
-                    </Form.Group>
+                    <UseNumberInput useNumber={useNumber} setUseNumber={setUseNumber}/>
+                    <TotalUseNumberInput totalUseNumber={totalUseNumber} setTotalUseNumber={setTotalUseNumber}/>
+                    <TimesBoughtInput timesBought={timesBought} setTimesBought={setTimesBought}/>
                 </Row>
             </Row>
             <Container>
