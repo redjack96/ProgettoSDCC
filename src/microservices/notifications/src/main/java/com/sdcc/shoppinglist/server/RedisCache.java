@@ -2,12 +2,8 @@ package com.sdcc.shoppinglist.server;
 
 import com.sdcc.shoppinglist.server.utils.Product;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.args.ExpiryOption;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import static com.sdcc.shoppinglist.server.NotificationConsumer.EXPIRED;
@@ -20,7 +16,7 @@ public class RedisCache {
     private static final Logger LOGGER = Logger.getLogger(RedisCache.class.getSimpleName());
     private final Jedis jedis;
 
-    public static final int TEN_MINUTES = 10*60;
+    public static final int TEN_MINUTES = 10 * 60;
     private final int expiration;
 
     public int getExpiration() {
@@ -32,9 +28,10 @@ public class RedisCache {
         this.expiration = TEN_MINUTES;
     }
 
-    public void cleanup(){
+    public void cleanup() {
         this.jedis.close();
     }
+
     private String createKeyForSet(String topic, boolean isNew) {
         return isNew ? "NEW-" + topic : "OLD-" + topic;
     }
@@ -61,13 +58,21 @@ public class RedisCache {
     }
 
     public String consumeNewExpiredNotifications() {
-        var str = "The following products are expired: " + consumeNotifications(EXPIRED);
+        var productsJoined = consumeNotifications(EXPIRED);
+        if (productsJoined.isEmpty()) {
+            return "";
+        }
+        var str = "The following products are expired: " + productsJoined;
         LOGGER.info(str);
         return str;
     }
 
     public String consumeNewFinishedNotifications() {
-        var str = "You run out of the following products: " + consumeNotifications(FINISHED) + ". Do you want to add them to the shopping list?";
+        var productsJoined = consumeNotifications(FINISHED);
+        if (productsJoined.isEmpty()) {
+            return "";
+        }
+        var str = "You run out of the following products: " + productsJoined + ". Do you want to add them to the shopping list?";
         LOGGER.info(str);
         return str;
     }
@@ -92,6 +97,8 @@ public class RedisCache {
         StringBuilder s = new StringBuilder();
         for (int i = 0, size = newNotifications.length; i < size; i++) {
             String newExpiredProduct = newNotifications[i];
+            String[] split = newExpiredProduct.split("-");
+            newExpiredProduct = split[0];
             s.append(newExpiredProduct);
             if (i < size - 1) {
                 s.append(", ");

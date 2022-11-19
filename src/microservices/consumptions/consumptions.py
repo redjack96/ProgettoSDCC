@@ -222,6 +222,8 @@ class ConsumptionEstimator:
         # walk forward
         # (training 1, testing 2 .. training 1-2, testing 3 ..)
         y_pred = self.models[prod_name].predict(X_test)
+        if y_pred[0] < 0:
+            y_pred[0] = 0
         self.product_last_y_pred[prod_name] = y_pred[0]
         # if week == last_week-1:
         print("y_pred:", y_pred)

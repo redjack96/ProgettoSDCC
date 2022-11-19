@@ -123,6 +123,7 @@ class Cassandra:
         """
         global session
         cluster = Cluster(['cassandra'], port=9042)
+        # TODO: provare session = cluster.connect(wait_for_all_pools=True)
         session = cluster.connect()
         session.execute("""
             CREATE KEYSPACE IF NOT EXISTS sdcc
@@ -296,7 +297,7 @@ class Cassandra:
 
         new_rem = (rem + bought) - expired - used
         # Skip consumption calculation if used != 0 and bought == 0
-        if bought == 0 and used > 0:
+        if bought == 0 and used != 0:
             consumption = old_consumption
         else:
             consumption = used / (bought + rem)

@@ -46,7 +46,7 @@ public class NotificationServer implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.port = Integer.parseInt(prop.getProperty("NotificationPort"));
+        this.port = Integer.parseInt(prop.getProperty("NotificationsPort"));
         this.address = prop.getProperty("NotificationsAddress");
     }
 

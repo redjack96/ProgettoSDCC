@@ -37,7 +37,7 @@ public class ConsumptionsChronJob implements Runnable {
         var now = ZonedDateTime.now(ZoneId.of("America/Los_Angeles"));
         var nextRun = now.withHour(0).withMinute(0).withSecond(0);
         if (now.compareTo(nextRun) > 0)
-            nextRun = nextRun.plusDays(WEEK);
+            nextRun = nextRun.plusSeconds(WEEK); // TODO: plusDays(WEEK)
 
         var duration = Duration.between(now, nextRun);
         this.initialDelay = duration.getSeconds();
@@ -56,7 +56,7 @@ public class ConsumptionsChronJob implements Runnable {
         var scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(this,
                 startNow ? 0L : initialDelay,
-                TimeUnit.DAYS.toSeconds(WEEK),
+                TimeUnit.SECONDS.toSeconds(WEEK), // TODO: TimeUnit.DAYS.toSeconds(WEEK),
                 TimeUnit.SECONDS);
     }
 

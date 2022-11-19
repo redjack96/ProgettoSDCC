@@ -42,19 +42,54 @@ export function Notifications() {
                 {notifications.notification.length === 0 && (
                     <p className="text-center">{voidMessage}</p>
                 )}
-                {notifications.notification.length != 0 && (
+                {notifications.notification.length == 1 && (
                     <React.Fragment>
+                        {notifications.notification[0].startsWith("The following") && (
+                            <Alert key='warning1' variant='warning'>
+                                {notifications.notification[0]}
+                            </Alert>
+                        )}
+                        {notifications.notification[0].startsWith("You run out") && (
+                            <Alert key='warning2' variant='warning'>
+                                <Col>
+                                    {notifications.notification[0]}
+                                    <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
+                                </Col>
+                            </Alert>
+                        )}
+                    </React.Fragment>
+                )}
+
+            {notifications.notification.length == 2 && (
+                <React.Fragment>
+                    {notifications.notification[0].startsWith("The following") && (
                         <Alert key='warning1' variant='warning'>
                             {notifications.notification[0]}
                         </Alert>
+                    )}
+                    {notifications.notification[0].startsWith("You run out") && (
+                        <Alert key='warning2' variant='warning'>
+                            <Col>
+                                {notifications.notification[0]}
+                                <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
+                            </Col>
+                        </Alert>
+                    )}
+                    {notifications.notification[1].startsWith("The following") && (
+                        <Alert key='warning1' variant='warning'>
+                            {notifications.notification[1]}
+                        </Alert>
+                    )}
+                    {notifications.notification[1].startsWith("You run out") && (
                         <Alert key='warning2' variant='warning'>
                             <Col>
                                 {notifications.notification[1]}
                                 <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
                             </Col>
                         </Alert>
-                    </React.Fragment>
-                )}
+                    )}
+                </React.Fragment>
+            )}
         </React.Fragment>
     )
 }
