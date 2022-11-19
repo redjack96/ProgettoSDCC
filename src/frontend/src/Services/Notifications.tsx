@@ -6,6 +6,9 @@ export function Notifications() {
     const [notifications, setNotifications] = useState({
         notification: []
     });
+    const [viewedNotifications, setViewedNotifications] = useState({
+        notification: []
+    });
     const [loading, setLoading] = React.useState(false)
     const [voidMessage, setVoidMessage] = React.useState("Nothing to notify.");
 
@@ -23,6 +26,9 @@ export function Notifications() {
                 .then(itemsOrError => {
                     try {
                         setNotifications(itemsOrError)
+                        if (notifications.notification.length > 0) {
+                            setViewedNotifications(itemsOrError);
+                        }
                         setVoidMessage("Nothing to notify.")
                     } catch {
                         console.log("Error: Notifications service is down")
@@ -39,20 +45,20 @@ export function Notifications() {
 
     return(
         <React.Fragment>
-                {notifications.notification.length === 0 && (
+                {viewedNotifications.notification.length === 0 && (
                     <p className="text-center">{voidMessage}</p>
                 )}
-                {notifications.notification.length == 1 && (
+                {viewedNotifications.notification.length == 1 && (
                     <React.Fragment>
-                        {notifications.notification[0].startsWith("The following") && (
+                        {viewedNotifications.notification[0].startsWith("The following") && (
                             <Alert key='warning1' variant='warning'>
-                                {notifications.notification[0]}
+                                {viewedNotifications.notification[0]}
                             </Alert>
                         )}
-                        {notifications.notification[0].startsWith("You run out") && (
+                        {viewedNotifications.notification[0].startsWith("You run out") && (
                             <Alert key='warning2' variant='warning'>
                                 <Col>
-                                    {notifications.notification[0]}
+                                    {viewedNotifications.notification[0]}
                                     <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
                                 </Col>
                             </Alert>
@@ -60,30 +66,30 @@ export function Notifications() {
                     </React.Fragment>
                 )}
 
-            {notifications.notification.length == 2 && (
+            {viewedNotifications.notification.length == 2 && (
                 <React.Fragment>
-                    {notifications.notification[0].startsWith("The following") && (
+                    {viewedNotifications.notification[0].startsWith("The following") && (
                         <Alert key='warning1' variant='warning'>
-                            {notifications.notification[0]}
+                            {viewedNotifications.notification[0]}
                         </Alert>
                     )}
-                    {notifications.notification[0].startsWith("You run out") && (
+                    {viewedNotifications.notification[0].startsWith("You run out") && (
                         <Alert key='warning2' variant='warning'>
                             <Col>
-                                {notifications.notification[0]}
+                                {viewedNotifications.notification[0]}
                                 <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
                             </Col>
                         </Alert>
                     )}
-                    {notifications.notification[1].startsWith("The following") && (
+                    {viewedNotifications.notification[1].startsWith("The following") && (
                         <Alert key='warning1' variant='warning'>
-                            {notifications.notification[1]}
+                            {viewedNotifications.notification[1]}
                         </Alert>
                     )}
-                    {notifications.notification[1].startsWith("You run out") && (
+                    {viewedNotifications.notification[1].startsWith("You run out") && (
                         <Alert key='warning2' variant='warning'>
                             <Col>
-                                {notifications.notification[1]}
+                                {viewedNotifications.notification[1]}
                                 <Button className="ml-3" variant="outline-warning">Warning</Button>{' '}
                             </Col>
                         </Alert>

@@ -22,7 +22,7 @@ public class InfluxSink {
     private static final String BUCKET = "krakend";
     private static final String ORG = "myorg";
 
-    private static final long TEST_DIFF = 60 * 5; // 5 MINUTES
+    private static final long TEST_DIFF = 2 * 60; // 5 MINUTES
     private static final long WEEK_DIFF = 60 * 60 * 24 * 7;
     private static final long MONTH_DIFF = 60 * 60 * 24 * 31;
     private String url;
@@ -88,7 +88,7 @@ public class InfluxSink {
         QueryApi queryApi = client.getQueryApi();
         List<LogEntry> entries = new ArrayList<>();
         long unixTimeStart = switch (time) {
-            case Weekly ->  unixTimeNow - WEEK_DIFF;
+            case Weekly -> unixTimeNow - WEEK_DIFF;
             case Monthly -> unixTimeNow - MONTH_DIFF;
             case Total -> 0;
             case Test -> unixTimeNow - TEST_DIFF;

@@ -27,6 +27,7 @@ public class ConsumptionsChronJob implements Runnable {
     private final InfluxSink influx;
     private final long initialDelay;
     private final boolean startNow;
+    public static final int TEST = 2 * 60;
     public static final int WEEK = 7;
     public static final String TRANSACTION_ADD = "add_product_to_pantry";
     public static final String TRANSACTION_USE = "use_product_in_pantry";
@@ -56,14 +57,14 @@ public class ConsumptionsChronJob implements Runnable {
         var scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(this,
                 startNow ? 0L : initialDelay,
-                TimeUnit.SECONDS.toSeconds(WEEK), // TODO: TimeUnit.DAYS.toSeconds(WEEK),
+                TimeUnit.SECONDS.toSeconds(TEST), // TODO: TimeUnit.DAYS.toSeconds(WEEK),
                 TimeUnit.SECONDS);
     }
 
     public void blockingExecution() {
         LOGGER.info("Chron-job: Sending consumption week data!");
         // Get the data
-        List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
+        List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Test);
         LOGGER.info("Chron-job: LOGS:" + logs);
         LOGGER.info("Chron-job: Connecting to consumptions!");
         // If the connection cannot be established rapidly, the circuit breaker ends this method.
