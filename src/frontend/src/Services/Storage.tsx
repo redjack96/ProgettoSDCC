@@ -32,17 +32,17 @@ export function Storage() {
                     return x;
                 })
                 .then(itemsOrError => {
-                    try {
-                        setItems(itemsOrError)
-                        setVoidMessage("Nothing added to List! Add one when you're ready!")
-                    } catch {
-                        console.log("Error: shopping_list service is down")
+                    if (itemsOrError.hasOwnProperty('products')) {
+                        setItems(itemsOrError);
+                        setVoidMessage("Nothing added to pantry! Add one when you're ready!");
+                    } else if (itemsOrError.hasOwnProperty('msg')) {
+                        console.log("Error: product_storage service is down")
                         setItems({
                             id: 0,
                             name: "",
                             products: []
-                        })
-                        setVoidMessage(itemsOrError.msg)
+                        });
+                        setVoidMessage(itemsOrError.msg);
                     }
                 })
                 .catch(e => console.log("Errore: " + e))
