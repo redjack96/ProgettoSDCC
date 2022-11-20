@@ -308,7 +308,7 @@ export function PantryElement({item, onItemRemoval}) {
                 <StatusExpirationBadge itemExpiration={item.expiration.seconds}/>
             </td>
             <td>
-                <ButtonGroup style={{display: "block"}}>
+                <ButtonGroup>
                     <Button
                         size="sm"
                         variant="danger"
