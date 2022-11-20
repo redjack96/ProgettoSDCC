@@ -1,4 +1,5 @@
 import React, {useState} from "react";
+import { Row } from "react-bootstrap";
 import {API_GATEWAY_ADDRESS, ProductType, Unit} from "./Home";
 
 export function Consumptions() {
@@ -39,25 +40,29 @@ export function Consumptions() {
 
     return(
         <div className="auto-max scrollable">
-            <table className="table align-middle mb-0 bg-white">
-                <thead className="bg-light">
-                <tr>
-                    <th>Product Name</th>
-                    <th>Consumption (%)</th>
-                </tr>
-                </thead>
-                <tbody>
-                {/*map items nel pantry in pantry element come in shopping list*/}
-                {consData.predicted.length === 0 && (
+            {consData.predicted.length > 0 && (
+                <table className="table align-middle mb-0 bg-white">
+                    <thead className="bg-light">
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Consumption (%)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {/*map items nel pantry in pantry element come in shopping list*/}
+                    {consData.predicted.map(item => (
+                        <PredictedEntry
+                            entry={item}
+                        />
+                    ))}
+                    </tbody>
+                </table>
+            )}
+            {consData.predicted.length === 0 && (
+                <Row>
                     <p className="text-center">{voidMessage}</p>
-                )}
-                {consData.predicted.map(item => (
-                    <PredictedEntry
-                        entry={item}
-                    />
-                ))}
-                </tbody>
-            </table>
+                </Row>
+            )}
         </div>
     )
 }

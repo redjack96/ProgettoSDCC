@@ -56,7 +56,6 @@ export function Recipes() {
     }, [items]);
 
     const showListIngredients = (ingredient, index, row) => {
-        console.log(row.length)
         if (index == row.length-1) {
             return ingredient.name;
         } else {

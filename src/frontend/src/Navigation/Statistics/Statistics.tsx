@@ -16,6 +16,18 @@ export function Statistics() {
             <Navbar/>
             <PageHeader pageName="Statistics"/>
             <Row className="mb-3">
+                <Col mb={2}>
+                    <MDBCard className="form">
+                        <MDBCardBody>
+                            <Col className="border-right">
+                                <h2>Notifications</h2>
+                                <Notifications />
+                            </Col>
+                        </MDBCardBody>
+                    </MDBCard>
+                </Col>
+            </Row>
+            <Row className="mb-3">
                 <Col>
                     <MDBCard className="form">
                         <MDBCardBody className="pb-5">
@@ -32,18 +44,6 @@ export function Statistics() {
                             <Col>
                                 <h2>Consumption</h2>
                                 <Consumptions/>
-                            </Col>
-                        </MDBCardBody>
-                    </MDBCard>
-                </Col>
-            </Row>
-            <Row className="mb-3">
-                <Col mb={2}>
-                    <MDBCard className="form">
-                        <MDBCardBody>
-                            <Col className="border-right">
-                                <h2>Notifications</h2>
-                                <Notifications />
                             </Col>
                         </MDBCardBody>
                     </MDBCard>
