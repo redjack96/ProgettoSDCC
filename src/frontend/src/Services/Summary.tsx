@@ -15,6 +15,7 @@ import {
 export function Summary() {
     const [dropValue, setDropValue] = useState("Time window selected")
     const [verticalActive, setVerticalActive] = useState('tab1');
+    const [voidMessage, setVoidMessage] = useState("");
     const [summaryData, setSummaryData] = useState({
         reference: 0,
         most_used_product: "".toString(),
@@ -32,7 +33,7 @@ export function Summary() {
         setVerticalActive(value);
     };
 
-
+    // FIXME: implementami!
     const onWeekly = () => {
         console.log("on weekly");
         setDropValue("Weekly");
@@ -60,6 +61,7 @@ export function Summary() {
             .catch(e => console.log("Errore: " + e));
     }
 
+    // FIXME: implementami!
     const onMonthly = () => {
         console.log("on monthly");
         setDropValue("Monthly");
@@ -70,10 +72,10 @@ export function Summary() {
                 return x;
             })
             .then(itemsOrError => {
-                try {
-                    setSummaryData(itemsOrError)
-                } catch {
-                    console.log("Error: summary service is down.")
+                if (itemsOrError.hasOwnProperty('msg')) {
+                    // service down
+                    console.log("Error: summary service is down.");
+                    setVoidMessage(itemsOrError.msg);
                     setSummaryData({
                         reference: 0,
                         most_used_product: "".toString(),
@@ -83,10 +85,15 @@ export function Summary() {
                         number_expired: 0,
                     })
                 }
+                try {
+                    setSummaryData(itemsOrError)
+                } catch {
+                }
             })
             .catch(e => console.log("Errore: " + e));
     }
 
+    // FIXME: implementami!
     const onTotal = () => {
         console.log("on total");
         setDropValue("Total");

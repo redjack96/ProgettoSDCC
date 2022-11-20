@@ -14,6 +14,7 @@ export function Notifications() {
     const [voidMessage, setVoidMessage] = React.useState("Nothing to notify.");
 
     // called on page load, loads the entire list from shopping_list microservice
+    // FIXME: implementami!
     React.useEffect(() => {
         if (!loading) {
             console.log("reloading list from server");

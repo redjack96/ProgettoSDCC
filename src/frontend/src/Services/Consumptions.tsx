@@ -8,6 +8,7 @@ export function Consumptions() {
         predicted: []
     })
     // called on page load, loads the entire list from shopping_list microservice
+    // FIXME: testami!
     React.useEffect(() => {
         if (!loading) {
             console.log("reloading list from server");
@@ -19,10 +20,12 @@ export function Consumptions() {
                     return x;
                 })
                 .then(itemsOrError => {
-                    try {
+                    if (itemsOrError.hasOwnProperty('predicted')) {
+                        // service up
                         setConsData(itemsOrError);
                         setVoidMessage("No consumption data available.");
-                    } catch {
+                    } else if (itemsOrError.hasOwnProperty('msg')) {
+                        // service down
                         console.log("Error: consumption service is down")
                         setConsData({
                             predicted: []
