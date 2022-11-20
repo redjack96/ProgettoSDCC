@@ -211,12 +211,12 @@ label.star:before {
     position:absolute;
     top:0px;
     bottom:0;
-    left:30px;
+    left:0px;
     flex: 1 1 auto;
     border-radius: 20px;
     display: flex;
     flex-flow: column;
-    padding: 0 10px 10px 10px;
+    padding: 0px 0px 120% 0px;
     overflow: scroll;
 }
 

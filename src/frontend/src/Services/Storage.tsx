@@ -110,26 +110,22 @@ export function Storage() {
         <Container>
             <Navbar/>
             <PageHeader pageName="My storage"/>
-            <Row>
-                <Col>
-                    <Row className="mb-3">
-                        <MDBCard className="form">
-                            <MDBCardBody>
-                                <h2>Add item</h2>
-                                <AddPantryForm onAdd={onAddItem}/>
-                            </MDBCardBody>
-                        </MDBCard>
-                    </Row>
-                    <Row>
-                        <MDBCard className="form">
-                            <MDBCardBody>
-                                <h2>Use item</h2>
-                                <UseForm onUseItem={handleUseItems}/>
-                            </MDBCardBody>
-                        </MDBCard>
-                    </Row>
+            <Row spacing={2}>
+                <Col xl={6}>
+                    <MDBCard className="form mb-3">
+                        <MDBCardBody>
+                            <h2>Add item</h2>
+                            <AddPantryForm onAdd={onAddItem}/>
+                        </MDBCardBody>
+                    </MDBCard>
+                    <MDBCard className="form mb-3">
+                        <MDBCardBody>
+                            <h2>Use item</h2>
+                            <UseForm onUseItem={handleUseItems}/>
+                        </MDBCardBody>
+                    </MDBCard>
                 </Col>
-                <Col className="wrapper">
+                <Col xl={6} className="wrapper">
                     <PantryView items={items} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
                 </Col>
             </Row>
@@ -237,27 +233,27 @@ export function UseForm({onUseItem}) {
 export function PantryView({items, voidMessage, handleRemove}) {
     return (
         <div className="tableContainer">
-            <Table className="table align-middle mb-0 bg-white">
+            <Table className="table align-middle bg-white">
                 <TableHead className="bg-light">
-                <TableRow>
-                    <th>Name</th>
-                    <th>Quantity</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </TableRow>
+                    <TableRow>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </TableRow>
                 </TableHead>
                 <TableBody>
-                {/*map items nel pantry in pantry element come in shopping list*/}
-                {items.products.length === 0 && (
-                    <p className="text-center">{voidMessage}</p>
-                )}
-                {items.products.map(item => (
-                    <PantryElement
-                        item={item}
-                        onItemRemoval={handleRemove}
-                        key={items.products.indexOf(item)}
-                    />
-                ))}
+                    {/*map items nel pantry in pantry element come in shopping list*/}
+                    {items.products.length === 0 && (
+                        <p className="text-center">{voidMessage}</p>
+                    )}
+                    {items.products.map(item => (
+                        <PantryElement
+                            item={item}
+                            onItemRemoval={handleRemove}
+                            key={items.products.indexOf(item)}
+                        />
+                    ))}
                 </TableBody>
             </Table>
         </div>
@@ -312,7 +308,7 @@ export function PantryElement({item, onItemRemoval}) {
                 <StatusExpirationBadge itemExpiration={item.expiration.seconds}/>
             </td>
             <td>
-                <ButtonGroup>
+                <ButtonGroup style={{display: "block"}}>
                     <Button
                         size="sm"
                         variant="danger"

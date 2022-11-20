@@ -2,7 +2,7 @@
 # terraform plan
 # terraform apply
 # terraform destroy
-
+# ssh -i labsuser.pem ec2-user@<public-ip-vedi-output>
 # Necessario per far funzionare aws
 terraform {
   required_providers {
@@ -22,7 +22,7 @@ resource "aws_instance" "example" {
   ami                    = "ami-0b0dcb5067f052a63"
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.instance.id]
-
+  key_name = "vockey" # RICORDATI CHE SENZA QUESTO NON TI PUOI CONNETTERE A SSH!!!
   user_data = <<-EOF
               #!/bin/bash
               echo "Hello, World" > index.html
@@ -41,6 +41,13 @@ resource "aws_security_group" "instance" {
   ingress {
     from_port   = 8080
     to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
