@@ -49,7 +49,6 @@ export function Storage() {
         }
     }, [items]);
 
-    // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
     const handleUseItems = React.useCallback(
         (usedItem: PantryItem) => {
             const newState = items.products.map(obj => {
@@ -65,7 +64,7 @@ export function Storage() {
                 try {
                     setItems({
                         ...items,
-                        products: [newState]
+                        products: newState
                     });
                 } catch {
                     setItems({
