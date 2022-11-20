@@ -7,12 +7,13 @@ import {PageHeader} from "../Utils/PageHeader";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/Home";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 import {
+    BackButton,
     ExpirationInput,
     NameInput,
     ProductTypeSelect,
     QuantityInput,
-    SubmitButton, TimesBoughtInput, TotalUseNumberInput,
-    UnitSelect,
+    TimesBoughtInput, TotalUseNumberInput,
+    UnitSelect, UpdateButton,
     UseNumberInput
 } from "../../Widgets/FormWidgets";
 
@@ -32,7 +33,6 @@ export function UpdatePantryPage() {
         </Container>
     );
 }
-
 
 
 // here we destructure the props to get the single value from the field of the interface
@@ -74,6 +74,10 @@ function UpdatePantryForm({item}) {
         navigate('/productStoragePage');
     }
 
+    const backFn = () => {
+        navigate('/productStoragePage');
+    }
+
     return (<Form onSubmit={() => toStorage()}>
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
@@ -81,12 +85,12 @@ function UpdatePantryForm({item}) {
                 <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
                 <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
                 <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
-                <QuantityInput quantity={quantity} setQuantity={setQuantity} />
+                <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
             </Row>
         </InputGroup>
         <InputGroup>
             <Row className="mb-3">
-                <ExpirationInput expiration={expiration} setExpiration={setExpiration} />
+                <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
                 <Form.Group as={Col} controlId="formBuyDate">
                     <Form.Label>Buy Date</Form.Label>
                     <Form.Control
@@ -119,7 +123,10 @@ function UpdatePantryForm({item}) {
         <InputGroup className="mb-3">
             <Container>
                 <Row className="mb-3">
-                    <SubmitButton itemName={itemName} submitting={submitting} buttonText="Update"/>
+                    <UpdateButton buttonText="Update in pantry"/>
+                </Row>
+                <Row>
+                    <BackButton backFn={backFn}/>
                 </Row>
             </Container>
         </InputGroup>

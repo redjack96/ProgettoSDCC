@@ -5,7 +5,7 @@ import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../../Ser
 import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
-import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../../Widgets/FormWidgets";
+import {BackButton, ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect, UpdateButton} from "../../Widgets/FormWidgets";
 import {Grid} from "@mui/material";
 
 // this is called by the route /updateProductPage by the ItemDisplay's Update button
@@ -61,30 +61,37 @@ function UpdateForm({item}: UpdateFormProps) {
         navigate('/');
     }
 
+    const backFn = () => {
+        navigate('/');
+    }
+
     return (<Form onSubmit={() => toHome()}>
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
-            <Grid container>
-                <Grid item className="mb-3">
+            <Row container>
+                <Col item className="mb-3">
                     <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
-                </Grid>
-                <Grid item className="mb-3">
+                </Col>
+                <Col item className="mb-3">
                     <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
-                </Grid>
-                <Grid item className="mb-3">
+                </Col>
+                <Col item className="mb-3">
                     <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
-                </Grid>
-                <Grid item className="mb-3">
+                </Col>
+                <Col item className="mb-3">
                     <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
-                </Grid>
-                <Grid item className="mb-3">
+                </Col>
+                <Col item className="mb-3">
                     <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
-                </Grid>
-                <Grid item className="mb-3">
-                    <SubmitButton itemName={itemName} submitting={submitting} buttonText="Update"/>
-                </Grid>
-            </Grid>
+                </Col>
+            </Row>
         </InputGroup>
+        <Row className="mb-3">
+            <UpdateButton buttonText="Update"/>
+        </Row>
+        <Row className="mb-3">
+            <BackButton backFn={() => backFn()}/>
+        </Row>
     </Form>);
 }
 

@@ -4,7 +4,7 @@ import {ProductType, Unit} from "../Services/Home";
 import {polarToCartesian} from "recharts/types/util/PolarUtils";
 
 
-export function NameInput({itemName, setItemName, isUpdate}){
+export function NameInput({itemName, setItemName, isUpdate}) {
     return (
         <Form.Group as={Col} controlId="formGridName">
             <Form.Label>Name</Form.Label>
@@ -12,26 +12,26 @@ export function NameInput({itemName, setItemName, isUpdate}){
                 <Form.Control
                     value={itemName}
                     onChange={e => {
-                        let itemNameStr : string = e.target.value;
+                        let itemNameStr: string = e.target.value;
                         itemNameStr = itemNameStr.replace(/[^A-Za-z]/g, '');
-                        let firstChar : string = itemNameStr.charAt(0).toUpperCase();
-                        let itemNameStrUppercase : string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
+                        let firstChar: string = itemNameStr.charAt(0).toUpperCase();
+                        let itemNameStrUppercase: string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
                         setItemName(itemNameStrUppercase.trim())
                     }}
                     type="text"
                     placeholder="New Item"
                     aria-describedby="basic-addon1"
-                disabled >
+                    disabled>
                 </Form.Control>
             )}
             {isUpdate == false && (
                 <Form.Control
                     value={itemName}
                     onChange={e => {
-                        let itemNameStr : string = e.target.value;
+                        let itemNameStr: string = e.target.value;
                         itemNameStr = itemNameStr.replace(/[^A-Za-z]/g, '');
-                        let firstChar : string = itemNameStr.charAt(0).toUpperCase();
-                        let itemNameStrUppercase : string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
+                        let firstChar: string = itemNameStr.charAt(0).toUpperCase();
+                        let itemNameStrUppercase: string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
                         setItemName(itemNameStrUppercase.trim())
                     }}
                     type="text"
@@ -44,11 +44,11 @@ export function NameInput({itemName, setItemName, isUpdate}){
     );
 }
 
-export function UnitSelect({unit, setUnit, isUpdate}){
+export function UnitSelect({unit, setUnit, isUpdate}) {
     return (<Form.Group as={Col} controlId="formSelectUnit">
         <Form.Label>Unit</Form.Label>
         {isUpdate === true && (
-            <Form.Select as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)} disabled >
+            <Form.Select as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)} disabled>
                 <option>Select unit...</option>
                 <option>Bottle</option>
                 <option>Packet</option>
@@ -68,13 +68,13 @@ export function UnitSelect({unit, setUnit, isUpdate}){
     </Form.Group>);
 }
 
-export function ProductTypeSelect({type, setType, isUpdate}){
+export function ProductTypeSelect({type, setType, isUpdate}) {
     return (<Form.Group as={Col} controlId="formSelectType">
         <Form.Label>Type</Form.Label>
         {/*Il value è della select*/}
         {isUpdate === true && (
             <Form.Select onChange={e => setType(ProductType.parse(e.target.value))} defaultValue={ProductType.toString(type)}
-            disabled >
+                         disabled>
                 <option>Select product type...</option>
                 <option>Vegetable</option>
                 <option>Fruit</option>
@@ -113,7 +113,7 @@ export function ExpirationInput({expiration, setExpiration}) {
     </Form.Group>);
 }
 
-export function QuantityInput({quantity, setQuantity}){
+export function QuantityInput({quantity, setQuantity}) {
     return (<Form.Group as={Col} controlId="formQuantity">
         <Form.Label>Quantity</Form.Label>
         <Form.Control
@@ -130,7 +130,7 @@ export function QuantityInput({quantity, setQuantity}){
 }
 
 export function UseNumberInput({useNumber, setUseNumber}) {
-    return(
+    return (
         <Form.Group as={Col} controlId="formUseNumber">
             <Form.Label>Uses</Form.Label>
             <Form.Control
@@ -148,7 +148,7 @@ export function UseNumberInput({useNumber, setUseNumber}) {
 }
 
 export function TotalUseNumberInput({totalUseNumber, setTotalUseNumber}) {
-    return(
+    return (
         <Form.Group as={Col} controlId="formTotalUseNumber">
             <Form.Label>Total Uses</Form.Label>
             <Form.Control
@@ -166,7 +166,7 @@ export function TotalUseNumberInput({totalUseNumber, setTotalUseNumber}) {
 }
 
 export function TimesBoughtInput({timesBought, setTimesBought}) {
-    return(
+    return (
         <Form.Group as={Col} controlId="formTimesBought">
             <Form.Label>Times Bought</Form.Label>
             <Form.Control
@@ -183,7 +183,7 @@ export function TimesBoughtInput({timesBought, setTimesBought}) {
     );
 }
 
-export function SubmitButton({itemName, submitting, buttonText}){
+export function SubmitButton({itemName, submitting, buttonText}) {
     return (<Button
         type="submit"
         variant="success"
@@ -192,4 +192,27 @@ export function SubmitButton({itemName, submitting, buttonText}){
     >
         {buttonText}
     </Button>);
+}
+
+export function UpdateButton({buttonText}) {
+    return (
+        <Button
+            type="submit"
+            variant="success"
+        >
+            {buttonText}
+        </Button>
+    );
+}
+
+export function BackButton({backFn}){
+    return (
+        <Button
+            type="button"
+            variant="secondary"
+            onClick={() => backFn()}
+        >
+            Cancel
+        </Button>
+    );
 }

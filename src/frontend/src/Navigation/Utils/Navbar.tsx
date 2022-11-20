@@ -34,6 +34,7 @@ const Navbar = () => {
         })
     }
     const [showBasic, setShowBasic] = useState(false);
+    const [showNavCentred, setShowNavCentred] = useState(false);
 
     return (
         <MDBNavbar expand='lg' light bgColor='white'>
@@ -47,33 +48,33 @@ const Navbar = () => {
                     />
                     S.D.C.C Shopping List
                 </MDBNavbarBrand>
-
                 <MDBNavbarToggler
-                    aria-controls='navbarSupportedContent'
+                    type='button'
+                    data-target='#navbarCenteredExample'
+                    aria-controls='navbarCenteredExample'
                     aria-expanded='false'
                     aria-label='Toggle navigation'
-                    onClick={() => setShowBasic(!showBasic)}
+                    onClick={() => setShowNavCentred(!showNavCentred)}
                 >
-                    <MDBIcon icon='bars' fas />
+                    <MDBIcon icon='bars' fas/>
                 </MDBNavbarToggler>
 
-                <MDBCollapse navbar show={showBasic}>
-                    <MDBNavbarNav className='mr-auto mb-2 mb-lg-0'>
-                        <MDBNavbarItem>
-                            <MDBNavbarLink className={(url === "/" ?" active" : "")} aria-current='page' href='/'>Shopping List</MDBNavbarLink>
+                <MDBCollapse navbar show={showNavCentred} id='navbarCenteredExample'>
+                    <MDBNavbarNav fullWidth={false} className='mb-2 mb-lg-0'>
+                        <MDBNavbarItem className="center">
+                            <MDBNavbarLink className={(url === "/" ? " active" : "")} aria-current='page' href='/'>Shopping List</MDBNavbarLink>
                         </MDBNavbarItem>
-                        <MDBNavbarItem>
-                            <MDBNavbarLink className={(url === "/productStoragePage" ?" active" : "")} href='/productStoragePage'>Storage</MDBNavbarLink>
+                        <MDBNavbarItem className="center">
+                            <MDBNavbarLink className={(url === "/productStoragePage" ? " active" : "")} href='/productStoragePage'>Storage</MDBNavbarLink>
                         </MDBNavbarItem>
-                        <MDBNavbarItem>
-                            <MDBNavbarLink className={(url === "/recipesPage" ?" active" : "")} href='/recipesPage'>Recipes</MDBNavbarLink>
+                        <MDBNavbarItem className="center">
+                            <MDBNavbarLink className={(url === "/recipesPage" ? " active" : "")} href='/recipesPage'>Recipes</MDBNavbarLink>
                         </MDBNavbarItem>
-                        <MDBNavbarItem>
-                            <MDBNavbarLink className={(url === "/statisticsPage" ?" active" : "")} href='/statisticsPage'>Statistics</MDBNavbarLink>
+                        <MDBNavbarItem className="center">
+                            <MDBNavbarLink className={(url === "/statisticsPage" ? " active" : "")} href='/statisticsPage'>Statistics</MDBNavbarLink>
                         </MDBNavbarItem>
                     </MDBNavbarNav>
                 </MDBCollapse>
-                <MDBBtn color='success'>Coming soon...</MDBBtn>
             </MDBContainer>
         </MDBNavbar>
     );
