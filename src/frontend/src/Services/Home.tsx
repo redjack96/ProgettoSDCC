@@ -470,7 +470,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
         fetch(request, {method: 'POST'})
             .then(r => r.json())
             // here it will receive the json object given in input?
-            .then(() => onItemUpdate(item)) // FIXME: qua ho modificato rispetto a then(onItemUpdate) perché la risposta che riceviamo dall'API non e' un oggetto, ma un messaggio
+            .then(() => onItemUpdate(item))
     }
     // called when clicking the removeFromCart button
     const removeFromCart = () => {
