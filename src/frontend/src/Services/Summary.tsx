@@ -35,8 +35,6 @@ export function Summary() {
     };
 
 
-
-    // FIXME: implementami!
     const onWeekly = () => {
         console.log("on weekly");
         setDropValue("Weekly");
@@ -97,7 +95,6 @@ export function Summary() {
             .catch(e => console.log("Errore: " + e));
     }
 
-    // FIXME: implementami!
     const onTotal = () => {
         console.log("on total");
         setDropValue("Total");

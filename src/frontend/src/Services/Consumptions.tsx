@@ -9,7 +9,6 @@ export function Consumptions() {
         predicted: []
     })
     // called on page load, loads the entire list from shopping_list microservice
-    // FIXME: testami!
     React.useEffect(() => {
         if (!loading) {
             console.log("reloading list from server");
