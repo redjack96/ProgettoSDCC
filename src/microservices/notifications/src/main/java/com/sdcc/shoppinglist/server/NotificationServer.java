@@ -43,7 +43,6 @@ public class NotificationServer implements Runnable {
         try {
             InputStream stream = new FileInputStream("src/main/resources/config.properties");
             prop.load(stream);
-            return;
         } catch (Exception e) {
             LOGGER.info("Config file not found: using default values.");
             e.printStackTrace();
