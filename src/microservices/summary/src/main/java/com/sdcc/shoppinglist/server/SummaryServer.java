@@ -11,15 +11,15 @@ import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Produces a summary with some infos of the Distributed Storage
@@ -35,8 +35,7 @@ public class SummaryServer {
         LOGGER.setLevel(Level.INFO);
         Properties prop = new Properties();
         try {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            InputStream stream = loader.getResourceAsStream("config.properties");
+            var stream = new FileInputStream("src/main/resources/config.properties");
             prop.load(stream);
         } catch (IOException e) {
             e.printStackTrace();

@@ -6,6 +6,7 @@ import io.grpc.stub.StreamObserver;
 import notifications.NotificationGrpc;
 import notifications.Notifications;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -20,8 +21,8 @@ import java.util.logging.Logger;
 public class NotificationServer implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(NotificationServer.class.getSimpleName());
-    public final int port;
-    public final String address;
+    public int port;
+    public String address;
 
     @Override
     public void run() {
@@ -40,10 +41,11 @@ public class NotificationServer implements Runnable {
         LOGGER.setLevel(Level.INFO);
         Properties prop = new Properties();
         try {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            InputStream stream = loader.getResourceAsStream("config.properties");
+            InputStream stream = new FileInputStream("src/main/resources/config.properties");
             prop.load(stream);
-        } catch (IOException e) {
+            return;
+        } catch (Exception e) {
+            LOGGER.info("Config file not found: using default values.");
             e.printStackTrace();
         }
         this.port = Integer.parseInt(prop.getProperty("NotificationsPort"));
@@ -51,7 +53,7 @@ public class NotificationServer implements Runnable {
     }
 
     private void start() throws IOException {
-        SocketAddress address = new InetSocketAddress("notifications", port);
+        SocketAddress address = new InetSocketAddress(this.address, port);
         this.server = NettyServerBuilder.forAddress(address)
                 .addService(new NotificationsImpl())
                 .build()

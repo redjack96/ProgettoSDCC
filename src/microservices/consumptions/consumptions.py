@@ -235,12 +235,9 @@ class ConsumptionEstimator:
         # IMPORTANT: the online fitting is activated only if there sare more than 20 observations in the dataset
         # due to poor prediction if the dataset is very little
         if self.week_indexes[prod_name] >= 20:
-            self.models[prod_name].partial_fit(X_train,
-                                               y_train)  # a differenza di fit, esegue un addestramento parziale di tipo
+            self.models[prod_name].partial_fit(X_train, y_train)  # executes a partial training like walk forward
         else:
-            self.models[prod_name].fit(X_train, y_train)  # a differenza di fit, esegue un addestramento parziale di
-            # tipo
-        # walk forward
+            self.models[prod_name].fit(X_train, y_train)  # executes a complete training when there are too little instances
         # (training 1, testing 2 .. training 1-2, testing 3 ..)
         y_pred = self.models[prod_name].predict(X_test)
         if y_pred[0] < 0:

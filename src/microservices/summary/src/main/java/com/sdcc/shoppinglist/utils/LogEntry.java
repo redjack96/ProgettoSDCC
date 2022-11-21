@@ -4,10 +4,6 @@ public record LogEntry(long log_timestamp, String transaction_type, String produ
 
     public boolean isExpired(){
         var unixTimeNow = System.currentTimeMillis() / 1000L;
-        boolean isExpired = this.expiration_date <= unixTimeNow;
-        if (isExpired) {
-            System.out.println("isExpired = " + isExpired);
-        }
-        return isExpired;
+        return this.expiration_date <= unixTimeNow;
     }
 }
