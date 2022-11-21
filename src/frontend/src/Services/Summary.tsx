@@ -130,7 +130,7 @@ export function Summary() {
             setLoading(false);
             onWeekly();
         }
-    }, [dropValue, verticalActive, voidMessage, summaryData]);
+    }, [dropValue, verticalActive, voidMessage, summaryData, loading]);
 
 
     return (

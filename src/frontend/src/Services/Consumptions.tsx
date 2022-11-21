@@ -35,7 +35,7 @@ export function Consumptions() {
                 })
                 .catch(e => console.log("Errore: " + e))
         }
-    }, [consData]);
+    }, [consData, loading]);
 
     return(
         <div className="auto-max scrollable">

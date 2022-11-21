@@ -55,7 +55,7 @@ export function Notifications() {
                 .catch(e => console.log("Errore: " + e))
             console.log(notifications);
         }
-    }, [notifications, viewedNotifications]);
+    }, [notifications, viewedNotifications, loading]);
 
     const onDismiss = notification => {
         let index = viewedNotifications.notification.indexOf(notification);
