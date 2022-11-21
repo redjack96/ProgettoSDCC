@@ -14,7 +14,7 @@ import {
 } from "mdb-react-ui-kit";
 export function Summary() {
     const [loading, setLoading] = useState(true);
-    const [dropValue, setDropValue] = useState("Weekly");
+    const [dropValue, setDropValue] = useState("Select Period...");
     const [verticalActive, setVerticalActive] = useState('tab1');
     const [voidMessage, setVoidMessage] = useState("");
     const [summaryData, setSummaryData] = useState({
@@ -125,12 +125,12 @@ export function Summary() {
             .catch(e => console.log("Errore: " + e));
     }
 
-    React.useEffect(() => {
-        if (loading){
-            setLoading(false);
-            onWeekly();
-        }
-    }, [dropValue, verticalActive, voidMessage, summaryData, loading]);
+    // React.useEffect(() => {
+    //     if (loading){
+    //         setLoading(false);
+    //         onWeekly();
+    //     }
+    // }, [dropValue, verticalActive, voidMessage, summaryData, loading]);
 
 
     return (
