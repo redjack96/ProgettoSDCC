@@ -13,21 +13,16 @@ This project is made of 6 microservices:
 5. **NotificationsService**: sends e-mail or push notifications when an item is about to expire or a recipe can be done. (Java)
 6. **SummaryService**: computes the summary statistics about shopped, used and expired item last week or last month. (Java)
 
-TODO: NotificationService and ProductStorageService communication is decoupled with the usage of Kafka Publish Subscribe Framework.
+NotificationService, SummaryService and ProductStorageService communication is decoupled with the usage of Kafka Publish Subscribe Framework.
 
-TODO: The following pattern are implemented:
+The following pattern are implemented:
 
-- Circuit Breaker:
-- Database per Service:
+
+
 - API Gateway: implemented in Rust. It's a REST API server (built with crate actix-web) and a grpc client (with crates prost+tonic). 
+- Circuit Breaker: implemented in ApiGateway, ShoppingList, Summary with libraries inspired by hystrix
+- Database per Service: every service has its own database. Only ProductStorageService's database is internal to the container, because it's stateful.
 
-## Development Build single container
-
-Use docker-build.sh with a number 1-6
-
-```console
-$ ./docker-build.sh [1-6]
-```
 ## Build and Run single container (compose service)
 
 ```console
@@ -40,49 +35,53 @@ $ docker compose up shopping_list --build
 
 ## TODO: Release Run
 
-Use docker-compose:
+Use docker compose:
 
 ```console
-$ docker-compose up -d
+$ docker compose up -d
 ```
 
 ## Frontend UI
 
-TODO!
+The frontend is built in React with Typescript.
 
-## DEV
-### Use MongoDB:
-Call the following command from terminal to run mongo container
-```console
-$ docker exec -it mongo /bin/bash
-```
-Run the following command to activate mongo shell:
-```console
-$ mongosh
-```
-Once in the mongo shell, run the following command to authenticate
-```console
-> use admin
-> admin.auth("user-name", "password")
-```
+## Deploy on AWS
+To load credentials from [LAB](https://www.awsacademy.com/LMS_Login):
+1) Copy AWS CLI credentials from AWS Details and paste it in terraform/credentials
+2) Download PEM and save it in terraform/labsuser.pem
+3) terraform$ `chmod 400 terraform/labsuser.pem`
+4) terraform$ `terraform apply`
+5) To SSH to EC2 VM:
 
-Some useful mongo commands:
-- show dbs: shows all the available databases
-- use <dbs-name>: switches context to a certain database (creates a new one if not existing)
-- db.<collection-name>.insertOne({att1: <attr1>, ...}): insert one single element
-- db.<collection-name>.insertMany({...}, {...}): insert many elements
-- db.<collection-name>.find(): search for alla elements in a collection
+terraform$ `ssh -i labsuser.pem ec2-user@<public-ip-see-output>`
 
-```js
-React.useEffect(() => {
-    fetch('http://localhost:8007')
-        .then(r => {
-            let x = r.json();
-            console.log(x);
-            console.log("ye, che bello!!!!");
-            return x;
-        })
-        .then(setItems)
-        .catch(e => console.log("Errore: " + e))
-}, []);
-```
+## EC2 Configuration
+To copy files from local to EC2 VM (remember to change <public-ip> to the ip obtained from `terraform apply`):
+
+ProgettoSDCC$ `scp -i terraform/labsuser.pem docker-compose.yml ec2-user@<public-ip>:~/docker-compose.yml`
+
+ProgettoSDCC$ `scp -i terraform/labsuser.pem config.properties ec2-user@<public-ip>:~/config.properties`
+
+To copy an entire directory to EC2:
+
+ProgettoSDCC$ `scp -r -i terraform/labsuser.pem docker ec2-user@<public-ip>:~/docker`
+
+ProgettoSDCC$ `scp -pr -i terraform/labsuser.pem src/proto ec2-user@<public-ip>:~/src/proto`
+
+src -r -i terraform/labsuser.pem src/frontend ec2-user@<public-ip>:~/src/frontend
+
+From the SSHed EC2, you'll need to install some programs, like docker (we use Amazon Linux VMs, so use `yum` instead of `apt`):
+
+sudo yum update && sudo yum install docker
+sudo mkdir -p /usr/local/lib/docker/cli-plugins/
+sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+systemctl start docker
+sudo gpasswd -a $USER docker
+
+After this, re-login to apply changes. Now you can use docker and docker compose without sudo:
+
+docker compose up api_gateway shopping_list mongo
+
+When finished:
+`terraform destroy`
