@@ -75,6 +75,16 @@ def prepare_update_quantity_query(type_update: consumptions_pb2.ObservationType,
     return query_1 + total_str + query_2 + week_str + query_3 + prod + query_end
 
 
+def convert_predictions_to_dataframe(rows):
+    data = []
+    for row in rows:
+        week = row.week_num
+        prod = row.product_name
+        pred = row.prediction
+        data.append([week, prod, pred])
+    return pd.DataFrame(data, columns=['week_num', 'product_name', 'prediction'])
+
+
 def convert_rows_to_dataframe(rows):
     data = []
     for row in rows:
@@ -112,8 +122,9 @@ class Cassandra:
         self.__create_tables()
         print("creating index")
         self.__create_index()
-        print("populating tables")
-        self.__populate_tables("consumi-storage.csv")
+        # todo: RIMETTIMI
+        # print("populating tables")
+        # self.__populate_tables("consumi-storage.csv")
 
     @staticmethod
     def __cassandra_connection():
@@ -139,9 +150,14 @@ class Cassandra:
                 "consumption float," \
                 "PRIMARY KEY(week_num, product_name));"
         self.session.execute(query)
+        query = "CREATE TABLE IF NOT EXISTS predictions" \
+                "(week_num int, product_name text, prediction float, PRIMARY KEY(product_name));"
+        self.session.execute(query)
 
     def __create_index(self):
         query = "CREATE INDEX IF NOT EXISTS productIndex ON dataset (product_name);"
+        self.session.execute(query)
+        query = "CREATE INDEX IF NOT EXISTS prodIndex ON predictions (product_name);"
         self.session.execute(query)
 
     def __populate_tables(self, dataset_filename: str):
@@ -188,6 +204,27 @@ class Cassandra:
             query_update = prepare_update_quantity_query(type_update, old_quantity, week_num, product_name,
                                                          new_quantity)
             self.session.execute(query_update)
+
+    def insert_new_prediction(self, prediction_args: list):
+        """
+        Inserts a new prediction in the dataset
+        :param prediction_args: a list of matching query args
+        :return: None
+        """
+        query_insert = "INSERT INTO predictions (week_num, product_name, prediction) " \
+                       "VALUES (?,?,?);"
+        stmt = self.session.prepare(query_insert)
+        query = stmt.bind(prediction_args)
+        self.session.execute(query)
+
+    def select_predictions(self):
+        """
+        Selects all the predictions
+        :return: A DataFrame of the observations selected
+        """
+        query_select = "SELECT * FROM predictions;"
+        rows = self.session.execute(query_select)
+        return convert_predictions_to_dataframe(rows)
 
     def update_entry(self, week_num: int, product_name: str, n_bought: int, n_expired: int, n_used: int, n_rem: int,
                      consumption: float):
@@ -274,7 +311,7 @@ class Cassandra:
         :return:
         """
         entry = self.select_entries_for_week_product(week_num - 1, product_name)
-        print("ENTRY RECOVERED PREVIOUS WEEK: ", entry.iloc[0])
+        # print("ENTRY RECOVERED PREVIOUS WEEK: ", entry.iloc[0])
         if entry.size != 0:
             print("There are previous observations")
             rem = entry.iloc[0]["n_rem"]
@@ -297,7 +334,7 @@ class Cassandra:
 
         new_rem = (rem + bought) - expired - used
         # Skip consumption calculation if used != 0 and bought == 0
-        if bought == 0 and used != 0:
+        if (bought == 0 and rem == 0) and used != 0:
             consumption = old_consumption
         else:
             consumption = used / (bought + rem)

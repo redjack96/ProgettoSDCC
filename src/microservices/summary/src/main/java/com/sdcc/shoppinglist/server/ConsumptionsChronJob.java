@@ -30,6 +30,7 @@ public class ConsumptionsChronJob implements Runnable {
     public static final int TEST = 2 * 60;
     public static final int WEEK = 7;
     public static final String TRANSACTION_ADD = "add_product_to_pantry";
+    public static final String TRANSACTION_ADD_BUY = "add_bought_products_to_pantry";
     public static final String TRANSACTION_USE = "use_product_in_pantry";
     private final CircuitBreaker circuitBreaker;
 
@@ -38,7 +39,7 @@ public class ConsumptionsChronJob implements Runnable {
         var now = ZonedDateTime.now(ZoneId.of("America/Los_Angeles"));
         var nextRun = now.withHour(0).withMinute(0).withSecond(0);
         if (now.compareTo(nextRun) > 0)
-            nextRun = nextRun.plusSeconds(WEEK); // TODO: plusDays(WEEK)
+            nextRun = nextRun.plusSeconds(TEST); // TODO: plusDays(WEEK)
 
         var duration = Duration.between(now, nextRun);
         this.initialDelay = duration.getSeconds();
@@ -118,13 +119,15 @@ public class ConsumptionsChronJob implements Runnable {
             observationBuilder.setQuantity(logEntry.quantity());
             list.add(observationBuilder.build());
         }
+        System.out.println("observations = " + list);
         return list;
     }
 
     private Consumptions.ObservationType toObservationType(LogEntry logEntry) {
+        System.out.println("transaction type: "+logEntry.transaction_type());
         return switch (logEntry.transaction_type()) {
             case TRANSACTION_USE -> Consumptions.ObservationType.used;
-            case TRANSACTION_ADD -> logEntry.isExpired() ? Consumptions.ObservationType.expired : Consumptions.ObservationType.added;
+            case TRANSACTION_ADD_BUY, TRANSACTION_ADD -> logEntry.isExpired() ? Consumptions.ObservationType.expired : Consumptions.ObservationType.added;
             default -> Consumptions.ObservationType.added;
         };
     }

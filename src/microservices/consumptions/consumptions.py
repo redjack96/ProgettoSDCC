@@ -50,25 +50,32 @@ class ConsumptionEstimator:
     def __init__(self, cassandra: persistence.Cassandra):
         self.cassandra_conn = cassandra
         self.total_dataset = None
-        self.total_product_list = ["Pane", "Mortadella", "Pasta"]
+        self.total_product_list = []
+        # todo: rimettimi
+        # self.total_product_list = ["Pane", "Mortadella", "Pasta"]
         self.last_added_products = []
-        self.week_indexes = {"Pane": 20, "Mortadella": 20,
-                             "Pasta": 20}  # dizionario degli indici di split per ogni prodotto
+        self.week_indexes = {}
+        # todo: rimettimi
+        # self.week_indexes = {"Pane": 20, "Mortadella": 20,
+        #                      "Pasta": 20}  # dizionario degli indici di split per ogni prodotto
         # SGD si adatta maggiormente in base agli ultimi dati analizzati. Piu' preciso rispetto al regressore base.
         # Se ci sono variazioni elevate, non funziona bene. Invece il Regressore lineare si basa su tutti i dati.
-        self.models = {
-            "Pane": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
-            "Mortadella": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
-            "Pasta": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive')
-        }
+        # todo: rimettimi
+        # self.models = {
+        #     "Pane": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
+        #     "Mortadella": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
+        #     "Pasta": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive')
+        # }
+        self.models = {}
         self.product_datasets_dict = {}  # dizionario dei dataset per ogni prodotto
         self.product_X_train_dict = {}  # dizionario delle features di training per ogni prodotto
         self.product_X_test_dict = {}  # dizionario delle features di testing per ogni prodotto
         self.product_y_train_dict = {}  # dizionario dei valori target di training per ogni prodotto
         self.product_y_test_dict = {}  # dizionario dei valori target di testing per ogni prodotto
         self.product_last_y_pred = {}  # dizionario dei valori predetti per ogni prodotto
-        print("Init ML pipeline")
-        self.__init_train_dataset()
+        # todo: rimettimi
+        # print("Init ML pipeline")
+        # self.__init_train_dataset()
 
     def new_training(self):
         self.last_added_products = []
@@ -113,17 +120,25 @@ class ConsumptionEstimator:
             self.__scaling(prod_name)
             print("Training dataset ", prod_name)
             self.__train_model(prod_name)
+            print("Add prediction to database for product ", prod_name)
+            self.cassandra_conn.insert_new_prediction([current_week, prod_name, self.product_last_y_pred[prod_name]])
 
     def predict_consumptions(self):
         """
-        Get consumption predictions
+        Get consumption predictions from cassandra
         :return: dictionary of consumption prediction for each product present
         """
+        # recover data from cassandra
+        predict = self.cassandra_conn.select_predictions()
+        print("predict df: ", predict)
+        predict = self.cassandra_conn.select_predictions().to_dict('records')
+        print("predict dict: ", predict)
         res = {}
-        for prod in self.total_product_list:
+        for line in predict:
+            prod = line["product_name"]
             res[prod] = {}
-            res[prod]["week"] = self.week_indexes[prod]
-            res[prod]["predicted"] = self.product_last_y_pred[prod]
+            res[prod]["week"] = line["week_num"]
+            res[prod]["predicted"] = line["prediction"]
         return res
 
     def add_new_product(self, product_name: str):
@@ -217,8 +232,14 @@ class ConsumptionEstimator:
         y_train = self.product_y_train_dict[prod_name]
         X_test = self.product_X_test_dict[prod_name]
         y_test = self.product_y_test_dict[prod_name]
-        self.models[prod_name].partial_fit(X_train,
-                                           y_train)  # a differenza di fit, esegue un addestramento parziale di tipo
+        # IMPORTANT: the online fitting is activated only if there sare more than 20 observations in the dataset
+        # due to poor prediction if the dataset is very little
+        if self.week_indexes[prod_name] >= 20:
+            self.models[prod_name].partial_fit(X_train,
+                                               y_train)  # a differenza di fit, esegue un addestramento parziale di tipo
+        else:
+            self.models[prod_name].fit(X_train, y_train)  # a differenza di fit, esegue un addestramento parziale di
+            # tipo
         # walk forward
         # (training 1, testing 2 .. training 1-2, testing 3 ..)
         y_pred = self.models[prod_name].predict(X_test)
