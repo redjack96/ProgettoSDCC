@@ -22,13 +22,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
+/**
+ * This class schedules a periodic task that will ask consumption microservice to train the dataset,
+ * sending new data about finished and expired products. Data will be retrieved from influxDB and then
+ * sent to consumption via gRPC.
+ */
 public class ConsumptionsChronJob implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ConsumptionsChronJob.class.getSimpleName());
     private final InfluxSink influx;
     private final long initialDelay;
     private final boolean startNow;
     public static final int TEST = 2 * 60;
-    public static final int WEEK = 7;
+    // public static final int WEEK = 7;
     public static final String TRANSACTION_ADD = "add_product_to_pantry";
     public static final String TRANSACTION_ADD_BUY = "add_bought_products_to_pantry";
     public static final String TRANSACTION_USE = "use_product_in_pantry";
@@ -39,7 +44,7 @@ public class ConsumptionsChronJob implements Runnable {
         var now = ZonedDateTime.now(ZoneId.of("America/Los_Angeles"));
         var nextRun = now.withHour(0).withMinute(0).withSecond(0);
         if (now.compareTo(nextRun) > 0)
-            nextRun = nextRun.plusSeconds(TEST); // TODO: plusDays(WEEK)
+            nextRun = nextRun.plusSeconds(TEST); // this is for release: plusDays(WEEK)
 
         var duration = Duration.between(now, nextRun);
         this.initialDelay = duration.getSeconds();
@@ -58,7 +63,7 @@ public class ConsumptionsChronJob implements Runnable {
         var scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(this,
                 startNow ? 0L : initialDelay,
-                TimeUnit.SECONDS.toSeconds(TEST), // TODO: TimeUnit.DAYS.toSeconds(WEEK),
+                TimeUnit.SECONDS.toSeconds(TEST), // this is for release: TimeUnit.DAYS.toSeconds(WEEK),
                 TimeUnit.SECONDS);
     }
 
@@ -76,21 +81,20 @@ public class ConsumptionsChronJob implements Runnable {
         LOGGER.info("Chron-job: Successfully connected to consumptions");
         // Create the client
         var client = EstimatorGrpc.newBlockingStub(channel);
-        // convert LogEntry to Observations for consumptions microservice
 
         // Build the request parameter
         var trainRequest = Consumptions.TrainRequest.newBuilder()
-                .addAllObservations(convertLogsToObservations(logs))
+                .addAllObservations(convertLogsToObservations(logs)) // convert LogEntry to Observations for consumptions microservice
                 .setCurrentDate(new Date().getTime())
                 .build();
         LOGGER.info("Chron-job: Sending training request to consumptions service!");
-        // Sends the request
+        // Sends the request, using the Resilience4j circuit breaker.
         var responseSupplier = circuitBreaker.decorateSupplier(() -> {
             Consumptions.TrainResponse trainResponse = client.trainModel(trainRequest);
             LOGGER.info(trainResponse.getMsg());
             return trainResponse;
         });
-
+        // waits and gets the response if the consumption microservice is up, or else will return an error message.
         Consumptions.TrainResponse trainResponse = Try.ofSupplier(responseSupplier)
                 .toJavaOptional()
                 .orElse(Consumptions.TrainResponse.newBuilder().setMsg("Failed to receive training response").build());

@@ -10,8 +10,6 @@ use tokio::time::sleep;
 use std::cmp::max;
 use chrono::{TimeZone, Utc};
 use tokio::sync::Mutex;
-// use kafka::Error;
-// use kafka::producer::{DefaultPartitioner, Producer, Record, RequiredAcks};
 use crate::database::{Database, DEFAULT_EXPIRATION, QueryType};
 use tonic::{transport::Server, Request, Status, Response};
 // HELP: nome_progetto::package_file_proto::nome_servizio_client::NomeServizioClient
@@ -27,25 +25,22 @@ use rskafka::{
     record::Record,
     time::OffsetDateTime,
 };
-
 use std::string::ToString;
 use std::time::Duration;
 use lazy_static::lazy_static;
 use rskafka::client::partition::PartitionClient;
 use crate::database::QueryType::{SelectConsumed, SelectExpired};
 use crate::Notify::{Consumed, Expired};
-// use rskafka::client::error::Error::ServerError;
 
-#[derive(Default)]
-pub struct ProductStorageImpl {}
-
-// enum for notification microservice
+// enum for notification microservice. The macro derive generates te code at compile-time
+// to implement the Clone and Copy Traits (interface) for this enum
 #[derive(Clone, Copy)]
 pub enum Notify {
     Consumed,
     Expired,
 }
 
+// this struct represent a product in the pantry
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProductItem {
     pub name: String,
@@ -60,6 +55,7 @@ pub struct ProductItem {
     pub buy_date: i64,
 }
 
+// this struct will be sent to kafka and it will be read from notification and summary
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LogEntry {
     log_timestamp: i64,
@@ -71,7 +67,9 @@ pub struct LogEntry {
     expiration_date: i64,
 }
 
+// here we define the methods for the ProductItem struct
 impl ProductItem {
+    // this is a static method, it is used to build a new ProductItem from a Product reference
     fn from_product(p: &Product) -> Self {
         ProductItem {
             name: p.clone().product_name,
@@ -86,7 +84,7 @@ impl ProductItem {
             buy_date: Utc::now().timestamp(),
         }
     }
-
+    // This is a instance method, it is used to convert the ProductItem to an Item, defined in the proto
     fn to_item(&self) -> Item {
         // let date_time = api_gateway::shopping_list::Timestamp::from();
         println!("Converting to item");
@@ -109,14 +107,18 @@ impl ProductItem {
     }
 }
 
-// const KAFKA_RETRIES: i32 = 5;
 const KAFKA_TOPIC: &str = "notification";
 const SUMMARY_KEY: u8 = 2;
 const EXPIRED: &str = "expired";
 const CONSUMED: &str = "consumed";
 const LOGS: &str = "logs";
 
+// this defines a mutable global variable (or singleton). THe variable is used to save the Kafka clients
+// In Rust global mutable variables are not easily done, so we need the lazy_static create
 lazy_static!{
+    // another problem is the Mutex. Like other things in this microservice it is not the std::Mutex,
+    // but the tokio::Mutex. The latter has the lock method that is async so it is compatible with async function.
+    // the std::Mutex, will block everything instead, because the lock method it's not async
     static ref KAFKA_CLIENT_HASH_MAP: Mutex<HashMap<String, PartitionClient>> = Mutex::new(HashMap::new());
 }
 
@@ -149,6 +151,10 @@ pub fn notify_to_int(input: Notify) -> u8 {
     }
 }
 
+#[derive(Default)]
+pub struct ProductStorageImpl {}
+
+// this implements the methods of trait ProductStorage (defined in the proto files) for the ProductStorageImpl struct
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
     // Adds all bought products to pantry
@@ -180,10 +186,11 @@ impl ProductStorage for ProductStorageImpl {
         println!("Sent log to kafka for summary");
 
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
-        // Se alla fine manca il ';' significa che stiamo restituendo l'Ok (Result)
-        // In teoria questo METODO va sempre a buon fine, ma ricordiamo che è asincrono
+        // When we skip the ';' it means that we are returning the value, Result::Ok in this case
+        // You can also use return and ';', but this is more concise
     }
 
+    // adds a product to pantry
     async fn add_product_to_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let msg = format!("Item Added to pantry: {}, quantity: {}", request.get_ref().item_name, request.get_ref().quantity);
         let item = request.into_inner();
@@ -207,6 +214,7 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
+    // deletes forever a product from pantry
     async fn drop_product_from_pantry(&self, request: Request<ItemName>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let msg = format!("Item manually deleted from pantry: {}", request.get_ref().name);
         let item = request.into_inner();
@@ -215,16 +223,18 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
+    // updates a product in pantry
     async fn update_product_in_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
         let msg = format!("Item manually updated in pantry: {}, quantity: {} {} ({}), expiration: {}",
                           prod.item_name, prod.quantity, unit_to_str(prod.unit), prod_type_to_str(prod.r#type),
                           Utc.timestamp(prod.expiration.as_ref().map(|t| t.seconds).unwrap_or(0), 0));
-        println!("Removing item from db");
+        println!("Updating item in db");
         update_product_in_db(prod);
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
-    // TODO: questo deve essere chiamato da recipes!!
+
+    // uses the product in pantry, if you have enough
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
         println!("prod_unit: {}", prod.unit);
@@ -249,6 +259,7 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
+    // returns the entire pantry
     async fn get_pantry(&self, _: Request<PantryMessage>) -> Result<Response<Pantry>, Status> {
         println!("Getting pantry!");
         let products = select_pantry();
@@ -380,31 +391,35 @@ fn use_product_in_db(elem: &UsedItem) -> String {
     }
 }
 
+// this main function defines the gRPC server and the kafka producer.
+// Both the server and the producer are async functions, so we need tokio::main to make the main function async
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let configs = get_properties();
     let addr = format!("[::]:{}", configs.product_storage_port);
-    // Create db and create products table
+    // Create db and create products table (if not exists)
     let db = Database::new();
     db.create_table_products();
     println!("Created database tables!");
 
-    // Creo il servizio
-    let service = ProductStorageImpl::default(); // istanzia la struct impostando TUTTI i valori in default!
-    // aggiungo l'indirizzo al server
-    let grpc_server = Server::builder()
-        .add_service(ProductStorageServer::new(service)) // Qua si possono aggiungere altri service se vuoi!!!
-        .serve(addr.parse().unwrap()); // inizia a servire a questo indirizzo!
+    // Creates the service
+    let service = ProductStorageImpl::default(); // builds the struct with all default values. This static method is defined by the derive(Default) macro
 
-    // Attende! E se ci sono errori, restituisce un Result Err con il messaggio di errore
-    let x = tokio::join!(grpc_server, async_kafka_producer());
+    // starts serving
+    let grpc_server = Server::builder()
+        .add_service(ProductStorageServer::new(service)) // You can add more services if you want!!!
+        .serve(addr.parse().unwrap());
+
+    // awaits both the server and the async kafka producer, so both will progress.
+    // If there are errors, the variable will have a Result::Err enum variant
+    let x = tokio::join!(grpc_server, async_kafka_producer()); // the std library join is not enough, we need the tokio one!
     x.0.unwrap();
     println!("Server listening on {}", addr);
     // Restituisce una tupla vuota dentro un Result Ok!
 
     Ok(())
 }
-
+// this async function implements the kafka producer
 async fn async_kafka_producer() {
     println!("Establishing connection to Kafka broker...");
     // setup client
@@ -415,6 +430,7 @@ async fn async_kafka_producer() {
     // create needed topics
     let controller_client = client.controller_client().unwrap();
 
+    // initialize the topic clients
     for topic in topics {
         let status = topic.to_string();
         match controller_client.create_topic(
@@ -422,7 +438,7 @@ async fn async_kafka_producer() {
             1,      // partitions
             1,      // replication factor
             5_000,  // timeout (ms)
-        ).await {
+        ).await { // the create_topic function is async, we need to await to make it progress!
             Ok(_) => println!("created topic {}", KAFKA_TOPIC),
             Err(_) => println!("the topic already exists"),
         }
@@ -437,8 +453,10 @@ async fn async_kafka_producer() {
     }
     println!("Connection to Kafka established.");
 
+    // this is an infinite loop, to produce periodically logEntries to kafka!
     loop {
         println!("Asynchronously checking for consumed or expired products in pantry...");
+        // this is not the std sleep! Again we use tokio::sleep because it is async, otherwise it will block everything!
         sleep(Duration::from_secs(60)).await;
         // check if there are expired or consumed products in pantry
         let expired = check_for_expired().await;

@@ -1,5 +1,5 @@
 import React from "react";
-
+// this is the badge shown on the pantry table when the item is available or finished
 export function StatusAvailabilityBadge({itemQuantity}) {
 
     const createBadgeQuantity = (itemQuantity) => {
@@ -15,7 +15,7 @@ export function StatusAvailabilityBadge({itemQuantity}) {
 function getTimestampInSeconds () {
     return Math.floor(Date.now() / 1000)
 }
-
+// this badge will show when the pantry item is expired
 export function StatusExpirationBadge({itemExpiration}) {
     const createBadgeExpiration = (itemExpiration) => {
         let today = getTimestampInSeconds();

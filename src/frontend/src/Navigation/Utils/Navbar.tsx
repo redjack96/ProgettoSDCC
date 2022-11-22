@@ -1,39 +1,23 @@
 import React, {useState} from "react";
-import {useNavigate, useLocation} from "react-router-dom";
+import {useLocation} from "react-router-dom";
 import {
-    MDBBtn,
     MDBCollapse,
     MDBContainer,
     MDBIcon,
     MDBNavbar,
     MDBNavbarBrand, MDBNavbarItem, MDBNavbarLink,
     MDBNavbarNav,
-    MDBNavbarToggler, MDBRow
+    MDBNavbarToggler
 } from "mdb-react-ui-kit";
 import images from "../../Images/images";
-import {Col, Row} from "react-bootstrap";
-// import {Storage} from "../Services/Storage"
 
-
+// this arrow function represents the Navbar
 const Navbar = () => {
-    const navigate = useNavigate(); // once ready it returns the 'window.location' object
     const location = useLocation();
     const [url, setUrl] = useState(null);
     React.useEffect(() => {
         setUrl(location.pathname);
     }, [location]);
-    const toStoragePage = () => {
-        navigate("/productStoragePage", {
-            state: {}
-        })
-    }
-
-    const toShoppingPage = () => {
-        navigate("/", {
-            state: {}
-        })
-    }
-    const [showBasic, setShowBasic] = useState(false);
     const [showNavCentred, setShowNavCentred] = useState(false);
 
     return (

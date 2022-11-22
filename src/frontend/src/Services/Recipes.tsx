@@ -10,7 +10,7 @@ import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
 import {API_GATEWAY_ADDRESS} from "./Home";
 
-
+// This component defines the recipes page
 export function Recipes() {
     const [loading, setLoading] = React.useState(false)
     const [voidMessage, setVoidMessage] = React.useState("No recipes available for your pantry!");
@@ -63,6 +63,7 @@ export function Recipes() {
         }
     }
 
+    // this allows the spinner to show when is loading recipes
     const displayMessageOrSpinner = (items) => {
         if (serviceAvailable) {
             if (items.recipes.length == 1) {

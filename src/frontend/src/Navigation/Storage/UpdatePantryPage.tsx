@@ -1,7 +1,7 @@
 // this is called by the route /updatePantryPage by ...
 import {useLocation, useNavigate} from "react-router-dom";
 import React from "react";
-import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
+import {Col, Container, Form, InputGroup, Row} from "react-bootstrap";
 import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/Home";
@@ -17,6 +17,7 @@ import {
     UseNumberInput
 } from "../../Widgets/FormWidgets";
 
+// this component defines the update pantry page
 export function UpdatePantryPage() {
     const {state} = useLocation();
     const productName = state.item.product_name;
@@ -40,7 +41,6 @@ function UpdatePantryForm({item}) {
     const defaultExpiration = Timestamp.today();
     console.log(defaultExpiration);
     const [itemName, setItemName] = React.useState(item.item_name);
-    const [submitting, setSubmitting] = React.useState(true);
     const [type, setType] = React.useState(item.type);
     const [unit, setUnit] = React.useState(item.unit);
     const [quantity, setQuantity] = React.useState(item.quantity);
@@ -58,8 +58,6 @@ function UpdatePantryForm({item}) {
         console.log("called submitUpdated item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
-        setSubmitting(true);
-        // TODO: convertire timestamp in stringa yyyy-mm-dd
         let request = API_GATEWAY_ADDRESS + '/updateProductInStorage' + '/' + itemName.trim() + '/' + quantity +
             '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration + '/' + lastUsed + '/'
             + useNumber + '/' + totalUseNumber + '/' + timesBought + '/' + buyDate;
@@ -67,7 +65,6 @@ function UpdatePantryForm({item}) {
         fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
-                setSubmitting(false);
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })

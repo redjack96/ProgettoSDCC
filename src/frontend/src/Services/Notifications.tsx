@@ -1,8 +1,8 @@
 import React, {useState} from "react";
-import {Alert, Button, Col, Container, Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS} from "./Home";
 import {AlertExpired, AlertFinished} from "../Widgets/NotificationWidgets";
 
+// this component defines the Notification area
 export function Notifications() {
     const [notifications, setNotifications] = useState({
         notification: []

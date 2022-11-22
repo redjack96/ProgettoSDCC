@@ -19,10 +19,6 @@ public class RedisCache {
     public static final int THREE_MINUTES_TEST = 3 * 60;
     private final int expiration;
 
-    public int getExpiration() {
-        return expiration;
-    }
-
     public RedisCache() {
         this.jedis = new Jedis("redis-notification", 6379);
         this.expiration = THREE_MINUTES_TEST;
@@ -87,10 +83,7 @@ public class RedisCache {
             return "";
         }
         LOGGER.info(">>>>>>>>>>>>>>>>>>>>>" + Arrays.toString(newNotifications));
-        // jedis.srem(setKey, newNotifications);
-        // also adds them to the set of the OLD values, if not already present
-        // var setKeyOld = createKeyForSet(topic, false);
-        // jedis.sadd(setKeyOld, newNotifications);
+
         jedis.expire(setKey, this.expiration);
 
         StringBuilder s = new StringBuilder();

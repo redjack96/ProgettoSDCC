@@ -4,8 +4,6 @@ import {Helmet} from 'react-helmet';
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import {Storage} from "./Services/Storage";
 import {Recipes} from "./Services/Recipes";
-import {Summary} from "./Services/Summary";
-import {Consumptions} from "./Services/Consumptions";
 import Home from "./Services/Home";
 import UpdateProductPage from "./Navigation/Shopping/UpdateProductPage";
 import {UpdatePantryPage} from "./Navigation/Storage/UpdatePantryPage";
@@ -40,5 +38,4 @@ export function App() {
     );
 }
 
-// TODO: importante, per eseguire fuori da docker con hot reload, usa:
-//  npm start --host 0.0.0.0 --port 3000 --disableHostCheck true
+// To run, use: npm start --host 0.0.0.0 --port 3000 --disableHostCheck true

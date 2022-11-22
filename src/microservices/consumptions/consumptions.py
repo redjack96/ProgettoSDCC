@@ -159,7 +159,7 @@ class ConsumptionEstimator:
             self.week_indexes[product_name] = 1
         print("products list: ", self.total_product_list)
 
-    def increment_week(self, product_name: str, week_num: int):  # TODO mandargli il valore della vera settimana
+    def increment_week(self, product_name: str, week_num: int):
         old_idx = self.week_indexes[product_name]
         if week_num > old_idx:
             self.week_indexes[product_name] = old_idx + 1
@@ -233,7 +233,7 @@ class ConsumptionEstimator:
         X_test = self.product_X_test_dict[prod_name]
         y_test = self.product_y_test_dict[prod_name]
         # IMPORTANT: the online fitting is activated only if there sare more than 20 observations in the dataset
-        # due to poor prediction if the dataset is very little
+        # due to poor prediction if the dataset is very small
         if self.week_indexes[prod_name] >= 20:
             self.models[prod_name].partial_fit(X_train, y_train)  # executes a partial training like walk forward
         else:

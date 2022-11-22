@@ -282,12 +282,15 @@ class Cassandra:
     def fill_missing_entries(self, last_week_registered: int, week_num: int, product_name: str):
         # Select the entry for the product name corresponding to the previous week to calculate remainder
         print("last week registered:", last_week_registered)
+
+        # for the first week, initialize all features with default values
         if last_week_registered == 1:
             # No previous observations
             rem = 0
             print("No previous observations")
             # Fill missing weeks with empty entry
             for week in range(1, week_num):
+                # insert into cassandra
                 self.insert_entry([week, product_name, 0, 0, 0, 0, 0.0])
         else:
             # There are previous observations
@@ -300,6 +303,7 @@ class Cassandra:
             rem = entry.iloc[0]["n_rem"]
             # Fill missing weeks with previous entry
             for week in range(last_week_registered, week_num):
+                # insert into cassandra
                 self.insert_entry([week, product_name, bought, expired, used, rem, cons])
         print("previous rem:", rem)
 

@@ -10,6 +10,9 @@ import {Summary} from "../../Services/Summary";
 import {Consumptions} from "../../Services/Consumptions";
 import {Notifications} from "../../Services/Notifications";
 
+/**
+ * This component renders the dashboard for notifications, consumptions and summary microservices
+ */
 export function Statistics() {
     return(
         <Container>

@@ -42,7 +42,7 @@ impl Database {
             ).expect("Create table failed!");
     }
 
-    /// prepares a sql query. FIXME: it is vulnerable to SQL injection
+    /// prepares a sql query.
     /// # Arguments
     ///
     /// * `product`: &ProductItem to select, insert, update or remove
@@ -51,7 +51,6 @@ impl Database {
     /// * `former_expiration`: only for updates: if not used, use 0
     ///
     /// returns: String query
-    /// FIXME trasformare in metodi della struct database separati senza il match!!!
     pub fn prepare_product_statement(&self, product: Option<&ProductItem>, kind: QueryType,
                                      former_quantity: Option<i32>,
                                      former_expiration: Option<i64>,
@@ -118,7 +117,6 @@ impl Database {
     }
 
     pub fn execute_select_query(&self, query: &str) -> Vec<ProductItem> {
-        //TODO: ritorna errore se query non contiene select
         let mut cursor = self.conn
             .prepare(query)
             .unwrap()

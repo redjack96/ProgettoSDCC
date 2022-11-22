@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Unused. Can be used to deserialize a JSON string into a SensorDataModel
+ * Can be used to deserialize a JSON string into a LogEntry
  */
 public class JsonDeserializer implements Deserializer<LogEntry> {
     private final ObjectMapper objectMapper = new ObjectMapper();
