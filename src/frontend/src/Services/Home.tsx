@@ -269,11 +269,9 @@ export namespace ProductType {
             case 1: {
                 return images.fish;
             }
-
             case 2: {
                 return images.fruit;
             }
-
             case 3: {
                 return images.veggies;
             }
