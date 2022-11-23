@@ -33,6 +33,7 @@ extern crate serde_derive;
 use lazy_static::lazy_static;
 use api_gateway::notifications::notification_client::NotificationClient;
 use api_gateway::notifications::{NotificationList, NotificationRequest};
+use ginepro::{LoadBalancedChannel, LoadBalancedChannelBuilder};
 
 lazy_static! {
     static ref CIRCUIT_BREAKER: Mutex<StateMachine<OrElse<SuccessRateOverTimeWindow<EqualJittered>, ConsecutiveFailures<EqualJittered>>, ()>> = Mutex::new(Config::new().build());
@@ -87,6 +88,16 @@ fn to_json_response<T>(obj: T) -> HttpResponse where T: Serialize {
 }
 
 fn to_json_unavailable(err: failsafe::Error<tonic::transport::Error>) -> HttpResponse {
+    let msg = format!("Service Unavailable, retry later. Error: {}", err);
+    let string = serde_json::json!({
+        "msg": &msg,
+    });
+    HttpResponse::ServiceUnavailable()
+        .insert_header(("Access-Control-Allow-Origin", "*"))
+        .body(string.to_string())
+}
+
+fn to_json_unavailable_lb(err: failsafe::Error<anyhow::Error>) -> HttpResponse {
     let msg = format!("Service Unavailable, retry later. Error: {}", err);
     let string = serde_json::json!({
         "msg": &msg,
@@ -405,7 +416,7 @@ async fn add_product_to_storage(req: HttpRequest) -> impl Responder {
     );
     println!("Request created");
     // Invio la richiesta e attendo la risposta:
-    let response = CIRCUIT_BREAKER.lock().await.call(client.add_product_to_pantry(request))
+    let response = client.add_product_to_pantry(request)
         .await
         .unwrap_or(Response::new(OurResponse { msg: "Empty response".to_string() }))
         .into_inner();
@@ -441,7 +452,7 @@ async fn drop_product_from_storage(req: HttpRequest) -> impl Responder {
     to_json_response(response)
 }
 
-// FIXME: aggiornare OPZIONALMENTE almeno uno tra quantity, expiration, lastUsed, useNumber, totalUseNumber timesIsBought buyDate. Usa Query!!
+// aggiornare OPZIONALMENTE almeno uno tra quantity, expiration, lastUsed, useNumber, totalUseNumber timesIsBought buyDate. Usa Query!!
 #[post("/updateProductInStorage/{name}/{quantity}/{unit}/{type}/{expiration}/{lastUsed}/{useNumber}/{totalUseNumber}/{timesIsBought}/{buyDate}")]
 async fn update_product_in_storage(req: HttpRequest) -> impl Responder {
     let configs = get_properties();
