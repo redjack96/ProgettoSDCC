@@ -11,18 +11,18 @@ import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Produces a summary with some infos of the Distributed Storage
+ * A gRPC server that produces a summary with some info about the Storage products in a time period.
  */
 public class SummaryServer {
     private static final Logger LOGGER = Logger.getLogger(SummaryServer.class.getSimpleName());
@@ -35,8 +35,7 @@ public class SummaryServer {
         LOGGER.setLevel(Level.INFO);
         Properties prop = new Properties();
         try {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            InputStream stream = loader.getResourceAsStream("config.properties");
+            var stream = new FileInputStream("src/main/resources/config.properties");
             prop.load(stream);
         } catch (IOException e) {
             e.printStackTrace();
@@ -45,6 +44,10 @@ public class SummaryServer {
         this.address = prop.getProperty("SummaryAddress");
     }
 
+    /**
+     * Starts the hRPC server and sets the shutdown hook.
+     * @throws IOException
+     */
     private void start() throws IOException {
         SocketAddress address = new InetSocketAddress(this.address, this.port);
         this.server = NettyServerBuilder.forAddress(address)
@@ -63,6 +66,10 @@ public class SummaryServer {
         }));
     }
 
+    /**
+     * Stops the grpc server and influxDB client.
+     * @throws InterruptedException
+     */
     private void stop() throws InterruptedException {
         if (server != null) {
             server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
@@ -76,6 +83,12 @@ public class SummaryServer {
         }
     }
 
+    /**
+     * Runs the chronjob thread for consumption and the kafka thread.
+     * @param args
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public static void main(String[] args) throws IOException, InterruptedException{
         final var server = new SummaryServer();
         server.start();
@@ -97,6 +110,7 @@ public class SummaryServer {
         server.blockUntilShutdown();
     }
 
+    // this class implements the grpc abstract class
     static final class SummaryImpl extends SummaryGrpc.SummaryImplBase{
         @Override
         public void weekSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {

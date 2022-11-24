@@ -16,7 +16,7 @@ week_num: int = 0
 
 
 def uniform_quantity_by_unit(unit, quantity):
-    # uniform quantity converting everything to Grams
+    # uniforms quantity converting everything to Grams
     if unit == shopping_list_pb2.Kg:
         # 1 Kg = 1000 Grams
         new_quantity = quantity * 1000
@@ -31,7 +31,10 @@ def uniform_quantity_by_unit(unit, quantity):
     return new_quantity
 
 
+# the gRPC server functions
 class Estimator(consumptions_pb2_grpc.EstimatorServicer):
+
+    # this is called by the frontend when asking the consumptions for all product in pantry
     def Predict(self, request: consumptions_pb2.PredictRequest, context):
         print("Received predict request")
         predicted = estimator.predict_consumptions()
@@ -44,23 +47,30 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
         print("RESPONSE: ", response)
         return consumptions_pb2.PredictedDataList(predicted=response)
 
+    # this is called periodically by summary
     def TrainModel(self, item: consumptions_pb2.TrainRequest, context):
-        print("I'm here")
         print("Received request with param: %s" % item.observations)
         global week_num
         # Save new observation data into persistence
         obs = item.observations
         week_num = week_num + 1  # increment the global week counter
         print("NEW WEEK: ", week_num)
-        estimator.new_training()  # sets the list of new products to []
+
+        # sets the list of new products to []
+        estimator.new_training()
+        # for each product to train on
         for instance in obs:
             product_name = instance.productName
-            estimator.add_new_product(product_name)  # Add product to the product list in the estimator
-            # Uniform the product quantity to Grams unit
+            # Add product to the product list variable in the estimator
+            estimator.add_new_product(product_name)
+            # Converts the product quantity to grams
             new_quantity = uniform_quantity_by_unit(instance.unit, instance.quantity)
             req_type = instance.requestType
+            # Fills entry that are missing in the previous week with the same data as the last non-missing week
             cassandra_conn.fill_missing_entries(estimator.get_last_week_index(product_name), week_num, product_name)
+            # updates the quantities
             cassandra_conn.update_quantity(week_num, product_name, new_quantity, req_type)
+            # computes the features for the product and the week
             cassandra_conn.calculate_features_of_product(week_num, product_name)
             estimator.increment_week(product_name, week_num)  # Increment the last week registered ref
         # Re-train the model (only for last added elements)

@@ -1,7 +1,8 @@
 import React, {useState} from "react";
 import { Row } from "react-bootstrap";
-import {API_GATEWAY_ADDRESS, ProductType, Unit} from "./Home";
+import {API_GATEWAY_ADDRESS} from "./Home";
 
+// this component defines the Consumption table
 export function Consumptions() {
     const [loading, setLoading] = React.useState(false)
     const [voidMessage, setVoidMessage] = React.useState("No consumption data available.");
@@ -35,7 +36,7 @@ export function Consumptions() {
                 })
                 .catch(e => console.log("Errore: " + e))
         }
-    }, [consData]);
+    }, [consData, loading]);
 
     return(
         <div className="auto-max scrollable">

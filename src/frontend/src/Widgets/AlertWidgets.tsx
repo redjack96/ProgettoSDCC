@@ -2,6 +2,8 @@ import Modal from "react-bootstrap/Modal";
 import {Button} from "react-bootstrap";
 import React from "react";
 
+/*This file define some simple alert modals*/
+
 export function ModalAlert({showAlert, centralPart, setShowAlert}) {
     return (
         <Modal show={showAlert}>

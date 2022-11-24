@@ -9,7 +9,7 @@ import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../../Services/
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../../Widgets/FormWidgets";
 
-
+// this is the definition of the addProductToPantry page.
 export function AddPantryPage() {
     const {state} = useLocation();
     console.log("items: ", state.items)
@@ -31,13 +31,13 @@ export function AddPantryPage() {
         </Container>
     );
 }
-
+// This form allows to add a new product directly to pantry
 export function AddPantryForm({onAdd}) {
     const [itemName, setItemName] = React.useState('');
     const [quantity, setQuantity] = React.useState(1);
     const [type, setType] = React.useState(ProductType.Other);
     const [unit, setUnit] = React.useState(Unit.Packet);
-    const [expiration, setExpiration] = React.useState(Timestamp.today); // FIXME: forse qua ci vuole un numero, non una stringa.
+    const [expiration, setExpiration] = React.useState(Timestamp.today);
     // this state is the status of this component. If it is submitting, the item is being added. If not it is already added.
     const [submitting, setSubmitting] = React.useState(false);
 

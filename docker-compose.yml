@@ -74,6 +74,7 @@ services:
     depends_on:
       - product_storage
       - redis-notifications
+      - kafka
 
   summary:
     image: "redjack96/summary"
@@ -88,6 +89,7 @@ services:
     depends_on:
       - influxdb
       - consumptions
+      - kafka
 
   recipes:
     image: "redjack96/recipes"

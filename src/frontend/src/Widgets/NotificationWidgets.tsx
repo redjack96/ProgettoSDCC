@@ -1,7 +1,6 @@
-import {Alert, Button, Col, Container, Form} from "react-bootstrap";
+import {Alert, Button, Col, Container} from "react-bootstrap";
 import React from "react";
-import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../Services/Home";
-import Modal from "react-bootstrap/Modal";
+import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "../Services/Home";
 import {ModalAlert, SimpleModalAlert} from "./AlertWidgets";
 
 export function AlertExpired({notification, onDismiss}) {
@@ -71,10 +70,9 @@ export function AlertFinished({notification, onDismiss}) {
         setShow(false);
     }
     // "You run out of the following products: Branzino, Melanzane, Farina. Do you want to add them to the shopping list?"
-    let lastPart: string = notification.substring("You run out of the following products: ".length, notification.length);
+    let lastPart: string = notification.substring("You run out of the following products: ".length, notification.length); // Branzino, Melanzane, Farina. Do you want to add them to the shopping list?
     let centralPart: string = lastPart.split(".")[0]; // Branzino, Melanzane, Farina
-    let products: string[] = centralPart.split(", ");
-    console.log("products", products);
+    let products: string[] = centralPart.split(", "); // ["Branzino", "Melanzane", "Farina"]
 
     const showModal = () => {
         if (serviceAvailable) {

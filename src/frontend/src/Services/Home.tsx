@@ -7,15 +7,10 @@ import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
 import {
     MDBCard,
-    MDBCardBody,
-    MDBCardTitle,
-    MDBCardText,
-    MDBBtn
+    MDBCardBody
 } from 'mdb-react-ui-kit';
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, UnitSelect} from "../Widgets/FormWidgets";
-import {ModalAlert, SimpleModalAlert} from "../Widgets/AlertWidgets";
-import {ResponsiveContainer} from 'recharts';
-import {Grid} from "@mui/material";
+import {SimpleModalAlert} from "../Widgets/AlertWidgets";
 
 function getList(setItems, setVoidMessage) {
     fetch(API_GATEWAY_ADDRESS + '/getList')
@@ -144,7 +139,7 @@ function Home() {
                     <MDBCard className="form mb-3">
                         <MDBCardBody>
                             <h2>Add new item</h2>
-                            <AddItemForm onNewItem={onNewItem}/> {/*FIXME: c'e' qualcosa che non va qui, quando shopping list è down!*/}
+                            <AddItemForm onNewItem={onNewItem}/>
                         </MDBCardBody>
                     </MDBCard>
                     <MDBCard className="form mb-3">
@@ -269,11 +264,9 @@ export namespace ProductType {
             case 1: {
                 return images.fish;
             }
-
             case 2: {
                 return images.fruit;
             }
-
             case 3: {
                 return images.veggies;
             }
@@ -388,7 +381,7 @@ function AddItemForm({onNewItem}) {
     const [quantity, setQuantity] = React.useState(1);
     const [type, setType] = React.useState(ProductType.Other);
     const [unit, setUnit] = React.useState(Unit.Packet);
-    const [expiration, setExpiration] = React.useState(Timestamp.today()); // FIXME: forse qua ci vuole un numero, non una stringa.
+    const [expiration, setExpiration] = React.useState(Timestamp.today());
     // this state is the status of this component. If it is submitting, the item is being added. If not it is already added.
     const [submitting, setSubmitting] = React.useState(false);
 
@@ -398,7 +391,6 @@ function AddItemForm({onNewItem}) {
         e.preventDefault();
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-        // TODO: convertire timestamp in stringa yyyy-mm-dd
         let request = API_GATEWAY_ADDRESS + '/addProduct/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
@@ -413,8 +405,7 @@ function AddItemForm({onNewItem}) {
                 setItemName('');
             })
     }
-    // We return a Form with an input group that is a Control (textfield) plus a Button.
-    // TODO: We will need to add also the quantity, type and expiration fields.
+    // We return a Form with an input group that is a Control (textfield) and a Button.
     return (
         <Form onSubmit={submitNewItem}>
             <Col>
@@ -462,9 +453,9 @@ function AddItemForm({onNewItem}) {
  */
 function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
 
-    // called when clicking the addToCart button. TODO: This button must be also hidden when clicked and the remove from cart shown.!
+    // called when clicking the addToCart button.
     const addToCart = () => {
-        // Watch out! Here we use the ` NOT ' !!!
+        // Watch out! Here to define the string we use the ` NOT ' !!!
         let request = API_GATEWAY_ADDRESS + `/addToCart/${item.product_name}/${Unit.toString(item.unit)}/${ProductType.toString(item.type)}`;
         console.log(request);
         fetch(request, {method: 'POST'})
@@ -478,13 +469,11 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
         fetch(API_GATEWAY_ADDRESS + `/removeFromCart/${item.product_name}/${Unit.toString(item.unit)}/${ProductType.toString(item.type)}`, {method: 'POST'})
             .then(r => r.json())
             // here it will receive the json object given in input?
-            .then(() => onItemUpdate(item)) // TODO: forse bisogna farsi restituire l'item da rust e non un messaggio per dire ok fatto!
-        // FIXME: qua ho modificato rispetto a then(onItemUpdate) perché la risposta che riceviamo dall'API non e' un oggetto, ma un messaggio
+            .then(() => onItemUpdate(item))
     }
 
     // called when removing an item
     const removeItem = () => {
-        // TODO: qua andrebbe aggiunto anche unit e type.
         fetch(API_GATEWAY_ADDRESS + `/removeProduct/${item.product_name}/${Unit.toString(item.unit)}/${ProductType.toString(item.type)}`, {method: 'POST'})
             .then(r => {
                 console.log(r.json());
@@ -499,8 +488,6 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     const toProductPage = () => {
         navigate('/updateProductPage', {
             state: {
-                // id: 1,
-                // name: 'Benissimo! Aggiorniamo ' + item.product_name,
                 item: item,
             }
         });
@@ -509,11 +496,8 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
     console.log("item is added to cart? " + item.added_to_cart);
     return (
         <MDBCard className="mb-3">
-            {/*<img src="../res/images/Avenue-of-the-Baobobs-Madagascar 2.png" className="card-img-top" alt="product-image"/>*/}
             <MDBCardBody className="card-body">
                 <ItemInfo item={item}/>
-                {/*<button type="submit" name="viewinfo" className="btn btn-primary" value="${btninfoid}">More Info...</button>*/}
-                {/*<AddButton/>*/}
                 <Container>
                     <ButtonGroup>
                         <Button
@@ -524,7 +508,6 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
                         >
                             Remove
                         </Button>
-                        {/*<Checkbox label={"Add to cart"} onFunc={addToCart} offFunc={removeFromCart}/>*/}
                         <Button
                             size="sm"
                             variant="outline-info"
@@ -560,16 +543,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
 function ItemInfo({item}) {
 
     const extractAndReformatDateToShow = (expiration: Timestamp) => {
-        console.log(expiration);
         let timestamp = new Timestamp(expiration.seconds);
-        // Timestamp(sec, nsec) -> Date -> DateString (dd-mm-yyyy)
-        console.log(timestamp);
-        console.log(timestamp.getShowString());
-        // let ts =  new Timestamp(timestamp);
-        // console.log(ts);
-        // let date = new Date(ts.getSeconds());
-        // console.log(date);
-        // console.log(date.toDateString());
         return timestamp.getShowString();
     }
 

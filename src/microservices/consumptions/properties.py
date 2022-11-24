@@ -1,6 +1,7 @@
 from jproperties import Properties
 
 
+# loads the config.properties file
 class Props:
     ShoppingListPort: int
     ProductStoragePort: int

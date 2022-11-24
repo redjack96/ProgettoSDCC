@@ -13,6 +13,9 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * This class subscribes to "logs" topic on kafka and then writes the logs into influxDB
+ */
 public class KafkaSummaryConsumer implements Runnable {
     private static final Logger log = Logger.getLogger(KafkaSummaryConsumer.class.getSimpleName());
     private final InfluxSink influx;

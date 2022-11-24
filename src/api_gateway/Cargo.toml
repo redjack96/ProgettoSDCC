@@ -19,6 +19,8 @@ serde_derive = "1.0.147"
 serde_json = "1.0.64"
 failsafe = "1.2.0"
 lazy_static = "1.4.0"
+ginepro = "0.5.0" # if gives an error when using cargo check, try cargo clean
+anyhow = "1.0.66"
 
 [build-dependencies]
 tonic-build = "0.8.0"

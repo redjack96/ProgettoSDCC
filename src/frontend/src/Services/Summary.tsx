@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Col, Container, Dropdown, Row} from "react-bootstrap";
+import {Dropdown, Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS} from "./Home";
 
 import {
@@ -12,9 +12,10 @@ import {
     MDBTabsLink,
     MDBTabsPane
 } from "mdb-react-ui-kit";
+
+// this component defines the summary page
 export function Summary() {
-    const [loading, setLoading] = useState(true);
-    const [dropValue, setDropValue] = useState("Weekly");
+    const [dropValue, setDropValue] = useState("Select Period...");
     const [verticalActive, setVerticalActive] = useState('tab1');
     const [voidMessage, setVoidMessage] = useState("");
     const [summaryData, setSummaryData] = useState({
@@ -62,7 +63,7 @@ export function Summary() {
                     setVoidMessage("");
                 }
             })
-            .catch(e => console.log("Errore: " + e));
+            .catch(e => console.log("Error: " + e));
     }
 
     const onMonthly = () => {
@@ -92,7 +93,7 @@ export function Summary() {
                     setVoidMessage("");
                 }
             })
-            .catch(e => console.log("Errore: " + e));
+            .catch(e => console.log("Error: " + e));
     }
 
     const onTotal = () => {
@@ -122,16 +123,8 @@ export function Summary() {
                     setVoidMessage("");
                 }
             })
-            .catch(e => console.log("Errore: " + e));
+            .catch(e => console.log("Error: " + e));
     }
-
-    React.useEffect(() => {
-        if (loading){
-            setLoading(false);
-            onWeekly();
-        }
-    }, [dropValue, verticalActive, voidMessage, summaryData]);
-
 
     return (
         <React.Fragment>

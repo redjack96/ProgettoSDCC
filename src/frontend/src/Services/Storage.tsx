@@ -4,13 +4,13 @@ import {useNavigate} from "react-router-dom";
 import {API_GATEWAY_ADDRESS, ProductType, Timestamp, Unit} from "./Home";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
-import {MDBCard, MDBCardBody, MDBTableHead} from "mdb-react-ui-kit";
-import {NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect} from "../Widgets/FormWidgets";
+import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
+import {NameInput, ProductTypeSelect, QuantityInput, UnitSelect} from "../Widgets/FormWidgets";
 import {AddPantryForm} from "../Navigation/Storage/AddPantryPage";
 import {StatusAvailabilityBadge, StatusExpirationBadge} from "../Widgets/StatusBadge";
 import {TableBody, TableHead, TableRow} from "@mui/material";
 
-
+// this component defines the storage page
 export function Storage() {
     const [loading, setLoading] = React.useState(false)
     const [items, setItems] = React.useState({
@@ -20,7 +20,7 @@ export function Storage() {
     });
     const [voidMessage, setVoidMessage] = React.useState("No products in storage.");
 
-    // called on page load, loads the entire list from storage microservice
+    // called on page load, loads the entire list from storage microservice (if not already loaded)
     React.useEffect(() => {
         if (!loading) {
             console.log("reloading list from server");
@@ -49,6 +49,7 @@ export function Storage() {
         }
     }, [items]);
 
+    // this callback is used for the useItem form
     const handleUseItems = React.useCallback(
         (usedItem: PantryItem) => {
             const newState = items.products.map(obj => {
@@ -228,7 +229,7 @@ export function UseForm({onUseItem}) {
     )
 }
 
-
+// this is the pantry table
 export function PantryView({items, voidMessage, handleRemove}) {
     return (
         <div className="tableContainer">
@@ -259,7 +260,7 @@ export function PantryView({items, voidMessage, handleRemove}) {
     )
 }
 
-
+// this is the single row of the pantry
 export function PantryElement({item, onItemRemoval}) {
     // called when removing an item
     const removePantryItem = () => {

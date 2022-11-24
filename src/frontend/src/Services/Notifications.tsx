@@ -1,8 +1,8 @@
 import React, {useState} from "react";
-import {Alert, Button, Col, Container, Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS} from "./Home";
 import {AlertExpired, AlertFinished} from "../Widgets/NotificationWidgets";
 
+// this component defines the Notification area
 export function Notifications() {
     const [notifications, setNotifications] = useState({
         notification: []
@@ -55,7 +55,7 @@ export function Notifications() {
                 .catch(e => console.log("Errore: " + e))
             console.log(notifications);
         }
-    }, [notifications, viewedNotifications]);
+    }, [notifications, viewedNotifications, loading]);
 
     const onDismiss = notification => {
         let index = viewedNotifications.notification.indexOf(notification);

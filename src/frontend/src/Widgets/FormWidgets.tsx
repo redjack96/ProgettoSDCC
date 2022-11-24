@@ -1,8 +1,8 @@
 import {Button, Col, Form} from "react-bootstrap";
 import React from "react";
 import {ProductType, Unit} from "../Services/Home";
-import {polarToCartesian} from "recharts/types/util/PolarUtils";
 
+/*This file defines in one place the inputs that are used for several forms*/
 
 export function NameInput({itemName, setItemName, isUpdate}) {
     return (

@@ -13,23 +13,24 @@ This project is made of 6 microservices:
 5. **NotificationsService**: sends e-mail or push notifications when an item is about to expire or a recipe can be done. (Java)
 6. **SummaryService**: computes the summary statistics about shopped, used and expired item last week or last month. (Java)
 
-TODO: NotificationService and ProductStorageService communication is decoupled with the usage of Kafka Publish Subscribe Framework.
+NotificationService, SummaryService and ProductStorageService communication is decoupled with the usage of Kafka Publish Subscribe Framework.
 
-TODO: The following pattern are implemented:
+The following pattern are implemented:
 
-- Circuit Breaker:
-- Database per Service:
 - API Gateway: implemented in Rust. It's a REST API server (built with crate actix-web) and a grpc client (with crates prost+tonic). 
+- Circuit Breaker: implemented in ApiGateway, ShoppingList, Summary with libraries inspired by hystrix
+- Database per Service: every service has its own database. Only ProductStorageService's database is internal to the container, because it's stateful.
 
-## Development Build single container
+The frontend is built in React-Bootstrap with Typescript.
+## Release Run
 
-Use docker-build.sh with a number 1-6
+Use docker compose:
 
 ```console
-$ ./docker-build.sh [1-6]
+$ docker compose up -d
 ```
-## Build and Run single container (compose service)
 
+## Build and Run a single compose service
 ```console
 $ docker compose up <service> --build
 ```
@@ -38,51 +39,86 @@ for example:
 $ docker compose up shopping_list --build
 ```
 
-## TODO: Release Run
+## Deploy on AWS with terraform
+To load credentials from [LAB](https://www.awsacademy.com/LMS_Login):
+1) Copy AWS CLI credentials from AWS Details and paste it in terraform/credentials
+2) Download PEM and save it in terraform/labsuser.pem
+3) `terraform$ chmod 400 terraform/labsuser.pem`
+4) `terraform$ terraform apply`
+5) To SSH to EC2 VM:
 
-Use docker-compose:
+`terraform$ ssh -i labsuser.pem ec2-user@<public-ip-see-output>`
+
+## EC2 Configuration
+To copy files from local to EC2 VM (remember to change <public-ip> to the ip obtained from `terraform apply`):
+
+`ProgettoSDCC$ scp -i terraform/labsuser.pem docker-compose.yml ec2-user@<public-ip>:~/docker-compose.yml`
+
+`ProgettoSDCC$ scp -i terraform/labsuser.pem config.properties ec2-user@<public-ip>:~/config.properties`
+
+To copy an entire directory to EC2:
+
+`ProgettoSDCC$ scp -r -i terraform/labsuser.pem docker ec2-user@<public-ip>:~/docker`
+
+`ProgettoSDCC$ scp -pr -i terraform/labsuser.pem src/proto ec2-user@<public-ip>:~/src/proto`
+
+scp -r -i terraform/labsuser.pem src/frontend ec2-user@<public-ip>:~/src/frontend
+
+From the SSHed EC2, you'll need to install some programs, like docker (we use Amazon Linux VMs, so use `yum` instead of `apt`):
 
 ```console
-$ docker-compose up -d
+sudo yum update && sudo yum install docker
+sudo mkdir -p /usr/local/lib/docker/cli-plugins/
+sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+systemctl start docker
+sudo gpasswd -a $USER docker
 ```
 
-## Frontend UI
+After this, re-login to the EC2 instance to apply changes. Now you can use docker and docker compose without sudo:
 
-TODO!
+`docker compose up api_gateway shopping_list mongo`
 
-## DEV
-### Use MongoDB:
-Call the following command from terminal to run mongo container
-```console
-$ docker exec -it mongo /bin/bash
-```
-Run the following command to activate mongo shell:
-```console
-$ mongosh
-```
-Once in the mongo shell, run the following command to authenticate
-```console
-> use admin
-> admin.auth("user-name", "password")
-```
+When finished:
+`terraform destroy`
 
-Some useful mongo commands:
-- show dbs: shows all the available databases
-- use <dbs-name>: switches context to a certain database (creates a new one if not existing)
-- db.<collection-name>.insertOne({att1: <attr1>, ...}): insert one single element
-- db.<collection-name>.insertMany({...}, {...}): insert many elements
-- db.<collection-name>.find(): search for alla elements in a collection
 
-```js
-React.useEffect(() => {
-    fetch('http://localhost:8007')
-        .then(r => {
-            let x = r.json();
-            console.log(x);
-            console.log("ye, che bello!!!!");
-            return x;
-        })
-        .then(setItems)
-        .catch(e => console.log("Errore: " + e))
-}, []);
-```
+<a href="https://www.rust-lang.org/it">
+<img src="https://img.icons8.com/color/2x/rust-programming-language.png" width="150" height="150">
+</a>
+<a href="https://www.java.com/it/">
+<img src="https://img.icons8.com/color/2x/java-coffee-cup-logo.png" width="150" height="150">
+</a>
+<a href="https://go.dev/">
+<img src="https://img.icons8.com/color/2x/golang.png" width="150" height="150">
+</a>
+<a href="https://www.python.org/">
+<img src="https://img.icons8.com/color/2x/python.png" width="150" height="150">
+</a>
+<a href="https://www.typescriptlang.org/">
+<img src="https://img.icons8.com/color/2x/typescript.png" width="150" height="150">
+</a>
+<a href="https://www.sqlite.org/index.html">
+<img src="https://cdn.icon-icons.com/icons2/2699/PNG/96/sqlite_logo_icon_169724.png" width="150" height="150">
+</a>
+<a href="https://www.mongodb.com/">
+<img src="https://cdn.icon-icons.com/icons2/2415/PNG/96/mongodb_original_wordmark_logo_icon_146425.png" width="150" height="150">
+</a>
+<a href="https://www.influxdata.com/">
+<img src="https://img.icons8.com/flat-round/2x/influxdb.png" width="150" height="150">
+</a>
+<a href="https://cassandra.apache.org/_/index.html">
+<img src="https://www.vectorlogo.zone/logos/apache_cassandra/apache_cassandra-icon.svg" width="150" height="150">
+</a>
+<a href="https://kafka.apache.org/24/documentation.html">
+<img src="https://iconape.com/wp-content/files/vq/370992/svg/370992.svg" width="150" height="150">
+</a>
+<a href="https://redis.io">
+<img src="https://static.cdnlogo.com/logos/r/31/redis.svg" width="150" height="150">
+</a>
+<a href="https://it.reactjs.org/">
+<img src="https://img.icons8.com/officel/2x/react.png" width="150" height="150">
+</a>
+
+
+

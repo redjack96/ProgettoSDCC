@@ -1,17 +1,15 @@
 import React from 'react'
 import {useLocation, useNavigate} from "react-router-dom";
-import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
+import {Col, Container, Form, InputGroup, Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS, Item, ProductType, Timestamp, Unit} from "../../Services/Home";
 import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
 import {MDBCard, MDBCardBody} from "mdb-react-ui-kit";
-import {BackButton, ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButton, UnitSelect, UpdateButton} from "../../Widgets/FormWidgets";
-import {Grid} from "@mui/material";
+import {BackButton, ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, UnitSelect, UpdateButton} from "../../Widgets/FormWidgets";
 
 // this is called by the route /updateProductPage by the ItemDisplay's Update button
 function UpdateProductPage() {
     const location = useLocation();
-    const productName = location.state.item.product_name;
     return (
         <Container>
             <Navbar/>
@@ -34,7 +32,6 @@ interface UpdateFormProps {
 function UpdateForm({item}: UpdateFormProps) {
     const defaultExpiration = Timestamp.today();
     const [itemName, setItemName] = React.useState(item.product_name);
-    const [submitting, setSubmitting] = React.useState(true);
     const [type, setType] = React.useState(item.type);
     const [unit, setUnit] = React.useState(item.unit);
     const [quantity, setQuantity] = React.useState(item.quantity);
@@ -47,14 +44,11 @@ function UpdateForm({item}: UpdateFormProps) {
         console.log("called submitUpdated item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
-        setSubmitting(true);
-        // TODO: convertire timestamp in stringa yyyy-mm-dd
         let request = API_GATEWAY_ADDRESS + '/updateProduct?product_name=' + itemName.trim() + '&unit=' + Unit.toString(unit) + '&type=' + ProductType.toString(type) + '&quantity=' + quantity + '&expiration=' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
-                setSubmitting(false);
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })

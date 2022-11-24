@@ -1,5 +1,5 @@
 pub mod shopping_list {
-    // Serve a generare il codice automaticamente per i file .proto
+    // This auto-generates the rust proto files
     tonic::include_proto!("shopping_list");
 }
 pub mod product_storage {
