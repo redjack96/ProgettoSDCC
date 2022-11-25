@@ -29,11 +29,11 @@ resource "aws_instance" "ec2_instances" {
                              #!/bin/bash
                              sudo yum -y update && sudo yum -y install docker
                              systemctl start docker
-                             sudo gpasswd -a $USER docker
+                             sudo gpasswd -a ec2-user docker
                            EOF
 
   tags = {
-    Name = "terraform-instance-${count.index}}"
+    Name = "terraform-instance-${count.index}"
   }
 }
 
@@ -116,6 +116,8 @@ output "public_ip" {
 }
 
 
-# 34.234.91.106
-# 54.172.40.156
-# 54.211.66.163
+# 54.209.61.228
+# 52.90.2.73
+# 54.227.69.109
+
+

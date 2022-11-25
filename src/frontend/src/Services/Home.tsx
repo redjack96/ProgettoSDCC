@@ -48,7 +48,9 @@ function Home() {
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
         if (!loading) {
-            console.log("reloading list from server");
+            console.log("Reloading list from server");
+            console.log("Node Env: ", process.env.NODE_ENV);
+            console.log("api gateway address: ", API_GATEWAY_ADDRESS);
             setLoading(true);
             getList(setItems, setVoidMessage);
         }
@@ -171,7 +173,7 @@ function Home() {
 }
 
 
-export const API_GATEWAY_ADDRESS = "http://localhost:8007"
+export const API_GATEWAY_ADDRESS = "http://" + (process.env.NODE_ENV === "production" ? "api_gateway" : "localhost") + ":8007"
 // TODO: Qua bisogna mettere un indirizzo diverso da localhost!!! Forse dobbiamo usare AWS.
 //  Puoi provare sul tuo cellulare (connesso alla stessa rete) se sostituisci localhost con l'ip assegnato dal router wifi (es. 192.168.1.9)
 

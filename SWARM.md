@@ -9,18 +9,7 @@ second shell: `ssh -i labsuser.pem ec2-user@54.172.40.156` (change the ip)
 
 third shell: `ssh -i labsuser.pem ec2-user@54.211.66.163` (change the ip)
 
-2) On one of the EC2 instance, use `ifconfig` and copy the ip named "eth0", for example "172.31.30.79". Example output:
-
-```console
-eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 9001
-inet 172.31.30.79  netmask 255.255.240.0  broadcast 172.31.31.255
-inet6 fe80::860:85ff:fe5f:7fe9  prefixlen 64  scopeid 0x20<link>
-ether 0a:60:85:5f:7f:e9  txqueuelen 1000  (Ethernet)
-RX packets 146396  bytes 198264893 (189.0 MiB)
-RX errors 0  dropped 0  overruns 0  frame 0
-TX packets 16065  bytes 1612072 (1.5 MiB)
-TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-```
+2) On one of the EC2 instance, use `hostname -i` or `ifconfig eth0`and copy the **private ip** that you get, for example "172.31.30.79".
 
 3) On the same EC2 instance, use (use the correct ip)
 
@@ -38,7 +27,7 @@ To add a manager to this swarm, run 'docker swarm join-token manager' and follow
     
     docker swarm join --token SWMTKN-1-1cvss9vzvptthzxbwzpvar0jvs7p9vy4gncvc77nxq627m3qok-bdlvgq9pl0ppgh0dbvxr3h3dw 172.31.30.79:2377
 
-5) Check active nodes with `docker node ls`. Example Output:
+5) [optional] Check active nodes with `docker node ls`. Example Output:
 ```console
    ID                            HOSTNAME                        STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
    qy3mkh9o7gnis0fj8pwxvoef7     ip-172-31-21-117.ec2.internal   Ready     Active                          20.10.17
@@ -46,4 +35,51 @@ To add a manager to this swarm, run 'docker swarm join-token manager' and follow
    uoh3cqbl1p8qke3orrir05nnc *   ip-172-31-30-79.ec2.internal    Ready     Active         Leader           20.10.17
 ```
 
-6) NOW WHAT?
+6) Copy config.properties file into each of the ec2.
+
+   
+    ProgettoSDCC$ scp -i terraform/labsuser.pem config.properties ec2-user@<public-ip>:config.properties
+
+7) Create an overlay network to connect all the services:
+
+    
+    docker network create --driver overlay sdcc-network
+
+7) Now start the services in the LEADER node:
+
+Mongo DB: TODO: add a volume for mongo!!!
+
+   docker service create --hostname=mongo \
+   --network sdcc-network \
+   --publish target=27017,published=27017 \
+   -e MONGO_INITDB_ROOT_USERNAME='root' \
+   -e MONGO_INITDB_ROOT_PASSWORD='example' \
+   mongo
+
+
+Shopping List: 
+
+    docker service create --hostname=shopping_list \
+                          --mount source=~/config.properties,target=/usr/src/shopping_list/config.properties,type=bind \
+                          --publish target=8001,published=8001 \
+                          --network sdcc-network redjack96/shopping_list 
+
+
+
+Api Gateway:
+
+    docker service create --hostname=api_gateway \
+                        --mount source=~/config.properties,target=/api_gateway/config.properties,type=bind \
+                        --network sdcc-network \
+                        --publish target=8007,published=8007 \
+                        redjack96/api_gateway
+
+8) To remove all services
+
+    
+    docker service rm $(docker service ls -q)
+
+9) To destroy the swarm:
+
+
+    

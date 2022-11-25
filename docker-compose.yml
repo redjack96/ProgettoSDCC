@@ -13,9 +13,6 @@ services:
     build: "src/frontend"
     ports:
       - "3000:3000"
-     # only for development
-    volumes:
-      - "./src/frontend:/app"
 
 
   # --- API-GATEWAY ---
