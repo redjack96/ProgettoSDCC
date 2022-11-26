@@ -33,7 +33,7 @@ extern crate serde_derive;
 use lazy_static::lazy_static;
 use api_gateway::notifications::notification_client::NotificationClient;
 use api_gateway::notifications::{NotificationList, NotificationRequest};
-use ginepro::{LoadBalancedChannel, LoadBalancedChannelBuilder};
+// use ginepro::{LoadBalancedChannel, LoadBalancedChannelBuilder};
 
 lazy_static! {
     static ref CIRCUIT_BREAKER: Mutex<StateMachine<OrElse<SuccessRateOverTimeWindow<EqualJittered>, ConsecutiveFailures<EqualJittered>>, ()>> = Mutex::new(Config::new().build());
@@ -97,15 +97,15 @@ fn to_json_unavailable(err: failsafe::Error<tonic::transport::Error>) -> HttpRes
         .body(string.to_string())
 }
 
-fn to_json_unavailable_lb(err: failsafe::Error<anyhow::Error>) -> HttpResponse {
-    let msg = format!("Service Unavailable, retry later. Error: {}", err);
-    let string = serde_json::json!({
-        "msg": &msg,
-    });
-    HttpResponse::ServiceUnavailable()
-        .insert_header(("Access-Control-Allow-Origin", "*"))
-        .body(string.to_string())
-}
+// fn to_json_unavailable_lb(err: failsafe::Error<anyhow::Error>) -> HttpResponse {
+//     let msg = format!("Service Unavailable, retry later. Error: {}", err);
+//     let string = serde_json::json!({
+//         "msg": &msg,
+//     });
+//     HttpResponse::ServiceUnavailable()
+//         .insert_header(("Access-Control-Allow-Origin", "*"))
+//         .body(string.to_string())
+// }
 
 fn to_json_error(err: failsafe::Error<tonic::Status>) -> HttpResponse {
     let msg = format!("Error in calling the API: {}", err);
@@ -785,7 +785,9 @@ async fn predict() -> impl Responder {
 
 async fn get_channel(address: &String, port: i32) -> Result<Channel, failsafe::Error<tonic::transport::Error>> {
     let uri_str = format!("http://{}:{}", address, port);
+    println!("{}", &uri_str);
     let uri = Uri::try_from(uri_str.clone()).expect(&format!("Error in creating uri {}", uri_str));
+    println!("{:?}", &uri);
     let endpoint = Channel::builder(uri);
     CIRCUIT_BREAKER.lock().await.call(endpoint.connect()).await
 }
@@ -795,7 +797,7 @@ async fn get_channel(address: &String, port: i32) -> Result<Channel, failsafe::E
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let configs = get_properties();
-    println!("inter container address: {}:{}, on the host: localhost:{}", configs.api_gateway_address, configs.api_gateway_port, configs.api_gateway_port);
+    println!("inter container address: 0.0.0.0:{}, on the host: localhost:{}", configs.api_gateway_port, configs.api_gateway_port);
     HttpServer::new(|| {
         App::new()
             .service(add_product)
@@ -817,7 +819,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_recipes_from_pantry)
             .service(get_recipes_from_ingredients)
             .service(predict)
-    }).bind((configs.api_gateway_address, configs.api_gateway_port as u16))?
+    }).bind(("0.0.0.0", configs.api_gateway_port as u16))?
         .run()
         .await
 }

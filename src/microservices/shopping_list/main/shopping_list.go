@@ -500,7 +500,7 @@ func main() {
 	fmt.Printf("Properties %+v\n", properties)
 
 	// Listen for incoming requests
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", properties.ShoppingListPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", properties.ShoppingListAddress, properties.ShoppingListPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

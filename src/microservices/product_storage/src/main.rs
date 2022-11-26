@@ -107,7 +107,7 @@ impl ProductItem {
     }
 }
 
-const KAFKA_TOPIC: &str = "notification";
+// const KAFKA_TOPIC: &str = "notification";
 const SUMMARY_KEY: u8 = 2;
 const EXPIRED: &str = "expired";
 const CONSUMED: &str = "consumed";
@@ -237,7 +237,6 @@ impl ProductStorage for ProductStorageImpl {
     // uses the product in pantry, if you have enough
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
-        println!("prod_unit: {}", prod.unit);
         let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);
         println!("Using item from db");
         use_product_in_db(&prod);
@@ -439,8 +438,8 @@ async fn async_kafka_producer() {
             1,      // replication factor
             5_000,  // timeout (ms)
         ).await { // the create_topic function is async, we need to await to make it progress!
-            Ok(_) => println!("created topic {}", KAFKA_TOPIC),
-            Err(_) => println!("the topic already exists"),
+            Ok(_) => println!("created topic {}", &topic),
+            Err(_) => println!("the topic {} already exists", &topic),
         }
         // get a partition-bound client
         let partition_client = client
@@ -494,7 +493,7 @@ async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, pr
     // convert ProductItems to json strings
     for product in products {
         let serialized_product = serde_json::to_string(&product).unwrap_or("{}".to_string());
-        println!("{}", serialized_product);
+        // println!("{}", serialized_product);
 
         // create a record for the serialized product
         let record = Record {
@@ -506,7 +505,7 @@ async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, pr
 
         // produce some data
         partition_client.produce(vec![record], Compression::NoCompression).await.unwrap();
-        println!("Product sent to Kafka.");
+        println!("Product {} sent to Kafka.", product.name);
     }
 }
 

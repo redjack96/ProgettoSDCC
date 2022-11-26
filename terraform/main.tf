@@ -21,7 +21,7 @@ provider "aws" {
 resource "aws_instance" "ec2_instances" {
   count                  = 3
   ami                    = "ami-0b0dcb5067f052a63"
-  instance_type          = "t2.micro"
+  instance_type          = "t2.medium" # t2.medium = 4GB, 2 CPU; t2.small = 2GB 1CPU; t2.micro = 1GB 1 CPU
   vpc_security_group_ids = [aws_security_group.instance.id]
   key_name               = "vockey" # RICORDATI CHE SENZA QUESTO NON TI PUOI CONNETTERE A SSH!!!
   # questi comandi vengono eseguiti all'avvio della macchina
@@ -48,13 +48,6 @@ resource "aws_security_group" "instance" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  egress {
-    from_port        = 0
-    protocol         = "-1"
-    to_port          = 0
-    ipv6_cidr_blocks = ["::/0"]
-    cidr_blocks      = ["0.0.0.0/0"]
-  }
   # to use SSH
   ingress {
     from_port   = 22
@@ -62,10 +55,21 @@ resource "aws_security_group" "instance" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  # to connect to frontend
   ingress {
-    from_port   = 3000
-    to_port     = 3000
+    from_port   = 88
+    to_port     = 88
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -99,7 +103,117 @@ resource "aws_security_group" "instance" {
   ingress {
     from_port   = 4789
     to_port     = 4789
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 4789
+    to_port     = 4789
     protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # to connect to frontend
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8001
+    to_port     = 8001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8002
+    to_port     = 8002
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8003
+    to_port     = 8003
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8004
+    to_port     = 8004
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8005
+    to_port     = 8005
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8006
+    to_port     = 8006
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8007
+    to_port     = 8007
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # for mongo
+  ingress {
+    from_port   = 27017
+    to_port     = 27017
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # for zookkeeper
+  ingress {
+    from_port   = 2181
+    to_port     = 2181
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # for kafka
+  ingress {
+    from_port   = 9092
+    to_port     = 9092
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 29092
+    to_port     = 29092
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # for influx
+  ingress {
+    from_port   = 8086
+    to_port     = 8086
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # for redis notification
+  ingress {
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # for redis recipes
+  ingress {
+    from_port   = 6380
+    to_port     = 6380
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # for cassandra
+  ingress {
+    from_port   = 9042
+    to_port     = 9042
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -116,8 +230,9 @@ output "public_ip" {
 }
 
 
-# 54.209.61.228
-# 52.90.2.73
-# 54.227.69.109
+# 3.93.172.31
+# 3.84.42.96
+# 34.203.228.9
+# terraform apply
 
 

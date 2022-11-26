@@ -2,9 +2,9 @@
 # first we start from rust image and install our app
 FROM rust:latest as builder
 
+RUN rustup target add x86_64-unknown-linux-musl
+RUN apt update && apt install -y musl-tools musl-dev
 RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
-# TODO: installare anche sudo apt-get install -y libclang-dev
-# TODO: installare anche sudo apt install libssl-dev
 
 # create a new empty shell project
 RUN USER=root cargo new api_gateway
@@ -25,15 +25,21 @@ COPY proto/summary.proto ./summary.proto
 # ho già provato a mettere dopo i proto... niente vanno messi qua
 
 # this build step will cache your dependencies
-RUN cargo build --release --locked
+RUN cargo build --target x86_64-unknown-linux-musl --release --locked
 RUN rm src/*.rs
 
 # copy your source tree (watch out the build context is /src)
 COPY api_gateway/src ./src
 
 # build for release
-RUN rm ./target/release/deps/api_gateway*
-RUN cargo build --bin api_client --release --locked
+RUN rm ./target/x86_64-unknown-linux-musl/release/deps/api_gateway*
+RUN cargo build --target x86_64-unknown-linux-musl --bin api_client --release --locked
+
+FROM alpine as runner
+WORKDIR /api_gateway
+COPY --from=builder /api_gateway/target/x86_64-unknown-linux-musl/release/api_client api_client
+
+EXPOSE 8007
 
 # set the startup command to run your binary
-CMD ["./target/release/api_client"]
+CMD /api_gateway/api_client

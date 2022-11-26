@@ -1,5 +1,5 @@
 use sqlite3::{Connection};
-use chrono::{TimeZone, Utc};
+use chrono::Utc;
 use crate::ProductItem;
 
 pub const DEFAULT_EXPIRATION : i64 = 253370764800;
@@ -135,7 +135,6 @@ impl Database {
                 .map_or(0, |v| v.as_integer().unwrap_or(0));
             let expiration_ts = row.get(4)
                 .map_or(DEFAULT_EXPIRATION, |v| v.as_integer().unwrap_or(DEFAULT_EXPIRATION)); // per non renderlo la scadenza minima, se non sai qual è
-            let expiration = Utc.timestamp(expiration_ts, 0);
             let last_used = row.get(5)
                 .map_or(0, |v| v.as_integer().unwrap_or(0)); // se non sai quando è stato usato l'ultima volta, metti 0
             let use_number = row.get(6)
@@ -148,7 +147,6 @@ impl Database {
                 .expect("failed to get buy date timestamp")
                 .as_integer()
                 .unwrap();
-            let buy_date = Utc.timestamp(buy_date_ts, 0);
             let item = ProductItem {
                 name: name.to_string(),
                 item_type: item_type as i32,
@@ -162,10 +160,9 @@ impl Database {
                 buy_date: buy_date_ts,
             };
             v.push(item);
-            println!("{}", name);
-            println!("{}", quantity);
-            println!("{}", buy_date);
-            println!("{}", expiration);
+            // let expiration = Utc.timestamp(expiration_ts, 0);
+            // let buy_date = Utc.timestamp(buy_date_ts, 0);
+            // println!("{}, q: {}, buy: {}, exp: {}", name, quantity, buy_date, expiration);
         }
         return v;
     }

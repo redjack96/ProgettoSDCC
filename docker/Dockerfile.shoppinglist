@@ -25,4 +25,6 @@ RUN go get github.com/afex/hystrix-go/hystrix
 RUN export PATH="$PATH:$(go env GOPATH)/bin"
 
 COPY microservices/shopping_list/main ./main
+
+EXPOSE 8001
 CMD ["go", "run", "main/shopping_list.go"]

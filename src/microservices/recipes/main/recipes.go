@@ -249,7 +249,7 @@ func main() {
 	ctx, rediCli = connectToRedis()
 
 	// Listen for incoming requests
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", properties.RecipesPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", properties.RecipesAddress, properties.RecipesPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

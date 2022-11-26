@@ -173,7 +173,7 @@ function Home() {
 }
 
 
-export const API_GATEWAY_ADDRESS = "http://" + (process.env.NODE_ENV === "production" ? "api_gateway" : "localhost") + ":8007"
+export const API_GATEWAY_ADDRESS = "http://" + window.location.hostname + ":8007"
 // TODO: Qua bisogna mettere un indirizzo diverso da localhost!!! Forse dobbiamo usare AWS.
 //  Puoi provare sul tuo cellulare (connesso alla stessa rete) se sostituisci localhost con l'ip assegnato dal router wifi (es. 192.168.1.9)
 
