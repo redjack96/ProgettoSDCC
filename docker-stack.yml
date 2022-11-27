@@ -6,6 +6,8 @@ services:
     image: "redjack96/web_ui"
     ports:
       - "3000:3000"
+    deploy:
+      mode: global
     networks:
       - overlay_net
 
@@ -18,6 +20,8 @@ services:
       - "8007:8007"
     networks:
       - overlay_net
+    deploy:
+      mode: global
 
   # --- APP-MICROSERVICES ---
   shopping_list:
@@ -31,43 +35,48 @@ services:
     networks:
       - overlay_net
 
-#  product_storage:
-#    image: "redjack96/product_storage"
-#    depends_on:
-#      - kafka
-#    environment:
-#      TOPIC: notification
-#      ENVIRONMENT: local
-#      INTERNAL_KAFKA_ADDR: 'kafka:9092'
-#    ports:
-#      - "8002:8002"
-#    volumes:
-#      - "./config.properties:/product_storage/config.properties"
-#      - "./src/microservices/product_storage/test.db:/product_storage/test.db"
-#
-#  notifications:
-#    image: "redjack96/notifications"
-#    ports:
-#      - "8005:8005"
-#    volumes:
-#      - "./config.properties:/notifications/src/main/resources/config.properties"
-#    depends_on:
-#      - product_storage
-#      - redis-notifications
-#      - kafka
-#
-#  summary:
-#    image: "redjack96/summary"
-#    volumes:
-#      - "./config.properties:/summary/src/main/resources/config.properties"
+  product_storage:
+    image: "redjack96/product_storage"
+    depends_on:
+      - kafka
+    environment:
+      TOPIC: notification
+      ENVIRONMENT: local
+      INTERNAL_KAFKA_ADDR: 'kafka:9092'
+    ports:
+      - "8002:8002"
+    volumes:
+      - "./config.properties:/product_storage/config.properties"
+    networks:
+      - overlay_net
+
+  notifications:
+    image: "redjack96/notifications"
+    ports:
+      - "8005:8005"
+    volumes:
+      - "./config.properties:/notifications/src/main/resources/config.properties"
+    depends_on:
+      - product_storage
+      - redis-notifications
+      - kafka
+    networks:
+      - overlay_net
+
+  summary:
+    image: "redjack96/summary"
+    volumes:
+      - "./config.properties:/summary/src/main/resources/config.properties"
 #      - "/etc/timezone:/etc/timezone:ro"
 #      - "/etc/localtime:/etc/localtime:ro"
-#    ports:
-#      - "8006:8006"
-#    depends_on:
-#      - influxdb
-#      - consumptions
-#      - kafka
+    ports:
+      - "8006:8006"
+    depends_on:
+      - influxdb
+      - consumptions
+      - kafka
+    networks:
+      - overlay_net
 
   recipes:
     image: "redjack96/recipes"
@@ -80,45 +89,50 @@ services:
     networks:
       - overlay_net
 
-#  consumptions:
-#    image: "redjack96/consumptions"
-#    # restart: always
-#    ports:
-#      - "8004:8004"
-#    volumes:
-#      - "./config.properties:/usr/src/consumptions/config.properties"
-#    depends_on:
-#      - cassandra
-#
-#  # --- KAFKA + ZOOKEEPER ---
-#  zookeeper:
-#    image: 'bitnami/zookeeper:latest'
-#    ports:
-#      - '2181:2181'
-#    environment:
-#      - ALLOW_ANONYMOUS_LOGIN=yes
+  consumptions:
+    image: "redjack96/consumptions"
+    # restart: always
+    ports:
+      - "8004:8004"
+    volumes:
+      - "./config.properties:/usr/src/consumptions/config.properties"
+    depends_on:
+      - cassandra
+    networks:
+      - overlay_net
 
-#  kafka:
-#    # CREARE TOPIC
-#    # docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic notification
-#    image: bitnami/kafka:latest
-#    ports:
-#      - '9092:9092' # internal
-#      - '29092:29092' # localhost
-#    environment:
-#      - KAFKA_BROKER_ID=1
-#      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-#      - ALLOW_PLAINTEXT_LISTENER=yes
-#      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-#      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-#      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-#      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:29092
-#      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:29092
-#      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
-#      - KAFKA_CFG_LOG4J_LOGGERS="kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-#    depends_on:
-#      - zookeeper
+  # --- KAFKA + ZOOKEEPER ---
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - overlay_net
 
+  kafka:
+    # CREARE TOPIC
+    # docker exec -it kafka /opt/bitnami/kafka/bin/kafka-topics.sh --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic notification
+    image: bitnami/kafka:latest
+    ports:
+      - '9092:9092' # internal
+      - '29092:29092' # localhost
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:29092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_CFG_LOG4J_LOGGERS="kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+    depends_on:
+      - zookeeper
+    networks:
+      - overlay_net
   # --- DATABASES ---
   # for shopping list
   mongo:
@@ -143,21 +157,23 @@ services:
 #    depends_on:
 #      - mongo
 
-#  # for summary
-#  influxdb:
-#    image: influxdb:latest
-#    ports:
-#      - '8086:8086'
-#    volumes:
-#      - influxdb-storage:/var/lib/influxdb
-#    environment:
-#      DOCKER_INFLUXDB_INIT_MODE: setup
-#      DOCKER_INFLUXDB_INIT_USERNAME: admin
-#      DOCKER_INFLUXDB_INIT_PASSWORD: password
-#      DOCKER_INFLUXDB_INIT_ORG: myorg
-#      DOCKER_INFLUXDB_INIT_BUCKET: krakend
-#      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: token
-#
+  # for summary
+  influxdb:
+    image: influxdb:latest
+    ports:
+      - '8086:8086'
+    volumes:
+      - influxdb-storage:/var/lib/influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: myorg
+      DOCKER_INFLUXDB_INIT_BUCKET: krakend
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: token
+    networks:
+      - overlay_net
+
   # for recipes
   redis:
     image: redis:latest
@@ -166,32 +182,39 @@ services:
     networks:
       - overlay_net
 #
-#  # for notification
-#  redis-notifications:
-#    image: redis:latest
-#    ports:
-#      - '6380:6379'
-#
-#  # for consumptions
-#  cassandra:
-#    image: cassandra:latest
-#    ports:
-#      - '9042:9042'
-#    volumes:
-#      - 'cassandra_data:/appdata'
-#    environment:
-##      - CASSANDRA_SEEDS=cassandra
-##      - CASSANDRA_PASSWORD_SEEDER=yes
-##      - CASSANDRA_PASSWORD=cassandra
-#      - CASSANDRA_START_RPC=true
-#      - CASSANDRA_CLUSTER_NAME=CassandraCluster
-#      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-#      - CASSANDRA_DC=datacenter
-#
-#volumes:
-#  influxdb-storage:
-#  cassandra_data:
-#    driver: local
+  # for notification
+  redis-notifications:
+    image: redis:latest
+    ports:
+      - '6380:6379'
+    networks:
+      - overlay_net
+
+  # for consumptions
+  cassandra:
+    image: cassandra:latest
+    ports:
+      - '9042:9042'
+    volumes:
+      - 'cassandra_data:/appdata'
+    environment:
+#      - CASSANDRA_SEEDS=cassandra
+#      - CASSANDRA_PASSWORD_SEEDER=yes
+#      - CASSANDRA_PASSWORD=cassandra
+      - CASSANDRA_START_RPC=true
+      - CASSANDRA_CLUSTER_NAME=CassandraCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=datacenter
+    networks:
+      - overlay_net
+
+volumes:
+  influxdb-storage:
+  cassandra_data:
+    driver: local
+
+# TODO: add external volumes for cassandra and influx
+
 
 # this is needed to communicate between swarm nodes, container to container.
 networks:

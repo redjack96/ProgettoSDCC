@@ -48,8 +48,9 @@ Alternatively, use these commands with the public ip of each EC2 istance
       ProgettoSDCC$ scp -i terraform/labsuser.pem docker-stack.yml ec2-user@<public-ip>:docker-stack.yml
 
 6) Now start the services in the LEADER node from the docker-stack.yml file (copied at step 6):
-   
-   
+
+      
+      docker network create -d overlay overlay_net
       docker stack deploy -c docker-stack.yml sdcc-demo
 
    To check running services in the docker swarm's stack:
