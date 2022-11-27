@@ -121,7 +121,7 @@ class Cassandra:
 
         print("creating tables")
         self.__create_tables()
-        print("creating index")
+        # print("creating index")
         self.__create_index()
         # todo: RIMETTIMI
         # print("populating tables")
@@ -134,9 +134,10 @@ class Cassandra:
         :return: session, cluster
         """
         global session
-        cluster = Cluster(['cassandra'], port=9042)
+        p = properties.Props()
+        cluster = Cluster([p.CassandraAddress], port=p.CassandraPort, protocol_version=5)
         # TODO: provare session = cluster.connect(wait_for_all_pools=True)
-        session = cluster.connect()
+        session = cluster.connect(wait_for_all_pools=True)
         session.execute("""
             CREATE KEYSPACE IF NOT EXISTS sdcc
             WITH REPLICATION =
@@ -156,10 +157,11 @@ class Cassandra:
         self.session.execute(query)
 
     def __create_index(self):
-        query = "CREATE INDEX IF NOT EXISTS productIndex ON dataset (product_name);"
-        self.session.execute(query)
-        query = "CREATE INDEX IF NOT EXISTS prodIndex ON predictions (product_name);"
-        self.session.execute(query)
+        pass
+        # query = "CREATE INDEX IF NOT EXISTS productIndex ON dataset (product_name);"
+        # self.session.execute(query)
+        # query = "CREATE INDEX IF NOT EXISTS prodIndex ON predictions (product_name);"
+        # self.session.execute(query)
 
     def __populate_tables(self, dataset_filename: str):
         dataset = read_csv(dataset_filename)

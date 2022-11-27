@@ -30,7 +30,7 @@ public class NotificationConsumer implements Runnable {
         Properties properties = OurProperties.getProperties();
         String kafkaAddr = properties.getProperty("KafkaAddress");
         int kafkaPort = Integer.parseInt(properties.getProperty("KafkaPort"));
-        final var url = "kafka://" + kafkaAddr + ":" + kafkaPort; // TODO: mi sa che va messo quello parametrico. Provare a pushare e vedere se funziona su ec2.
+        final var url = "kafka://%s:%d".formatted(kafkaAddr, kafkaPort); // TODO: mi sa che va messo quello parametrico. Provare a pushare e vedere se funziona su ec2.
         // final var url = "kafka://kafka:9092";
 
         final Properties props = new Properties();

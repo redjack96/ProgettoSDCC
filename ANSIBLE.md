@@ -5,7 +5,7 @@ Use the python installation of the system (make sure you're not in a virtual env
 python -m pip install --user ansible
 ```
 
-# Hello Ansible
+# My Ansible Tutorial
 ## Create the hosts file
 Get the ip addresses of the VM (EC2) from terraform (in the terraform folder)
 
@@ -33,7 +33,7 @@ Create an "hosts.ini" file (see ansible folder), with a [title] and copy the hos
 44.193.6.37
 44.198.58.20
 ```
-This is also called **Inventory file**. Now we have used .ini for the inventory file, but Ansible is also compatible with .yml format. The yml format is easier to read, when you add variables only valid for certain host.
+This is also called **Inventory file**. Now we have used .ini for the inventory file, but Ansible is also compatible with .yml format. The yml format is easier to read, especially when you add variables only valid for certain host.
 [optional] To check that ansible reads the file, use (from ansible folder)
 
 ```
@@ -107,4 +107,11 @@ To run this playbook, use:
 
 ```
 ansible$ ansible-playbook playbook.yaml -i inventory.yaml
+```
+
+The update notebook also automatically starts docker swarm in the three ec2 instances.
+You can use the same command, but you need to install docker python sdk:
+
+```
+python3 -m pip install docker
 ```

@@ -37,26 +37,26 @@ resource "aws_instance" "ec2_instances" {
   }
 }
 
-locals {
-  ports = [
-    3000, # react
-    8001, # shopping_list
-    8002, # product_storage
-    8003, # recipes
-    8004, # consumptions
-    8005, # notifications
-    8006, # summary
-    8007, # api_gateway
-    27017, # mongo
-    2181, # zookeeper
-    9092, # kafka
-    29092, # kafka 2
-    8086, # influx
-    6379, # redis notification
-    6380, # redis recipes
-    9042, # cassandra
-  ]
-}
+#locals {
+#  ports = [
+#    3000, # react
+#    8001, # shopping_list
+#    8002, # product_storage
+#    8003, # recipes
+#    8004, # consumptions
+#    8005, # notifications
+#    8006, # summary
+#    8007, # api_gateway
+#    27017, # mongo
+#    2181, # zookeeper
+#    9092, # kafka
+#    29092, # kafka 2
+#    8086, # influx
+#    6379, # redis notification
+#    6380, # redis recipes
+#    9042, # cassandra
+#  ]
+#}
 
 resource "aws_security_group" "instance" {
 

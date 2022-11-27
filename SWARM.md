@@ -12,90 +12,88 @@
 
    [optional] On one of the EC2 instance, use `hostname -i` or `ifconfig eth0`and copy the **private ip** that you get, for example "172.31.30.79".
 
-3) On one of the EC2 instance, use
-
-
+3) Update the ips obtained from terraform in the ANSIBLE inventory.yaml 
+```
+ec2:
+  hosts:
+    vm01:
+      ansible_host: <ip1-here>
+    vm02:
+      ansible_host: <ip2-here>
+    vm03:
+      ansible_host: <ip3-here>
+  vars:
+    ansible_user: ec2-user
+    ansible_ssh_private_key_file: ../terraform/labsuser.pem
+```
+4) On one of the EC2 instance, use
+   ```
       docker swarm init --advertise-addr $(hostname -i)
-
-   To add a worker to this swarm, run the following command (_this is an example_):
-
-      docker swarm join --token SWMTKN-1-1cvss9vzvptthzxbwzpvar0jvs7p9vy4gncvc77nxq627m3qok-bdlvgq9pl0ppgh0dbvxr3h3dw 172.31.30.79:2377
-
-   To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
-
-4) On the other EC2 instances, use the command obtained at the previous step
-
-    
+   ```
+5) On the other EC2 instances, use the command obtained at the previous step
+   ```
     docker swarm join --token SWMTKN-1-1cvss9vzvptthzxbwzpvar0jvs7p9vy4gncvc77nxq627m3qok-bdlvgq9pl0ppgh0dbvxr3h3dw 172.31.30.79:2377
-
-[optional] Check active nodes with `docker node ls`. Example Output:
-```console
+   ```
+   Check active nodes with `docker node ls`. Example Output:
+   ```console
    ID                            HOSTNAME                        STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
    qy3mkh9o7gnis0fj8pwxvoef7     ip-172-31-21-117.ec2.internal   Ready     Active                          20.10.17
    2h8rwv95gfnc8johu5ywop5ea     ip-172-31-24-128.ec2.internal   Ready     Active                          20.10.17
    uoh3cqbl1p8qke3orrir05nnc *   ip-172-31-30-79.ec2.internal    Ready     Active         Leader           20.10.17
-```
+   ```
+6) On your PC, use this ANSIBLE command to copy files to each of the EC2 instance.
 
-5) On your PC, use the script copy-files-to-ec2.sh for each of the EC2 instance, it will ask you for the public ip to copy to.
-IMPORTANT: The files must be copied on all EC2 instances!!
-TODO: SOSTITUIRE CON ANSIBLE; forse si può creare anche lo swarm con ansible!!!
-
-
-      sh copy-files-to-ec2.sh
-
-Alternatively, use these commands with the public ip of each EC2 istance
-
-      ProgettoSDCC$ scp -i terraform/labsuser.pem config.properties ec2-user@<public-ip>:config.properties
-      ProgettoSDCC$ scp -i terraform/labsuser.pem docker-stack.yml ec2-user@<public-ip>:docker-stack.yml
-
-6) Now start the services from the LEADER node with the docker-stack.yml file (copied at previous step). **Most of the following command can only be used in the leader node.**
+   ```
+   ansible$ ansible-playbook playbook.yaml -i inventory.yaml
+   ```
+7) Now start the services from the LEADER node with the docker-stack.yml file (copied at previous step). **Most of the following command can only be used in the leader node.**
 
    [1) needed] To create an overlay network (TODO: I don't know if an external overlay network in the docker-stack.yml it is really necessary) (Leader-only):
 
-```
-docker network create -d overlay overlay_net
-```
+   ```
+   docker network create -d overlay overlay_net
+   ```
 
    [2) needed] **To deploy the stack with the entire application (Leader-only)**
-```      
-docker stack deploy -c docker-stack.yml sdcc-demo
-```
+   ```      
+   docker stack deploy -c docker-stack.yml sdcc-demo
+   ```
    [good to use - which service are running] To check running services (and their replication) in the docker swarm's stack (Leader-only):
-```
-docker stack services sdcc-demo
-```   
+   ```
+   docker stack services sdcc-demo
+   ```   
    Alternatively (Leader only):
-```   
-docker service ls
-```
+   ```   
+   docker service ls
+   ```
    [which container are running correctly] To check containers in the stack (Leader-only)
-```
-docker stack ps sdcc-demo
-```
+   ```
+   docker stack ps sdcc-demo
+   ```
    [which container are running in the node] To check the container running in one node:
-```
-docker ps
-```
+   ```
+   docker ps
+   ```
    [to debug] To check logs (Leader-only) of a service (for example api_gateway service). Note that the stack name is concatenated with service name in stack.yml to get full docker service name
-```
-docker service logs sdcc-demo_api_gateway
-```
+   ```
+   docker service logs sdcc-demo_api_gateway
+   ```
    Alternatively, in the correct node you can simply use:
-```
-docker logs <container-id>
-```
+   ```
+   docker logs <container-id>
+   ```
    [for reference] To get container ip (on the correct node):
-```
-docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_name_or_id>
-```
+   ```
+   docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_name_or_id>
+   ```
    [needed to stop] **To remove the stack (Leader only), with all internal volume and networks**
-```   
-docker stack rm sdcc-demo
-```
+   ```   
+   docker stack rm sdcc-demo
+   ```
    [optional] To leave the swarm: this can be avoided if you directly run `terraform destroy`, but you will lose all data in this way.
-```
-docker swarm leave [-f]
-```
+   ```
+   docker swarm leave [-f]
+   ```
 
 ## (deprecated) Deploy services one by one 
 Alternatively, if you like losing time, you could create all service one by one:
