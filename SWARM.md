@@ -12,7 +12,7 @@
 
    [optional] On one of the EC2 instance, use `hostname -i` or `ifconfig eth0`and copy the **private ip** that you get, for example "172.31.30.79".
 
-3) On the same EC2 instance, use
+3) On one of the EC2 instance, use
 
 
       docker swarm init --advertise-addr $(hostname -i)
@@ -38,6 +38,7 @@
 
 5) On your PC, use the script copy-files-to-ec2.sh for each of the EC2 instance, it will ask you for the public ip to copy to.
 IMPORTANT: The files must be copied on all EC2 instances!!
+TODO: SOSTITUIRE CON ANSIBLE; forse si può creare anche lo swarm con ansible!!!
 
 
       sh copy-files-to-ec2.sh
@@ -47,68 +48,91 @@ Alternatively, use these commands with the public ip of each EC2 istance
       ProgettoSDCC$ scp -i terraform/labsuser.pem config.properties ec2-user@<public-ip>:config.properties
       ProgettoSDCC$ scp -i terraform/labsuser.pem docker-stack.yml ec2-user@<public-ip>:docker-stack.yml
 
-6) Now start the services in the LEADER node from the docker-stack.yml file (copied at step 6):
+6) Now start the services from the LEADER node with the docker-stack.yml file (copied at previous step). **Most of the following command can only be used in the leader node.**
 
-      
-      docker network create -d overlay overlay_net
-      docker stack deploy -c docker-stack.yml sdcc-demo
+   [1) needed] To create an overlay network (TODO: I don't know if an external overlay network in the docker-stack.yml it is really necessary) (Leader-only):
 
-   To check running services in the docker swarm's stack:
+```
+docker network create -d overlay overlay_net
+```
 
-      docker stack services sdcc-demo
-
-   To check containers in the stack
-
-      docker stack ps sdcc-demo
-
-   To check logs of a service (for example api_gateway service). Note that the stack name is concatenated with service name in stack.yml to get full docker service name
-
-      docker service logs sdcc-demo_api_gateway
-   
-   To get container ip:
-
-      docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' container_name_or_id
-
-
-7) To remove the stack
-
-
-      docker stack rm sdcc-demo
+   [2) needed] **To deploy the stack with the entire application (Leader-only)**
+```      
+docker stack deploy -c docker-stack.yml sdcc-demo
+```
+   [good to use - which service are running] To check running services (and their replication) in the docker swarm's stack (Leader-only):
+```
+docker stack services sdcc-demo
+```   
+   Alternatively (Leader only):
+```   
+docker service ls
+```
+   [which container are running correctly] To check containers in the stack (Leader-only)
+```
+docker stack ps sdcc-demo
+```
+   [which container are running in the node] To check the container running in one node:
+```
+docker ps
+```
+   [to debug] To check logs (Leader-only) of a service (for example api_gateway service). Note that the stack name is concatenated with service name in stack.yml to get full docker service name
+```
+docker service logs sdcc-demo_api_gateway
+```
+   Alternatively, in the correct node you can simply use:
+```
+docker logs <container-id>
+```
+   [for reference] To get container ip (on the correct node):
+```
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_name_or_id>
+```
+   [needed to stop] **To remove the stack (Leader only), with all internal volume and networks**
+```   
+docker stack rm sdcc-demo
+```
+   [optional] To leave the swarm: this can be avoided if you directly run `terraform destroy`, but you will lose all data in this way.
+```
+docker swarm leave [-f]
+```
 
 ## (deprecated) Deploy services one by one 
-Alternatively you could run all containers one by one:
+Alternatively, if you like losing time, you could create all service one by one:
 
 Mongo DB:
 
-   docker service create --hostname=mongo \
-   --network sdcc-network \
-   --publish target=27017,published=27017 \
-   --env MONGO_INITDB_ROOT_USERNAME=root \
-   --env MONGO_INITDB_ROOT_PASSWORD=example \
-   mongo
-
+```
+docker service create --hostname=mongo \
+                     --network sdcc-network \
+                     --publish target=27017,published=27017 \
+                     --env MONGO_INITDB_ROOT_USERNAME=root \
+                     --env MONGO_INITDB_ROOT_PASSWORD=example \
+                     mongo
+```
 
 Shopping List: 
-
-    docker service create --hostname=shopping_list \
-                          --mount source=~/config.properties,target=/usr/src/shopping_list/config.properties,type=bind \
-                          --publish target=8001,published=8001 \
-                          --network sdcc-network redjack96/shopping_list 
-
+```
+docker service create --hostname=shopping_list \
+                    --mount source=~/config.properties,target=/usr/src/shopping_list/config.properties,type=bind \
+                    --publish target=8001,published=8001 \
+                    --network sdcc-network redjack96/shopping_list 
+```
 
 
 Api Gateway:
-
-    docker service create --hostname=api_gateway \
-                        --mount source=~/config.properties,target=/api_gateway/config.properties,type=bind \
-                        --network sdcc-network \
-                        --publish target=8007,published=8007 \
-                        redjack96/api_gateway
+```
+docker service create --hostname=api_gateway \
+                  --mount source=~/config.properties,target=/api_gateway/config.properties,type=bind \
+                  --network sdcc-network \
+                  --publish target=8007,published=8007 \
+                  redjack96/api_gateway
+```
+And so on.
 
 To destroy all services
-
-    
-    docker service rm $(docker service ls -q)
-
+```
+docker service rm $(docker service ls -q)
+```
 
     

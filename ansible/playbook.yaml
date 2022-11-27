@@ -1,0 +1,12 @@
+- name: copy files to ec2
+  hosts: ec2
+  connection: ssh
+  tasks:
+    - name: copy ec2config.properties as config.properties
+      copy:
+        src: ../terraform/ec2config.properties
+        dest: ~/config.properties
+    - name: copy docker-stack.yml as docker-stack.yml
+      copy:
+        src: ../docker-stack.yml
+        dest: ~/docker-stack.yml

@@ -1,5 +1,6 @@
 package com.sdcc.shoppinglist.server;
 
+import com.sdcc.shoppinglist.server.utils.OurProperties;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -39,14 +40,7 @@ public class NotificationServer implements Runnable {
 
     public NotificationServer() {
         LOGGER.setLevel(Level.INFO);
-        Properties prop = new Properties();
-        try {
-            InputStream stream = new FileInputStream("src/main/resources/config.properties");
-            prop.load(stream);
-        } catch (Exception e) {
-            LOGGER.info("Config file not found: using default values.");
-            e.printStackTrace();
-        }
+        Properties prop = OurProperties.getProperties();
         this.port = Integer.parseInt(prop.getProperty("NotificationsPort"));
         this.address = prop.getProperty("NotificationsAddress");
     }

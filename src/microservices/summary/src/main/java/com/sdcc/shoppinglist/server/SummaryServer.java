@@ -5,6 +5,7 @@ import com.sdcc.shoppinglist.summary.SummaryData;
 import com.sdcc.shoppinglist.summary.SummaryGrpc;
 import com.sdcc.shoppinglist.summary.SummaryRequest;
 import com.sdcc.shoppinglist.utils.LogEntry;
+import com.sdcc.shoppinglist.utils.OurProperties;
 import com.sdcc.shoppinglist.utils.SummaryBuilder;
 import com.sdcc.shoppinglist.utils.TimeWindow;
 import io.grpc.Server;
@@ -46,6 +47,7 @@ public class SummaryServer {
 
     /**
      * Starts the hRPC server and sets the shutdown hook.
+     *
      * @throws IOException
      */
     private void start() throws IOException {
@@ -59,7 +61,7 @@ public class SummaryServer {
             System.err.println("*** shutting down gRPC server since JVM is shutting down");
             try {
                 SummaryServer.this.stop();
-            } catch(InterruptedException i){
+            } catch (InterruptedException i) {
                 i.printStackTrace(System.err); // SO that it prints on the System console
             }
             System.err.println("*** server shut down");
@@ -68,6 +70,7 @@ public class SummaryServer {
 
     /**
      * Stops the grpc server and influxDB client.
+     *
      * @throws InterruptedException
      */
     private void stop() throws InterruptedException {
@@ -78,24 +81,28 @@ public class SummaryServer {
     }
 
     private void blockUntilShutdown() throws InterruptedException {
-        if(server != null){
+        if (server != null) {
             server.awaitTermination();
         }
     }
 
     /**
      * Runs the chronjob thread for consumption and the kafka thread.
+     *
      * @param args
      * @throws IOException
      * @throws InterruptedException
      */
-    public static void main(String[] args) throws IOException, InterruptedException{
+    public static void main(String[] args) throws IOException, InterruptedException {
         final var server = new SummaryServer();
         server.start();
+        Properties properties = OurProperties.getProperties();
+        var influxAddr = properties.getProperty("InfluxAddress");
+        var influxPort = properties.getProperty("InfluxPort");
         // Connecting to InfluxDB
         System.out.println("Trying connection to influxDB");
         influx = InfluxSink.getInstance(
-                "http://influxdb:8086",
+                "http://" + influxAddr + ":" + influxPort,
                 "admin",
                 "password",
                 "token");
@@ -111,14 +118,14 @@ public class SummaryServer {
     }
 
     // this class implements the grpc abstract class
-    static final class SummaryImpl extends SummaryGrpc.SummaryImplBase{
+    static final class SummaryImpl extends SummaryGrpc.SummaryImplBase {
         @Override
         public void weekSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
             LOGGER.info("Getting log entries from influxdb...");
             // Get last week data from influx db
             List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Weekly);
-            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: "+logs);
+            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: " + logs);
             // Calculate the summary data
             SummaryBuilder summary = new SummaryBuilder();
             SummaryData reply = summary.mapToSummary(logs, Period.Weekly);
@@ -133,7 +140,7 @@ public class SummaryServer {
             LOGGER.info("Getting log entries from influxdb...");
             // Get last month data from influx db
             List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Monthly);
-            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: "+logs);
+            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: " + logs);
             // Calculate the summary data
             SummaryBuilder summary = new SummaryBuilder();
             SummaryData reply = summary.mapToSummary(logs, Period.Monthly);
@@ -148,7 +155,7 @@ public class SummaryServer {
             LOGGER.info("Getting log entries from influxdb...");
             // Get total data from influx db
             List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Total);
-            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: "+logs);
+            LOGGER.log(Level.INFO, "Logs retrieved from influx in the selected period: " + logs);
             // Calculate the summary data
             SummaryBuilder summary = new SummaryBuilder();
             SummaryData reply = summary.mapToSummary(logs, Period.Total);

@@ -270,7 +270,9 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 /* Function to query the MongoDB database, implements all CRUD MongoDB operations */
 func queryDB(operation DBOperation) (interface{}, error) {
 	// connect mongo database
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://root:example@mongo:27017"))
+	configs, _ := props.GetProperties()
+	uri := fmt.Sprintf("mongodb://root:example@%s:%d", configs.MongoDBAddress, configs.MongoDBPort)
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}

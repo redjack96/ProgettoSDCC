@@ -1,6 +1,7 @@
 package com.sdcc.shoppinglist.server;
 
 import com.sdcc.shoppinglist.utils.LogEntry;
+import com.sdcc.shoppinglist.utils.OurProperties;
 import com.sdcc.shoppinglist.utils.TimeWindow;
 import consumptions.Consumptions;
 import consumptions.EstimatorGrpc;
@@ -17,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -73,8 +75,11 @@ public class ConsumptionsChronJob implements Runnable {
         List<LogEntry> logs = influx.getLogEntriesFromInflux(TimeWindow.Test);
         LOGGER.info("Chron-job: LOGS:" + logs);
         LOGGER.info("Chron-job: Connecting to consumptions!");
+        Properties properties = OurProperties.getProperties();
+        var consumptionsAddress = properties.getProperty("ConsumptionsAddress");
+        var consumptionsPort = Integer.parseInt(properties.getProperty("ConsumptionsPort"));
         // If the connection cannot be established rapidly, the circuit breaker ends this method.
-        var channel = ManagedChannelBuilder.forAddress("consumptions", 8004)
+        var channel = ManagedChannelBuilder.forAddress(consumptionsAddress, consumptionsPort)
                 .usePlaintext()
                 .build();
         // Create the channel

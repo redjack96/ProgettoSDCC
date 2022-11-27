@@ -3,6 +3,7 @@ package com.sdcc.shoppinglist.server;
 import com.influxdb.client.InfluxDBClient;
 import com.sdcc.shoppinglist.serde.JsonDeserializer;
 import com.sdcc.shoppinglist.utils.LogEntry;
+import com.sdcc.shoppinglist.utils.OurProperties;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -20,14 +21,18 @@ public class KafkaSummaryConsumer implements Runnable {
     private static final Logger log = Logger.getLogger(KafkaSummaryConsumer.class.getSimpleName());
     private final InfluxSink influx;
 
-    public KafkaSummaryConsumer(InfluxSink influx){
+    public KafkaSummaryConsumer(InfluxSink influx) {
         log.setLevel(Level.INFO);
         this.influx = influx;
     }
 
     @Override
     public void run() {
-        final var url = "kafka://kafka:9092";
+        Properties properties = OurProperties.getProperties();
+        var kafkaAddr = properties.getProperty("KafkaAddress");
+        var kafkaPort = properties.getProperty("KafkaPort");
+        // final var url = "kafka://"+kafkaAddr+":" + kafkaPort; // TODO: mi sa che va messo quello parametrico. Provare a pushare e vedere se funziona su ec2.
+        final var url = "kafka://kafka:9092"; // probably kafka:// is the protocol!
         final Properties props = new Properties();
         props.put("bootstrap.servers", url);
         props.put("group.id", "consumer");
@@ -50,7 +55,7 @@ public class KafkaSummaryConsumer implements Runnable {
                     consumerRecords.forEach(longStringConsumerRecord -> {
                         String topic = longStringConsumerRecord.topic();
                         LogEntry payload = longStringConsumerRecord.value();
-                        log.log(Level.INFO, "Found logs!!! Topic:"+topic+" - Record:"+payload);
+                        log.log(Level.INFO, "Found logs!!! Topic:" + topic + " - Record:" + payload);
                         // adding log entry to influxDB
                         log.log(Level.INFO, "Adding log entry to the influxDB database");
                         try {

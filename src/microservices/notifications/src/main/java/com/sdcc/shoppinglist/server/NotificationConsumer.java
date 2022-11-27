@@ -1,6 +1,7 @@
 package com.sdcc.shoppinglist.server;
 
 import com.sdcc.shoppinglist.server.serde.JsonDeserializer;
+import com.sdcc.shoppinglist.server.utils.OurProperties;
 import com.sdcc.shoppinglist.server.utils.Product;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
 /**
  * Receives notifications from the other microservices polling a Kafka broker
  */
-public class NotificationConsumer implements Runnable{
+public class NotificationConsumer implements Runnable {
 
     public static final String EXPIRED = "expired";
     public static final String FINISHED = "consumed";
@@ -26,7 +27,11 @@ public class NotificationConsumer implements Runnable{
     public void run() {
         final Logger log = Logger.getLogger(NotificationConsumer.class.getSimpleName());
         log.setLevel(Level.INFO);
-        final var url = "kafka://kafka:9092";
+        Properties properties = OurProperties.getProperties();
+        String kafkaAddr = properties.getProperty("KafkaAddress");
+        int kafkaPort = Integer.parseInt(properties.getProperty("KafkaPort"));
+        final var url = "kafka://" + kafkaAddr + ":" + kafkaPort; // TODO: mi sa che va messo quello parametrico. Provare a pushare e vedere se funziona su ec2.
+        // final var url = "kafka://kafka:9092";
 
         final Properties props = new Properties();
         props.put("bootstrap.servers", url);
@@ -51,9 +56,9 @@ public class NotificationConsumer implements Runnable{
                     for (ConsumerRecord<Long, Product> consumerRecord : consumerRecords) {
                         String topic = consumerRecord.topic();
                         Product payload = consumerRecord.value();
-                        if (FINISHED.equals(topic)){
+                        if (FINISHED.equals(topic)) {
                             redis.setNotificationIfNotExist(FINISHED, payload);
-                        } else if (EXPIRED.equals(topic)){
+                        } else if (EXPIRED.equals(topic)) {
                             redis.setNotificationIfNotExist(EXPIRED, payload);
                         }
                         log.log(Level.INFO, "Found notification!!! Topic:" + topic + " - Record:" + payload);

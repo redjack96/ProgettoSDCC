@@ -206,9 +206,10 @@ func appendToSingleString(availableItems []*pb.Item) string {
 // connects to the redis container
 func connectToRedis() (context.Context, *redis.Client) {
 	ctx := context.Background()
-
+	properties, _ := props.GetProperties()
+	addr := fmt.Sprintf("%s:%d", properties.RedisRecipesAddress, properties.RedisRecipesPort)
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis-cache:6379",
+		Addr:     addr,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})

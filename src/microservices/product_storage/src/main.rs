@@ -87,7 +87,7 @@ impl ProductItem {
     // This is a instance method, it is used to convert the ProductItem to an Item, defined in the proto
     fn to_item(&self) -> Item {
         // let date_time = api_gateway::shopping_list::Timestamp::from();
-        println!("Converting to item");
+        // println!("Converting to item");
         let ts = Timestamp {
             seconds: self.expiration,
             nanos: 0,
@@ -422,7 +422,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn async_kafka_producer() {
     println!("Establishing connection to Kafka broker...");
     // setup client
-    let connection = "kafka:9092".to_owned();
+    let props = get_properties();
+    let connection = format!("{}:{}", props.kafka_address, props.kafka_port);
     let topics: Vec<String> = vec![EXPIRED.to_string(), CONSUMED.to_string(), LOGS.to_string()];
     let client = ClientBuilder::new(vec![connection]).build().await.unwrap();
 

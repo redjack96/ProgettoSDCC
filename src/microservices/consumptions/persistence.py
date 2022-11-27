@@ -6,6 +6,7 @@ from cassandra.cluster import Cluster
 import pandas as pd
 
 import consumptions_pb2
+import properties
 
 logging.basicConfig(level=logging.INFO)
 session = None
