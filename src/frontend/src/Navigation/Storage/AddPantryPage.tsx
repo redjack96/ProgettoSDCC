@@ -1,7 +1,7 @@
 // this is called by the route /addPantryPage by ...
-import {useLocation, useNavigate} from "react-router-dom";
+// import {useLocation} from "react-router-dom";
 import React from "react";
-import {Button, Col, Container, Form, InputGroup, Row} from "react-bootstrap";
+import {Container, Form, InputGroup, Row} from "react-bootstrap";
 import {PantryItem} from "../../Services/Storage";
 import Navbar from "../Utils/Navbar";
 import {PageHeader} from "../Utils/PageHeader";
@@ -11,14 +11,14 @@ import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, SubmitButt
 
 // this is the definition of the addProductToPantry page.
 export function AddPantryPage() {
-    const {state} = useLocation();
-    console.log("items: ", state.items)
-    const onAddItem = React.useCallback(
-        (newItem: PantryItem) => {
-            state.items.products.pushEntry(newItem)
-        },
-        [state.items],
-    );
+    // const {state} = useLocation();
+    // console.log("items: ", state.items)
+    // const onAddItem = React.useCallback(
+    //     (newItem: PantryItem) => {
+    //         state.items.products.pushEntry(newItem)
+    //     },
+    //     [state.items],
+    // );
     return (
         <Container>
             <Navbar/>
@@ -31,6 +31,7 @@ export function AddPantryPage() {
         </Container>
     );
 }
+
 // This form allows to add a new product directly to pantry
 export function AddPantryForm({onAdd}) {
     const [itemName, setItemName] = React.useState('');
@@ -43,7 +44,8 @@ export function AddPantryForm({onAdd}) {
 
     // this is used to return to home when clicking update button
     // const navigate = useNavigate();
-    const addToStorage = () => {
+    const addToStorage = e => {
+        e.preventDefault();
         console.log("called submitAdded item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
@@ -51,33 +53,26 @@ export function AddPantryForm({onAdd}) {
         let request = API_GATEWAY_ADDRESS + '/addProductToStorage/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
-            .then(response => {
-                if (response.ok) {
-                    console.log("Response ok");
-                    return response.json();
-                }
-                console.log("Response not ok:", response);
-                return new Error("Something went wrong");
-            })
+            .then(response => response.json)
             .then(() => {
+                // this is a callback
+                onAdd(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0), new Timestamp(new Date().getTime(), 0),
+                    1, 1, 1));
                 setSubmitting(false);
-                onAdd(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0),
-                    1, 1, 1, new Timestamp(new Date().getTime(), 0)));
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })
-        // navigate('/productStoragePage');
-    }
+    };
 
-    return (<Form onSubmit={() => addToStorage()}>
+    return (<Form onSubmit={addToStorage}>
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
                 <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
-                <ExpirationInput expiration={expiration} setExpiration={setExpiration} />
+                <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
             </Row>
             <Row className="mb-3">
-                <QuantityInput quantity={quantity} setQuantity={setQuantity} />
+                <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
                 <UnitSelect unit={unit} setUnit={setUnit} isUpdate={false}/>
                 <ProductTypeSelect type={type} setType={setType} isUpdate={false}/>
             </Row>

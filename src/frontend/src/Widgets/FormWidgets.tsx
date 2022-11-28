@@ -24,7 +24,7 @@ export function NameInput({itemName, setItemName, isUpdate}) {
                     disabled>
                 </Form.Control>
             )}
-            {isUpdate == false && (
+            {isUpdate === false && (
                 <Form.Control
                     value={itemName}
                     onChange={e => {
@@ -56,7 +56,7 @@ export function UnitSelect({unit, setUnit, isUpdate}) {
                 <option>Grams</option>
             </Form.Select>
         )}
-        {isUpdate == false && (
+        {isUpdate === false && (
             <Form.Select as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}>
                 <option>Select unit...</option>
                 <option>Bottle</option>
@@ -117,13 +117,11 @@ export function QuantityInput({quantity, setQuantity}) {
     return (<Form.Group as={Col} controlId="formQuantity">
         <Form.Label>Quantity</Form.Label>
         <Form.Control
-            value={quantity.valueOf()}
+            value={Number(quantity).toString()}
             onChange={e => {
-                let inputQuantity = parseInt(e.target.value);
-                setQuantity(inputQuantity < 0 ? 0 : inputQuantity);
+                setNumber(e.target.value, setQuantity);
             }}
             type="number"
-            placeholder="0"
             aria-describedby="basic-addon1"
         />
     </Form.Group>);
@@ -134,7 +132,7 @@ export function UseNumberInput({useNumber, setUseNumber}) {
         <Form.Group as={Col} controlId="formUseNumber">
             <Form.Label>Uses</Form.Label>
             <Form.Control
-                value={useNumber}
+                value={Number(useNumber).toString()}
                 onChange={event => {
                     let inputUseNumber = parseInt(event.target.value);
                     setUseNumber(inputUseNumber < 0 ? 0 : inputUseNumber);
@@ -152,7 +150,7 @@ export function TotalUseNumberInput({totalUseNumber, setTotalUseNumber}) {
         <Form.Group as={Col} controlId="formTotalUseNumber">
             <Form.Label>Total Uses</Form.Label>
             <Form.Control
-                value={totalUseNumber}
+                value={Number(totalUseNumber).toString()}
                 onChange={event => {
                     let inputTotalUseNumber = parseInt(event.target.value);
                     setTotalUseNumber(inputTotalUseNumber < 0 ? 0 : inputTotalUseNumber);
@@ -170,7 +168,7 @@ export function TimesBoughtInput({timesBought, setTimesBought}) {
         <Form.Group as={Col} controlId="formTimesBought">
             <Form.Label>Times Bought</Form.Label>
             <Form.Control
-                value={timesBought}
+                value={Number(timesBought).toString()}
                 onChange={event => {
                     let inputTimesBought = parseInt(event.target.value);
                     setTimesBought(inputTimesBought < 0 ? 0 : inputTimesBought);
@@ -205,7 +203,7 @@ export function UpdateButton({buttonText}) {
     );
 }
 
-export function BackButton({backFn}){
+export function BackButton({backFn}) {
     return (
         <Button
             type="button"
@@ -215,4 +213,9 @@ export function BackButton({backFn}){
             Cancel
         </Button>
     );
+}
+
+function setNumber(n: string, setN: (arg0: number) => void){
+    let inputQuantity = parseInt(n);
+    setN(inputQuantity < 0 || isNaN(inputQuantity) ? 0 : inputQuantity);
 }

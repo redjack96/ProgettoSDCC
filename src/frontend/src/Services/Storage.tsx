@@ -13,10 +13,8 @@ import {TableBody, TableHead, TableRow} from "@mui/material";
 // this component defines the storage page
 export function Storage() {
     const [loading, setLoading] = React.useState(false)
-    const [items, setItems] = React.useState({
-        id: 0,
-        name: "",
-        products: []
+    const [pantryItems, setPantryItems] = React.useState({
+        products: [] as PantryItem[]
     });
     const [voidMessage, setVoidMessage] = React.useState("No products in storage.");
 
@@ -30,14 +28,13 @@ export function Storage() {
                     return r.json();
                 })
                 .then(itemsOrError => {
+                    console.log(itemsOrError);
                     if (itemsOrError.hasOwnProperty('products')) {
-                        setItems(itemsOrError);
+                        setPantryItems(itemsOrError);
                         setVoidMessage("Nothing added to pantry! Add one when you're ready!");
                     } else if (itemsOrError.hasOwnProperty('msg')) {
                         console.log("Error: product_storage service is down")
-                        setItems({
-                            id: 0,
-                            name: "",
+                        setPantryItems({
                             products: []
                         });
                         setVoidMessage(itemsOrError.msg);
@@ -45,14 +42,14 @@ export function Storage() {
                 })
                 .catch(e => console.log("Errore: " + e))
         }
-    }, [items, voidMessage, loading]);
+    }, [pantryItems, voidMessage, loading]);
 
     // this callback is used for the useItem form
     const handleUseItems = React.useCallback(
         (usedItem: PantryItem) => {
-            const newState = items.products.map(obj => {
+            const newState = pantryItems.products.map(obj => {
                 // if id is corresponding, update quantity property
-                if (obj.product_name === usedItem.product_name && obj.type === usedItem.type && obj.unit === usedItem.unit) {
+                if (obj.item_name === usedItem.item_name && obj.type === usedItem.type && obj.unit === usedItem.unit) {
                     return {...obj, quantity: obj.quantity - usedItem.quantity};
                 }
 
@@ -61,14 +58,11 @@ export function Storage() {
             });
             if (loading) {
                 try {
-                    setItems({
-                        ...items,
+                    setPantryItems({
                         products: newState
                     });
                 } catch {
-                    setItems({
-                        id: 0,
-                        name: "",
+                    setPantryItems({
                         products: []
                     });
                     setVoidMessage("Error: shopping_list service is down")
@@ -76,31 +70,39 @@ export function Storage() {
                 setLoading(false);
             }
         },
-        [items, loading],
+        [pantryItems, loading],
     );
 
     // This removes only from the array state "items.products"
     const onItemRemoval = React.useCallback(
-        item => {
+        (item: PantryItem) => {
             console.log("Removing item ", item.item_name);
-            const i = items.products.findIndex(value => value.item_name === item.item_name);
-            setItems({
-                ...items,
-                products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
+            const i = pantryItems.products.findIndex(value => value.item_name === item.item_name);
+            setPantryItems({
+                products: [...pantryItems.products.slice(0, i), ...pantryItems.products.slice(i + 1)]
             });
             setLoading(false);
         },
-        [items],
+        [pantryItems],
     );
 
     const onAddItem = React.useCallback(
         (newItem: PantryItem) => {
-            setItems({
-                ...items,
-                products: [...items.products, newItem]
-            });
+            if (loading) {
+                try {
+                    setPantryItems({
+                        products: [...pantryItems.products, newItem]
+                    });
+                } catch {
+                    setPantryItems({
+                        products: []
+                    });
+                    setVoidMessage("Error: shopping_list service is down")
+                }
+                setLoading(false);
+            }
         },
-        [items],
+        [pantryItems, loading],
     );
 
     return (
@@ -123,7 +125,7 @@ export function Storage() {
                     </MDBCard>
                 </Col>
                 <Col xl={6} className="wrapper">
-                    <PantryView items={items} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
+                    <PantryView items={pantryItems} voidMessage={voidMessage} handleRemove={onItemRemoval}/>
                 </Col>
             </Row>
         </Container>
@@ -131,36 +133,36 @@ export function Storage() {
 }
 
 export class PantryItem {
-    constructor(itemName: string, quantity: number, type: ProductType, unit: Unit, lastUsed: Timestamp,
-                useNumber: number, totalUseNumber: number, timesBought: number, buyDate: Timestamp) {
-        this.product_name = itemName;
+    constructor(itemName: string, quantity: number, type: ProductType, unit: Unit, expiration?: Timestamp, lastUsed?: Timestamp,
+                useNumber?: number, totalUseNumber?: number, timesBought?: number) {
+        this.item_name = itemName;
         this.quantity = quantity;
         this.unit = unit;
         this.type = type;
-        this.lastUsed = lastUsed;
-        this.useNumber = useNumber;
-        this.totalUseNumber = totalUseNumber;
-        this.timesBought = timesBought;
-        this.buyDate = buyDate;
+        this.expiration = expiration === undefined ? Timestamp.default() : expiration;
+        this.last_used = lastUsed === undefined ? Timestamp.default() : lastUsed;
+        this.use_number = useNumber === undefined ? 0 : useNumber;
+        this.total_used_number = totalUseNumber === undefined ? 0 : useNumber;
+        this.times_is_bought = timesBought === undefined ? 0 : timesBought;
     }
 
-    product_name: string;
+    item_name: string;
     quantity: number;
     type: ProductType;
     unit: Unit;
-    lastUsed: Timestamp;
-    useNumber: number;
-    totalUseNumber: number;
-    timesBought: number;
-    buyDate: Timestamp;
+    expiration: Timestamp;
+    last_used: Timestamp;
+    use_number: number;
+    total_used_number: number;
+    times_is_bought: number;
 
     static default(): PantryItem {
-        return new PantryItem("Unknown", 0, ProductType.Other, Unit.Packet, Timestamp.default(),
-            0, 0, 0, Timestamp.default());
+        return new PantryItem("Unknown", 0, ProductType.Other, Unit.Packet, Timestamp.default(), Timestamp.default(),
+            0, 0, 0);
     }
 
     toString() {
-        return `Item product_name: (${this.product_name} quantity: ${this.quantity} unit: ${this.unit} type: ${this.type})`
+        return `Item product_name: (${this.item_name} quantity: ${this.quantity} unit: ${this.unit} type: ${this.type})`
     }
 }
 
@@ -182,9 +184,10 @@ export function UseForm({onUseItem}) {
         fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
+                // find the item in items
                 // we call the callback passed as a parameter (!) to this component. We give it the item name to add. For us, it will be an object
-                onUseItem(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0),
-                    1, 1, 1, new Timestamp(new Date().getTime(), 0)))
+                onUseItem(new PantryItem(itemName, quantity, type, unit, Timestamp.default(), new Timestamp(new Date().getTime(), 0),
+                    1, 1, 1))
                 console.log("used " + itemName.trim());
                 // we are done submitting the item
                 setSubmitting(false);
@@ -226,8 +229,17 @@ export function UseForm({onUseItem}) {
     )
 }
 
+
+interface PantryData {
+    items: {
+        products: PantryItem[]
+    },
+    voidMessage: string,
+    handleRemove: (PantryItem) => void,
+}
+
 // this is the pantry table
-export function PantryView({items, voidMessage, handleRemove}) {
+export function PantryView({items, voidMessage, handleRemove}: PantryData) {
     return (
         <div className="tableContainer">
             <Table className="table align-middle bg-white">
@@ -243,9 +255,7 @@ export function PantryView({items, voidMessage, handleRemove}) {
                     {/*map items nel pantry in pantry element come in shopping list*/}
                     {items.products.length === 0 && (
                         <tr className="text-center">
-                            <td>
-                                {voidMessage}
-                            </td>
+                            <td>{voidMessage}</td>
                         </tr>
                     )}
                     {items.products.map(item => (

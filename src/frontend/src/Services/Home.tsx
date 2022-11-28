@@ -162,10 +162,8 @@ function Home() {
     );
 }
 
-
+// this will get always the correct IP typed in the address bar
 export const API_GATEWAY_ADDRESS = "http://" + window.location.hostname + ":8007"
-// TODO: Qua bisogna mettere un indirizzo diverso da localhost!!! Forse dobbiamo usare AWS.
-//  Puoi provare sul tuo cellulare (connesso alla stessa rete) se sostituisci localhost con l'ip assegnato dal router wifi (es. 192.168.1.9)
 
 export enum Unit {
     Bottle,
@@ -395,8 +393,8 @@ function AddItemForm({onNewItem}) {
                 setSubmitting(false);
                 // we update the state of "newItem" to an empty string, to clean the text field.
                 setItemName('');
-            })
-    }
+            });
+    };
     // We return a Form with an input group that is a Control (textfield) and a Button.
     return (
         <Form onSubmit={submitNewItem}>
