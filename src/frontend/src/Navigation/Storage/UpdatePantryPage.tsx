@@ -58,7 +58,7 @@ function UpdatePantryForm({item}) {
         console.log("called submitUpdated item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
-        let request = API_GATEWAY_ADDRESS + '/updateProductInStorage' + '/' + itemName.trim() + '/' + quantity +
+        let request = API_GATEWAY_ADDRESS + '/updateProductInStorage/' + itemName.trim() + '/' + quantity +
             '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration + '/' + lastUsed + '/'
             + useNumber + '/' + totalUseNumber + '/' + timesBought + '/' + buyDate;
         console.log(request);

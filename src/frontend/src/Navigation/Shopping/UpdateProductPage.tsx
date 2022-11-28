@@ -64,7 +64,7 @@ function UpdateForm({item}: UpdateFormProps) {
             {/*This is needed to write the name of the product*/}
             <Row container>
                 <Col item className="mb-3">
-                    <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
+                    <NameInput itemName={itemName} setItemName={setItemName}isUpdate={true}/>
                 </Col>
                 <Col item className="mb-3">
                     <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>

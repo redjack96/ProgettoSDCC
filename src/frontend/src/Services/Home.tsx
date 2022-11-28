@@ -42,18 +42,18 @@ function Home() {
     React.useEffect(() => {
         if (!loading) {
             console.log("Reloading shopping list from server");
-            console.log("api gateway address: ", API_GATEWAY_ADDRESS);
             setLoading(true);
             getList(setItems, setVoidMessage);
         }
     }, [items, loading]);
 
+    // at first items.products is empty
+    // after loading, useEffect will run and products will be populated
+
     // This removes only from the array state "items.products"
     const onItemRemoval = React.useCallback(
         item => {
             const i = items.products.findIndex(value => value.product_name === item.product_name)
-            console.log("index to remove = " + i);
-            // const index = items.findIndex(i => i.id === item.id);
             setItems({
                 ...items,
                 products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
@@ -63,12 +63,10 @@ function Home() {
         [items],
     );
 
-    console.log(items.products);
-
     const onItemUpdate = React.useCallback(
         item => {
             const index = items.products.findIndex(i => i.id === item.id);
-            console.log("The index to update is" + index);
+            // console.log("The index to update is" + index);
             setItems({
                 ...items,
                 products: [
@@ -350,10 +348,10 @@ function ShoppingList({items, voidMessage, handleUpdate, handleRemoval}) {
             {items.products.length === 0 && (
                 <p className="text-center">{voidMessage}</p>
             )}
-            {items.products.map(item => (
+            {items.products.map((item, index) => (
                 <ItemDisplay
                     item={item}
-                    key={items.products.indexOf(item)}
+                    key={index}
                     onItemUpdate={handleUpdate}
                     onItemRemoval={handleRemoval}
                 />
@@ -381,14 +379,15 @@ function AddItemForm({onNewItem}) {
         e.preventDefault();
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-        let request = API_GATEWAY_ADDRESS + '/addProduct/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
+        let trimmedItemName = itemName.trim();
+        let request = API_GATEWAY_ADDRESS + '/addProduct/' + trimmedItemName+ '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
                 // we call the callback passed as a parameter (!) to this component. We give it the item name to add. For us, it will be an object
-                onNewItem(new Item(itemName, quantity, unit, type, Timestamp.from(expiration)));
-                console.log("added " + itemName.trim());
+                onNewItem(new Item(trimmedItemName, quantity, unit, type, Timestamp.from(expiration)));
+                console.log("added " + trimmedItemName);
                 // we are done submitting the item
                 setSubmitting(false);
                 // we update the state of "newItem" to an empty string, to clean the text field.
@@ -483,7 +482,6 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
         });
     }
 
-    console.log("item is added to cart? " + item.added_to_cart);
     return (
         <MDBCard className="mb-3">
             <MDBCardBody className="card-body">
@@ -494,7 +492,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
                             size="sm"
                             variant="danger"
                             onClick={removeItem}
-                            aria-label="Rimuovi il prodotto"
+                            aria-label="Remove the product"
                         >
                             Remove
                         </Button>
