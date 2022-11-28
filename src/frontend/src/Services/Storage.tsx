@@ -23,13 +23,11 @@ export function Storage() {
     // called on page load, loads the entire list from storage microservice (if not already loaded)
     React.useEffect(() => {
         if (!loading) {
-            console.log("reloading list from server");
+            console.log("reloading storage from server");
             setLoading(true);
             fetch(API_GATEWAY_ADDRESS + '/getPantry')
                 .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
+                    return r.json();
                 })
                 .then(itemsOrError => {
                     if (itemsOrError.hasOwnProperty('products')) {
@@ -47,7 +45,7 @@ export function Storage() {
                 })
                 .catch(e => console.log("Errore: " + e))
         }
-    }, [items]);
+    }, [items, voidMessage, loading]);
 
     // this callback is used for the useItem form
     const handleUseItems = React.useCallback(
@@ -78,22 +76,21 @@ export function Storage() {
                 setLoading(false);
             }
         },
-        [items.products],
+        [items, loading],
     );
 
     // This removes only from the array state "items.products"
     const onItemRemoval = React.useCallback(
         item => {
-            console.log("DENTRO ITEM REMOVAL");
+            console.log("Removing item ", item.item_name);
             const i = items.products.findIndex(value => value.item_name === item.item_name);
-            console.log("index to remove = " + i);
             setItems({
                 ...items,
                 products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
             });
             setLoading(false);
         },
-        [items.products],
+        [items],
     );
 
     const onAddItem = React.useCallback(
@@ -245,7 +242,11 @@ export function PantryView({items, voidMessage, handleRemove}) {
                 <TableBody>
                     {/*map items nel pantry in pantry element come in shopping list*/}
                     {items.products.length === 0 && (
-                        <p className="text-center">{voidMessage}</p>
+                        <tr className="text-center">
+                            <td>
+                                {voidMessage}
+                            </td>
+                        </tr>
                     )}
                     {items.products.map(item => (
                         <PantryElement

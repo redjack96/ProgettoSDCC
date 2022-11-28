@@ -1,24 +1,17 @@
-import {Container, Button, Row, Col, Form, InputGroup, Image, ButtonGroup} from 'react-bootstrap';
+import {Button, ButtonGroup, Col, Container, Form, Image, Row} from 'react-bootstrap';
 import React from 'react'
 import '../App.css';
 import images from '../Images/images.js';
 import {useNavigate} from "react-router-dom";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
-import {
-    MDBCard,
-    MDBCardBody
-} from 'mdb-react-ui-kit';
+import {MDBCard, MDBCardBody} from 'mdb-react-ui-kit';
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, UnitSelect} from "../Widgets/FormWidgets";
 import {SimpleModalAlert} from "../Widgets/AlertWidgets";
 
 function getList(setItems, setVoidMessage) {
     fetch(API_GATEWAY_ADDRESS + '/getList')
-        .then(r => {
-            let x = r.json();
-            console.log(x);
-            return x;
-        })
+        .then(r => r.json())
         .then(itemsOrError => {
             if (itemsOrError.hasOwnProperty('products')) {
                 setItems(itemsOrError)
@@ -48,13 +41,12 @@ function Home() {
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
         if (!loading) {
-            console.log("Reloading list from server");
-            console.log("Node Env: ", process.env.NODE_ENV);
+            console.log("Reloading shopping list from server");
             console.log("api gateway address: ", API_GATEWAY_ADDRESS);
             setLoading(true);
             getList(setItems, setVoidMessage);
         }
-    }, [items]);
+    }, [items, loading]);
 
     // This removes only from the array state "items.products"
     const onItemRemoval = React.useCallback(
@@ -68,7 +60,7 @@ function Home() {
             });
             setLoading(false);
         },
-        [items.products],
+        [items],
     );
 
     console.log(items.products);
@@ -95,17 +87,15 @@ function Home() {
             console.log("BuyAll")
             fetch(API_GATEWAY_ADDRESS + '/buyProductsInCart', {method: 'POST'})
                 .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
+                    return r.json();
                 })
                 .catch(e => console.log("Errore: " + e))
 
-            console.log("reloading list from server");
+            console.log("reloading shopping list from server");
             getList(setItems, setVoidMessage);
             // show alert
             setShowAlert(true);
-        }, [items])
+        }, [])
 
     // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
     const onNewItem = React.useCallback(
@@ -127,7 +117,7 @@ function Home() {
                 setLoading(false);
             }
         },
-        [items.products],
+        [items, loading],
     );
 
     let [showAlert, setShowAlert] = React.useState(false);

@@ -2,16 +2,7 @@ import React, {useState} from "react";
 import {Dropdown, Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS} from "./Home";
 
-import {
-    MDBCol,
-    MDBIcon,
-    MDBRow,
-    MDBTabs,
-    MDBTabsContent,
-    MDBTabsItem,
-    MDBTabsLink,
-    MDBTabsPane
-} from "mdb-react-ui-kit";
+import {MDBCol, MDBIcon, MDBRow, MDBTabs, MDBTabsContent, MDBTabsItem, MDBTabsLink, MDBTabsPane} from "mdb-react-ui-kit";
 
 // this component defines the summary page
 export function Summary() {
@@ -41,9 +32,7 @@ export function Summary() {
         setDropValue("Weekly");
         fetch(API_GATEWAY_ADDRESS + '/getWeekSummary')
             .then(r => {
-                let x = r.json();
-                console.log(x);
-                return x;
+                return r.json();
             })
             .then(itemsOrError => {
                 if (itemsOrError.hasOwnProperty('msg')) {
@@ -71,9 +60,7 @@ export function Summary() {
         setDropValue("Monthly");
         fetch(API_GATEWAY_ADDRESS + '/getMonthSummary')
             .then(r => {
-                let x = r.json();
-                console.log(x);
-                return x;
+                return r.json();
             })
             .then(itemsOrError => {
                 if (itemsOrError.hasOwnProperty('msg')) {
@@ -101,9 +88,7 @@ export function Summary() {
         setDropValue("Total");
         fetch(API_GATEWAY_ADDRESS + '/getTotalSummary')
             .then(r => {
-                let x = r.json();
-                console.log(x);
-                return x;
+                return r.json();
             })
             .then(itemsOrError => {
                 if (itemsOrError.hasOwnProperty('msg')) {

@@ -1,11 +1,6 @@
 import React from "react";
 import {Container, Row} from "react-bootstrap";
-import {
-    MDBBtn,
-    MDBCard,
-    MDBCardBody,
-    MDBCardImage, MDBCardText, MDBCardTitle, MDBCol, MDBSpinner,
-} from "mdb-react-ui-kit";
+import {MDBBtn, MDBCard, MDBCardBody, MDBCardImage, MDBCardText, MDBCardTitle, MDBCol, MDBSpinner,} from "mdb-react-ui-kit";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
 import {API_GATEWAY_ADDRESS} from "./Home";
@@ -27,13 +22,11 @@ export function Recipes() {
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
         if (!loading) {
-            console.log("reloading list from server");
+            console.log("reloading recipes from server");
             setLoading(true);
             fetch(API_GATEWAY_ADDRESS + '/getRecipes')
                 .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
+                    return r.json();
                 })
                 .then(itemsOrError => {
                     if (itemsOrError.hasOwnProperty('recipes')) {
@@ -53,10 +46,10 @@ export function Recipes() {
                 })
                 .catch(e => console.log("Errore: " + e))
         }
-    }, [items]);
+    }, [items, loading]);
 
     const showListIngredients = (ingredient, index, row) => {
-        if (index == row.length-1) {
+        if (index === row.length-1) {
             return ingredient.name;
         } else {
             return ingredient.name+',';
@@ -66,11 +59,11 @@ export function Recipes() {
     // this allows the spinner to show when is loading recipes
     const displayMessageOrSpinner = (items) => {
         if (serviceAvailable) {
-            if (items.recipes.length == 1) {
+            if (items.recipes.length === 1) {
                 return(<MDBSpinner className="center p-5" color='success'>
                     <span className='visually-hidden'>Loading...</span>
                 </MDBSpinner>);
-            } else if (items.recipes.length == 0) {
+            } else if (items.recipes.length === 0) {
                 return (<p className="text-center">{voidMessage}</p>);
             }
         } else if (!serviceAvailable) {
@@ -79,9 +72,9 @@ export function Recipes() {
     }
 
     const displayRecipes = (items) => {
-        if (items.recipes.length != 1 || (items.recipes.length == 1 && items.recipes[0].title != "")) {
+        if (items.recipes.length !== 1 || (items.recipes.length === 1 && items.recipes[0].title !== "")) {
             return items.recipes.map(item => (
-                <MDBCol>
+                <MDBCol key={items.recipes.indexOf(item)}>
                     <MDBCard>
                         <MDBCardImage src={item.img} position='top' alt='...'/>
                         <MDBCardBody>
