@@ -6,10 +6,6 @@ services:
     image: "redjack96/web_ui"
     ports:
       - "3000:3000"
-    deploy:
-      mode: global
-    networks:
-      - overlay_net
 
   # --- API-GATEWAY ---
   api_gateway:
@@ -18,10 +14,6 @@ services:
       - "./config.properties:/api_gateway/config.properties"
     ports:
       - "8007:8007"
-    networks:
-      - overlay_net
-    deploy:
-      mode: global
 
   # --- APP-MICROSERVICES ---
   shopping_list:
@@ -32,8 +24,7 @@ services:
       - "8001:8001"
     depends_on:
       - mongo
-    networks:
-      - overlay_net
+
 
   product_storage:
     image: "redjack96/product_storage"
@@ -47,8 +38,7 @@ services:
       - "8002:8002"
     volumes:
       - "./config.properties:/product_storage/config.properties"
-    networks:
-      - overlay_net
+
 
   notifications:
     image: "redjack96/notifications"
@@ -60,8 +50,6 @@ services:
       - product_storage
       - redis-notifications
       - kafka
-    networks:
-      - overlay_net
 
   summary:
     image: "redjack96/summary"
@@ -75,8 +63,6 @@ services:
       - influxdb
       - consumptions
       - kafka
-    networks:
-      - overlay_net
 
   recipes:
     image: "redjack96/recipes"
@@ -86,8 +72,6 @@ services:
       - "8003:8003"
     depends_on:
       - redis
-    networks:
-      - overlay_net
 
   consumptions:
     image: "redjack96/consumptions"
@@ -98,8 +82,7 @@ services:
       - "./config.properties:/usr/src/consumptions/config.properties"
     depends_on:
       - cassandra
-    networks:
-      - overlay_net
+
 
   # --- KAFKA + ZOOKEEPER ---
   zookeeper:
@@ -108,8 +91,6 @@ services:
       - '2181:2181'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
-    networks:
-      - overlay_net
 
   kafka:
     # CREARE TOPIC
@@ -131,8 +112,7 @@ services:
       - KAFKA_CFG_LOG4J_LOGGERS="kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
     depends_on:
       - zookeeper
-    networks:
-      - overlay_net
+
   # --- DATABASES ---
   # for shopping list
   mongo:
@@ -142,8 +122,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     ports:
       - "27017:27017"
-    networks:
-      - overlay_net
+
   # MongoDB UI
 #  mongo-express:
 #    image: mongo-express
@@ -171,24 +150,21 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: myorg
       DOCKER_INFLUXDB_INIT_BUCKET: krakend
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: token
-    networks:
-      - overlay_net
+
 
   # for recipes
   redis:
     image: redis:latest
     ports:
       - '6379:6379'
-    networks:
-      - overlay_net
+
 #
   # for notification
   redis-notifications:
     image: redis:latest
     ports:
       - '6380:6379'
-    networks:
-      - overlay_net
+
 
   # for consumptions
   cassandra:
@@ -205,8 +181,7 @@ services:
       - CASSANDRA_CLUSTER_NAME=CassandraCluster
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_DC=datacenter
-    networks:
-      - overlay_net
+
 
 volumes:
   influxdb-storage:
@@ -214,10 +189,3 @@ volumes:
     driver: local
 
 # TODO: add external volumes for cassandra and influx
-
-
-# this is needed to communicate between swarm nodes, container to container.
-networks:
-  overlay_net:
-    external: true
-

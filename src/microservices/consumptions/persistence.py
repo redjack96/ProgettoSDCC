@@ -121,8 +121,6 @@ class Cassandra:
 
         print("creating tables")
         self.__create_tables()
-        # print("creating index")
-        self.__create_index()
         # todo: RIMETTIMI
         # print("populating tables")
         # self.__populate_tables("consumi-storage.csv")
@@ -155,13 +153,6 @@ class Cassandra:
         query = "CREATE TABLE IF NOT EXISTS predictions" \
                 "(week_num int, product_name text, prediction float, PRIMARY KEY(product_name));"
         self.session.execute(query)
-
-    def __create_index(self):
-        pass
-        # query = "CREATE INDEX IF NOT EXISTS productIndex ON dataset (product_name);"
-        # self.session.execute(query)
-        # query = "CREATE INDEX IF NOT EXISTS prodIndex ON predictions (product_name);"
-        # self.session.execute(query)
 
     def __populate_tables(self, dataset_filename: str):
         dataset = read_csv(dataset_filename)

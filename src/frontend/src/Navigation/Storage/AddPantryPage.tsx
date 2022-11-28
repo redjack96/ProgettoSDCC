@@ -25,7 +25,7 @@ export function AddPantryPage() {
             <PageHeader pageName="Add a product in Pantry"/>
             <MDBCard className="form">
                 <MDBCardBody>
-                    <AddPantryForm onAdd={onAddItem}/>
+                    {/*<AddPantryForm onAdd={onAddItem}/>*/}
                 </MDBCardBody>
             </MDBCard>
         </Container>
@@ -42,16 +42,23 @@ export function AddPantryForm({onAdd}) {
     const [submitting, setSubmitting] = React.useState(false);
 
     // this is used to return to home when clicking update button
-    const navigate = useNavigate();
-    const toStorage = () => {
+    // const navigate = useNavigate();
+    const addToStorage = () => {
         console.log("called submitAdded item");
         // when clicking on a submit button, the default behaviour is submitting a form. With this method we prevent this.
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-        let request = API_GATEWAY_ADDRESS + '/addProductToStorage'+'/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
+        let request = API_GATEWAY_ADDRESS + '/addProductToStorage/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
-            .then(r => r.json)
+            .then(response => {
+                if (response.ok) {
+                    console.log("Response ok");
+                    return response.json();
+                }
+                console.log("Response not ok:", response);
+                return new Error("Something went wrong");
+            })
             .then(() => {
                 setSubmitting(false);
                 onAdd(new PantryItem(itemName, quantity, type, unit, new Timestamp(new Date().getTime(), 0),
@@ -59,10 +66,10 @@ export function AddPantryForm({onAdd}) {
                 // we update the state of "itemName" to an empty string, to clean the text field.
                 setItemName('');
             })
-        navigate('/productStoragePage');
+        // navigate('/productStoragePage');
     }
 
-    return (<Form onSubmit={() => toStorage()}>
+    return (<Form onSubmit={() => addToStorage()}>
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">

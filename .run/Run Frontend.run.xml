@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Frontend" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/src/frontend/package.json" />
+    <command value="start" />
+    <arguments value="--host 0.0.0.0 --port 3000 --disableHostCheck true" />
+    <node-interpreter value="project" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>

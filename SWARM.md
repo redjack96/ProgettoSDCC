@@ -1,4 +1,4 @@
-# Deploy on Docker Swarm
+# Manual Deploy on Docker Swarm
 1) Use `terraform apply` to run N=3 instances.
 2) Connect with ssh to N=3 EC2 instances. 
 
@@ -12,27 +12,13 @@
 
    [optional] On one of the EC2 instance, use `hostname -i` or `ifconfig eth0`and copy the **private ip** that you get, for example "172.31.30.79".
 
-3) Update the ips obtained from terraform in the ANSIBLE inventory.yaml 
-```
-ec2:
-  hosts:
-    vm01:
-      ansible_host: <ip1-here>
-    vm02:
-      ansible_host: <ip2-here>
-    vm03:
-      ansible_host: <ip3-here>
-  vars:
-    ansible_user: ec2-user
-    ansible_ssh_private_key_file: ../terraform/labsuser.pem
-```
-4) On one of the EC2 instance, use
+3) On one of the EC2 instance, use
    ```
-      docker swarm init --advertise-addr $(hostname -i)
+   <ec2-swarm-leader>$ docker swarm init --advertise-addr $(hostname -i)
    ```
-5) On the other EC2 instances, use the command obtained at the previous step
+4) On the other 2 EC2 instances, use the command obtained at the previous step
    ```
-    docker swarm join --token SWMTKN-1-1cvss9vzvptthzxbwzpvar0jvs7p9vy4gncvc77nxq627m3qok-bdlvgq9pl0ppgh0dbvxr3h3dw 172.31.30.79:2377
+   <ec2-swarm-worker>$ docker swarm join --token SWMTKN-1-1cvss9vzvptthzxbwzpvar0jvs7p9vy4gncvc77nxq627m3qok-bdlvgq9pl0ppgh0dbvxr3h3dw 172.31.30.79:2377
    ```
    Check active nodes with `docker node ls`. Example Output:
    ```console
@@ -41,12 +27,13 @@ ec2:
    2h8rwv95gfnc8johu5ywop5ea     ip-172-31-24-128.ec2.internal   Ready     Active                          20.10.17
    uoh3cqbl1p8qke3orrir05nnc *   ip-172-31-30-79.ec2.internal    Ready     Active         Leader           20.10.17
    ```
-6) On your PC, use this ANSIBLE command to copy files to each of the EC2 instance.
+5) On your PC, use this ANSIBLE command to copy files to each of the EC2 instance.
 
    ```
-   ansible$ ansible-playbook playbook.yaml -i inventory.yaml
+   ansible$ ansible-playbook playbook-copyfiles.yaml -i inventory.yaml
    ```
-7) Now start the services from the LEADER node with the docker-stack.yml file (copied at previous step). **Most of the following command can only be used in the leader node.**
+   
+6) Now start the services from the LEADER node with the docker-stack.yml file (copied at previous step). **Most of the following command can only be used in the leader node.**
 
    [1) needed] To create an overlay network (TODO: I don't know if an external overlay network in the docker-stack.yml it is really necessary) (Leader-only):
 
@@ -55,7 +42,8 @@ ec2:
    ```
 
    [2) needed] **To deploy the stack with the entire application (Leader-only)**
-   ```      
+   
+   ```
    docker stack deploy -c docker-stack.yml sdcc-demo
    ```
    [good to use - which service are running] To check running services (and their replication) in the docker swarm's stack (Leader-only):

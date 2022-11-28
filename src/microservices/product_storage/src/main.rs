@@ -395,7 +395,7 @@ fn use_product_in_db(elem: &UsedItem) -> String {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let configs = get_properties();
-    let addr = format!("0.0.0.0:{}", configs.product_storage_port);
+    let addr = format!("[::]:{}", configs.product_storage_port);
     // Create db and create products table (if not exists)
     let db = Database::new();
     db.create_table_products();
