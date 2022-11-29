@@ -76,46 +76,49 @@ When finished:
 
 
 <a href="https://www.rust-lang.org/it">
-<img src="https://www.rust-lang.org/static/images/rust-logo-blk.svg" width="150" height="150">
+<img src="https://www.svgrepo.com/show/306688/rust.svg" width="150" height="150" alt="Rust">
 </a>
 <a href="https://www.java.com/it/">
-<img src="https://img.icons8.com/color/2x/java-coffee-cup-logo.png" width="150" height="150">
+<img src="https://www.svgrepo.com/show/353924/java.svg" width="150" height="150" alt="Java">
 </a>
 <a href="https://go.dev/">
-<img src="https://img.icons8.com/color/2x/golang.png" width="150" height="150">
+<img src="https://www.svgrepo.com/show/373635/go-gopher.svg" width="150" height="150" alt="Go">
 </a>
 <a href="https://www.python.org/">
-<img src="https://img.icons8.com/color/2x/python.png" width="150" height="150">
+<img src="https://www.svgrepo.com/show/374016/python.svg" width="150" height="150" alt="Python">
 </a>
 <a href="https://www.typescriptlang.org/">
-<img src="https://img.icons8.com/color/2x/typescript.png" width="150" height="150">
+<img src="https://www.svgrepo.com/show/354478/typescript-icon.svg" width="150" height="150" alt="Typescript">
 </a>
 <a href="https://www.sqlite.org/index.html">
-<img src="https://www.sqlite.org/images/sqlite370_banner.gif" width="300" height="150">
+<img src="https://www.svgrepo.com/show/374094/sqlite.svg" width="150" height="150" alt="SQLite">
 </a>
 <a href="https://www.mongodb.com/">
-<img src="https://webimages.mongodb.com/_com_assets/cms/kuyjf3vea2hg34taa-horizontal_default_slate_blue.svg?auto=format%252Ccompress" width="150" height="150">
+<img src="https://www.svgrepo.com/show/373845/mongo.svg" width="150" height="150" alt="MongoDB">
 </a>
 <a href="https://www.influxdata.com/">
-<img src="https://img.icons8.com/flat-round/2x/influxdb.png" width="150" height="150">
+<img src="https://www.svgrepo.com/show/306233/influxdb.svg" width="150" height="150" alt="InfluxDB">
 </a>
 <a href="https://cassandra.apache.org/_/index.html">
-<img src="https://www.vectorlogo.zone/logos/apache_cassandra/apache_cassandra-icon.svg" width="150" height="150">
+<img src="https://www.vectorlogo.zone/logos/apache_cassandra/apache_cassandra-icon.svg" width="150" height="150" alt="Cassandra">
 </a>
 <a href="https://kafka.apache.org/24/documentation.html">
-<img src="https://iconape.com/wp-content/files/vq/370992/svg/370992.svg" width="150" height="150">
+<img src="https://www.svgrepo.com/show/305719/apachekafka.svg" width="150" height="150" alt="Kafka">
 </a>
 <a href="https://redis.io">
-<img src="https://static.cdnlogo.com/logos/r/31/redis.svg" width="150" height="150">
+<img src="https://static.cdnlogo.com/logos/r/31/redis.svg" width="150" height="150" alt="Redis">
 </a>
 <a href="https://it.reactjs.org/">
-<img src="https://d33wubrfki0l68.cloudfront.net/554c3b0e09cf167f0281fda839a5433f2040b349/ecfc9/img/header_logo.svg" width="150" height="150">
+<img src="https://d33wubrfki0l68.cloudfront.net/554c3b0e09cf167f0281fda839a5433f2040b349/ecfc9/img/header_logo.svg" width="150" height="150" alt="React">
 </a>
 <a href="https://www.terraform.io/">
-<img src="https://camo.githubusercontent.com/1a4ed08978379480a9b1ca95d7f4cc8eb80b45ad47c056a7cfb5c597e9315ae5/68747470733a2f2f7777772e6461746f636d732d6173736574732e636f6d2f323838352f313632393934313234322d6c6f676f2d7465727261666f726d2d6d61696e2e737667" width="150" height="150">
+<img src="https://www.svgrepo.com/show/354447/terraform-icon.svg" width="150" height="150" alt="Terraform">
 </a>
 <a href="https://www.ansible.com/">
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Ansible_logo.svg/1664px-Ansible_logo.svg.png" width="150" height="150">
+<img src="https://www.svgrepo.com/show/341603/ansible.svg" width="150" height="150" alt="Ansible">
+</a>
+<a href="https://aws.amazon.com/">
+<img src="https://www.svgrepo.com/show/333504/aws.svg" width="150" height="150" alt="AWS">
 </a>
 
 
