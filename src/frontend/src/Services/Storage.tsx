@@ -201,7 +201,7 @@ export function UseForm({onUseItem}) {
             <InputGroup className="mb-3">
                 {/*This is needed to write the name of the product*/}
                 <Row className="mb-3">
-                    <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
+                    <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false} isUse={true}/>
                 </Row>
                 <Row className="mb-3">
                     <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
