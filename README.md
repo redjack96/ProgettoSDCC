@@ -111,6 +111,12 @@ When finished:
 <a href="https://it.reactjs.org/">
 <img src="https://d33wubrfki0l68.cloudfront.net/554c3b0e09cf167f0281fda839a5433f2040b349/ecfc9/img/header_logo.svg" width="150" height="150">
 </a>
+<a href="https://www.terraform.io/">
+<img src="https://camo.githubusercontent.com/1a4ed08978379480a9b1ca95d7f4cc8eb80b45ad47c056a7cfb5c597e9315ae5/68747470733a2f2f7777772e6461746f636d732d6173736574732e636f6d2f323838352f313632393934313234322d6c6f676f2d7465727261666f726d2d6d61696e2e737667" width="150" height="150">
+</a>
+<a href="https://www.ansible.com/">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Ansible_logo.svg/1664px-Ansible_logo.svg.png" width="150" height="150">
+</a>
 
 
 
