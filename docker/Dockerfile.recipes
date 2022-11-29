@@ -1,7 +1,5 @@
-# syntax=docker/dockerfile:1
-
-FROM golang:latest
-WORKDIR /usr/src/recipes
+FROM golang:latest as builder
+WORKDIR /usr/local/go/src/main/recipes.microservice
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --assume-yes protobuf-compiler
 RUN mkdir "generated"
@@ -23,6 +21,12 @@ RUN export PATH="$PATH:$(go env GOPATH)/bin"
 
 COPY microservices/recipes/main ./main
 
-EXPOSE 8003
 
-CMD ["go", "run", "main/recipes.go"]
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o recipes main/recipes.go
+
+FROM alpine as runner
+WORKDIR /usr/local/go/src/main/recipes.microservice
+COPY --from=builder /usr/local/go/src/main/recipes.microservice/recipes ./recipes
+
+EXPOSE 8003
+CMD ["./recipes"]

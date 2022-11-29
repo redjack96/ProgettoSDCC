@@ -37,7 +37,7 @@ services:
       dockerfile: "../docker/Dockerfile.shoppinglist"
       context: "src"
     volumes:
-      - "./config.properties:/usr/src/shopping_list/config.properties"
+      - "./config.properties:/usr/local/go/src/main/shoppinglist.microservice/config.properties"
     depends_on:
       - mongo
 
@@ -95,7 +95,7 @@ services:
       dockerfile: "../docker/Dockerfile.recipes"
       context: "src"
     volumes:
-      - "./config.properties:/usr/src/recipes/config.properties"
+      - "./config.properties:/usr/local/go/src/main/recipes.microservice/config.properties"
     depends_on:
       - redis
 

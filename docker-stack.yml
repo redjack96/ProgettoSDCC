@@ -19,7 +19,7 @@ services:
   shopping_list:
     image: "redjack96/shopping_list"
     volumes:
-      - "./config.properties:/usr/src/shopping_list/config.properties"
+      - "./config.properties:/usr/local/go/src/main/shoppinglist.microservice/config.properties"
     ports:
       - "8001:8001"
     depends_on:
@@ -67,7 +67,7 @@ services:
   recipes:
     image: "redjack96/recipes"
     volumes:
-      - "./config.properties:/usr/src/recipes/config.properties"
+      - "./config.properties:/usr/local/go/src/main/recipes.microservice/config.properties"
     ports:
       - "8003:8003"
     depends_on:
