@@ -68,7 +68,7 @@ export function AddPantryForm({onAdd}) {
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
-                <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
+                <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false} isUse={false}/>
                 <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>
             </Row>
             <Row className="mb-3">

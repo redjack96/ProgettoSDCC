@@ -400,7 +400,7 @@ function AddItemForm({onNewItem}) {
             <Col>
                 <Row className="mb-3">
                     <Col>
-                        <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false}/>
+                        <NameInput itemName={itemName} setItemName={setItemName} isUpdate={false} isUse={false}/>
                     </Col>
                     <Col>
                         <ExpirationInput expiration={expiration} setExpiration={setExpiration}/>

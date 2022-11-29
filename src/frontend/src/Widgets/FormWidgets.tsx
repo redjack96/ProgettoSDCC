@@ -4,7 +4,7 @@ import {ProductType, Unit} from "../Services/Home";
 
 /*This file defines in one place the inputs that are used for several forms*/
 
-export function NameInput({itemName, setItemName, isUpdate}) {
+export function NameInput({itemName, setItemName, isUpdate, isUse}) {
     const setSanitizedString = (str: string) => {
         str = str.replace(/[^A-Za-z ]/g, '');
         let capitalized = capitalizeWords(str);
@@ -13,14 +13,26 @@ export function NameInput({itemName, setItemName, isUpdate}) {
     return (
         <Form.Group as={Col} controlId="formGridName">
             <Form.Label>Name</Form.Label>
-            <Form.Control
-                value={itemName}
-                onChange={e => setSanitizedString(e.target.value)}
-                type="text"
-                placeholder="New Item"
-                aria-describedby="basic-addon1"
-                disabled={isUpdate}>
-            </Form.Control>
+            {isUse === true && (
+                <Form.Control
+                    value={itemName}
+                    onChange={e => setSanitizedString(e.target.value)}
+                    type="text"
+                    placeholder="Use item"
+                    aria-describedby="basic-addon1"
+                    disabled={isUpdate}>
+                </Form.Control>
+            )}
+            {isUse === false && (
+                <Form.Control
+                    value={itemName}
+                    onChange={e => setSanitizedString(e.target.value)}
+                    type="text"
+                    placeholder="New Item"
+                    aria-describedby="basic-addon1"
+                    disabled={isUpdate}>
+                </Form.Control>
+            )}
         </Form.Group>
     );
 }

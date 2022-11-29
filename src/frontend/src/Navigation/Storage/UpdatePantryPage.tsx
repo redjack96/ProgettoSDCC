@@ -79,7 +79,7 @@ function UpdatePantryForm({item}) {
         <InputGroup className="mb-3">
             {/*This is needed to write the name of the product*/}
             <Row className="mb-3">
-                <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true}/>
+                <NameInput itemName={itemName} setItemName={setItemName} isUpdate={true} isUse={false}/>
                 <UnitSelect unit={unit} setUnit={setUnit} isUpdate={true}/>
                 <ProductTypeSelect type={type} setType={setType} isUpdate={true}/>
                 <QuantityInput quantity={quantity} setQuantity={setQuantity}/>
