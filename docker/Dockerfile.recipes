@@ -22,4 +22,7 @@ RUN go get github.com/gocql/gocql
 RUN export PATH="$PATH:$(go env GOPATH)/bin"
 
 COPY microservices/recipes/main ./main
+
+EXPOSE 8003
+
 CMD ["go", "run", "main/recipes.go"]

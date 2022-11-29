@@ -16,13 +16,11 @@ export function Notifications() {
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
         if (!loading) {
-            console.log("reloading list from server");
+            console.log("reloading notifications from server");
             setLoading(true);
             fetch(API_GATEWAY_ADDRESS + '/getNotifications')
                 .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
+                    return r.json();
                 })
                 .then(itemsOrError => {
                     try {
@@ -71,7 +69,7 @@ export function Notifications() {
             {viewedNotifications.notification.length === 0 && (
                 <p className="text-center">{voidMessage}</p>
             )}
-            {viewedNotifications.notification.length == 1 && (
+            {viewedNotifications.notification.length === 1 && (
                 <React.Fragment>
                     {viewedNotifications.notification[0].startsWith("The following") && (
                         <AlertExpired notification={viewedNotifications.notification[0]} onDismiss={() => onDismiss(viewedNotifications.notification[0])}/>
@@ -83,7 +81,7 @@ export function Notifications() {
                 </React.Fragment>
             )}
 
-            {viewedNotifications.notification.length == 2 && (
+            {viewedNotifications.notification.length === 2 && (
                 <React.Fragment>
                     {viewedNotifications.notification[0].startsWith("The following") && (
                         <AlertExpired notification={viewedNotifications.notification[0]} onDismiss={() => onDismiss(viewedNotifications.notification[0])}/>

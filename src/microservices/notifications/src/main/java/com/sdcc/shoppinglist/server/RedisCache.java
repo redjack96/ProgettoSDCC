@@ -1,9 +1,11 @@
 package com.sdcc.shoppinglist.server;
 
+import com.sdcc.shoppinglist.server.utils.OurProperties;
 import com.sdcc.shoppinglist.server.utils.Product;
 import redis.clients.jedis.Jedis;
 
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import static com.sdcc.shoppinglist.server.NotificationConsumer.EXPIRED;
@@ -20,7 +22,8 @@ public class RedisCache {
     private final int expiration;
 
     public RedisCache() {
-        this.jedis = new Jedis("redis-notification", 6379);
+        Properties properties = OurProperties.getProperties();
+        this.jedis = new Jedis(properties.getProperty("RedisNotificationsAddress"), Integer.parseInt(properties.getProperty("RedisNotificationsPort")));
         this.expiration = THREE_MINUTES_TEST;
     }
 

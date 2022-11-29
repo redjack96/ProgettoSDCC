@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import { Row } from "react-bootstrap";
+import {Row} from "react-bootstrap";
 import {API_GATEWAY_ADDRESS} from "./Home";
 
 // this component defines the Consumption table
@@ -12,13 +12,11 @@ export function Consumptions() {
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
         if (!loading) {
-            console.log("reloading list from server");
+            console.log("reloading consumptions from server");
             setLoading(true);
             fetch(API_GATEWAY_ADDRESS + '/predictConsumptions')
                 .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
+                    return r.json();
                 })
                 .then(itemsOrError => {
                     if (itemsOrError.hasOwnProperty('predicted')) {
@@ -53,6 +51,7 @@ export function Consumptions() {
                     {consData.predicted.map(item => (
                         <PredictedEntry
                             entry={item}
+                            key={consData.predicted.indexOf(item)}
                         />
                     ))}
                     </tbody>
@@ -67,15 +66,23 @@ export function Consumptions() {
     )
 }
 
+interface PredictionEntry{
+    entry: {
+        consumption: number
+        product: string
+        week: string
+    }
+}
 
-export function PredictedEntry({entry}) {
+
+export function PredictedEntry({entry}: PredictionEntry) {
     return (
         <tr>
-            <td>
-                <p className="fw-bold mb-1">{entry.product}</p>
+            <td className="fw-bold mb-1">
+                {entry.product}
             </td>
-            <td>
-                <p className="fw-normal mb-1">{entry.consumption}</p>
+            <td className="fw-normal mb-1">
+                {entry.consumption}
             </td>
         </tr>
     );

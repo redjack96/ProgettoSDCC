@@ -2,6 +2,8 @@
 # first we start from rust image and install our app
 FROM rust:latest as builder
 
+RUN rustup target add x86_64-unknown-linux-musl
+RUN apt update && apt install -y musl-tools musl-dev
 RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
 
 # create a new empty shell project
@@ -21,15 +23,21 @@ COPY proto/notifications.proto ./notifications.proto
 COPY proto/summary.proto ./summary.proto
 
 # this build step will cache your dependencies
-RUN cargo build --release
+RUN cargo build --target x86_64-unknown-linux-musl --release
 RUN rm src/*.rs
 
 # copy your source tree
 COPY microservices/product_storage/src ./src
 
 # build for release
-RUN rm ./target/release/deps/product_storage*
-RUN cargo build --bin product_storage --release
+RUN rm ./target/x86_64-unknown-linux-musl/release/deps/product_storage*
+RUN cargo build --target x86_64-unknown-linux-musl --bin product_storage --release
+
+FROM alpine as runner
+WORKDIR /product_storage
+COPY --from=builder /product_storage/target/x86_64-unknown-linux-musl/release/product_storage product_storage
+
+EXPOSE 8002
 
 # set the startup command to run your binary
-CMD ["./target/release/product_storage"]
+CMD /product_storage/product_storage

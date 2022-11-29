@@ -270,7 +270,9 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 /* Function to query the MongoDB database, implements all CRUD MongoDB operations */
 func queryDB(operation DBOperation) (interface{}, error) {
 	// connect mongo database
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://root:example@mongo:27017"))
+	configs, _ := props.GetProperties()
+	uri := fmt.Sprintf("mongodb://root:example@%s:%d", configs.MongoDBAddress, configs.MongoDBPort)
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}
@@ -500,7 +502,7 @@ func main() {
 	fmt.Printf("Properties %+v\n", properties)
 
 	// Listen for incoming requests
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", properties.ShoppingListPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", properties.ShoppingListAddress, properties.ShoppingListPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

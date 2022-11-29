@@ -5,41 +5,22 @@ import {ProductType, Unit} from "../Services/Home";
 /*This file defines in one place the inputs that are used for several forms*/
 
 export function NameInput({itemName, setItemName, isUpdate}) {
+    const setSanitizedString = (str: string) => {
+        str = str.replace(/[^A-Za-z ]/g, '');
+        let capitalized = capitalizeWords(str);
+        setItemName(capitalized)
+    }
     return (
         <Form.Group as={Col} controlId="formGridName">
             <Form.Label>Name</Form.Label>
-            {isUpdate === true && (
-                <Form.Control
-                    value={itemName}
-                    onChange={e => {
-                        let itemNameStr: string = e.target.value;
-                        itemNameStr = itemNameStr.replace(/[^A-Za-z]/g, '');
-                        let firstChar: string = itemNameStr.charAt(0).toUpperCase();
-                        let itemNameStrUppercase: string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
-                        setItemName(itemNameStrUppercase.trim())
-                    }}
-                    type="text"
-                    placeholder="New Item"
-                    aria-describedby="basic-addon1"
-                    disabled>
-                </Form.Control>
-            )}
-            {isUpdate == false && (
-                <Form.Control
-                    value={itemName}
-                    onChange={e => {
-                        let itemNameStr: string = e.target.value;
-                        itemNameStr = itemNameStr.replace(/[^A-Za-z]/g, '');
-                        let firstChar: string = itemNameStr.charAt(0).toUpperCase();
-                        let itemNameStrUppercase: string = firstChar + itemNameStr.substring(1, itemNameStr.length).toLowerCase()
-                        setItemName(itemNameStrUppercase.trim())
-                    }}
-                    type="text"
-                    placeholder="New Item"
-                    aria-describedby="basic-addon1"
-                >
-                </Form.Control>
-            )}
+            <Form.Control
+                value={itemName}
+                onChange={e => setSanitizedString(e.target.value)}
+                type="text"
+                placeholder="New Item"
+                aria-describedby="basic-addon1"
+                disabled={isUpdate}>
+            </Form.Control>
         </Form.Group>
     );
 }
@@ -56,7 +37,7 @@ export function UnitSelect({unit, setUnit, isUpdate}) {
                 <option>Grams</option>
             </Form.Select>
         )}
-        {isUpdate == false && (
+        {isUpdate === false && (
             <Form.Select as="select" onChange={e => setUnit(Unit.parse(e.target.value))} defaultValue={Unit.toString(unit)}>
                 <option>Select unit...</option>
                 <option>Bottle</option>
@@ -117,13 +98,11 @@ export function QuantityInput({quantity, setQuantity}) {
     return (<Form.Group as={Col} controlId="formQuantity">
         <Form.Label>Quantity</Form.Label>
         <Form.Control
-            value={quantity.valueOf()}
+            value={Number(quantity).toString()}
             onChange={e => {
-                let inputQuantity = parseInt(e.target.value);
-                setQuantity(inputQuantity < 0 ? 0 : inputQuantity);
+                setNumber(e.target.value, setQuantity);
             }}
             type="number"
-            placeholder="0"
             aria-describedby="basic-addon1"
         />
     </Form.Group>);
@@ -134,7 +113,7 @@ export function UseNumberInput({useNumber, setUseNumber}) {
         <Form.Group as={Col} controlId="formUseNumber">
             <Form.Label>Uses</Form.Label>
             <Form.Control
-                value={useNumber}
+                value={Number(useNumber).toString()}
                 onChange={event => {
                     let inputUseNumber = parseInt(event.target.value);
                     setUseNumber(inputUseNumber < 0 ? 0 : inputUseNumber);
@@ -152,7 +131,7 @@ export function TotalUseNumberInput({totalUseNumber, setTotalUseNumber}) {
         <Form.Group as={Col} controlId="formTotalUseNumber">
             <Form.Label>Total Uses</Form.Label>
             <Form.Control
-                value={totalUseNumber}
+                value={Number(totalUseNumber).toString()}
                 onChange={event => {
                     let inputTotalUseNumber = parseInt(event.target.value);
                     setTotalUseNumber(inputTotalUseNumber < 0 ? 0 : inputTotalUseNumber);
@@ -170,7 +149,7 @@ export function TimesBoughtInput({timesBought, setTimesBought}) {
         <Form.Group as={Col} controlId="formTimesBought">
             <Form.Label>Times Bought</Form.Label>
             <Form.Control
-                value={timesBought}
+                value={Number(timesBought).toString()}
                 onChange={event => {
                     let inputTimesBought = parseInt(event.target.value);
                     setTimesBought(inputTimesBought < 0 ? 0 : inputTimesBought);
@@ -205,7 +184,7 @@ export function UpdateButton({buttonText}) {
     );
 }
 
-export function BackButton({backFn}){
+export function BackButton({backFn}) {
     return (
         <Button
             type="button"
@@ -215,4 +194,20 @@ export function BackButton({backFn}){
             Cancel
         </Button>
     );
+}
+
+function setNumber(n: string, setN: (arg0: number) => void) {
+    let inputQuantity = parseInt(n);
+    setN(inputQuantity < 0 || isNaN(inputQuantity) ? 0 : inputQuantity);
+}
+
+function capitalizeWords(str: string): string {
+    let splitStr = str.toLowerCase().split(' ');
+    for (let i = 0; i < splitStr.length; i++) {
+        // You do not need to check if i is larger than splitStr length, as your for does that for you
+        // Assign it back to the array
+        splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+    }
+    // Directly return the joined string
+    return splitStr.join(' ');
 }

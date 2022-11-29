@@ -1,0 +1,128 @@
+- name: copy files to ec2
+  hosts: ec2
+  connection: ssh
+  tasks:
+    - name: copy ec2config.properties as config.properties
+      copy:
+        src: ../terraform/ec2config.properties
+        dest: ~/config.properties
+    - name: copy docker-stack.yml as docker-stack.yml
+      copy:
+        src: ../docker-stack.yml
+        dest: ~/docker-stack.yml
+
+# classify each manager node (we have only one) if it is in the docker swarm or not
+- hosts: manager
+  become: true
+  tasks:
+  # check if docker swarm mode is activated. Initially, it is not.
+    - name: determine swarm status
+      shell: >
+        docker info --format \{\{.Swarm.LocalNodeState\}\}
+      register: swarm_status
+
+  # classify manager node that is in a swarm as part of "swarm_manager_operational" group. Nothing to do with them
+    - name: create swarm_manager_operational group
+      add_host: # ansible module to create a new group
+        hostname: "{{ item }}"
+        groups: swarm_manager_operational
+      with_items: "{{ play_hosts }}"
+      when: "'active' in swarm_status.stdout_lines"
+      run_once: true
+  # classify manager node that is NOT in a swarm as part of "swarm_manager_bootstrap" group. These should join the swarm
+    - name: create swarm_manager_bootstrap group
+      add_host:
+        hostname: "{{ item }}"
+        groups: swarm_manager_bootstrap
+      with_items: "{{ play_hosts }}"
+      when: "'active' not in swarm_status.stdout_lines"
+      run_once: true
+
+# the exact same things for all the workers. Classify them if joined the swarm or not
+- hosts: worker
+  become: true
+  tasks:
+    - name: determine swarm status
+      shell: >
+        docker info --format \{\{.Swarm.LocalNodeState\}\}
+      register: swarm_status
+
+    # classify worker nodes that are part of a swarm as part of "swarm_worker_operational" group
+    - name: create swarm_worker_operational group
+      add_host:
+        hostname: "{{ item }}"
+        groups: swarm_worker_operational
+      with_items: "{{ play_hosts }}"
+      when: "'active' in swarm_status.stdout_lines"
+      run_once: true
+    # classify worker nodes that are NOT part of a swarm as part of "swarm_worker_bootstrap" group
+    - name: create swarm_worker_bootstrap group
+      add_host:
+        hostname: "{{ item }}"
+        groups: swarm_worker_bootstrap
+      with_items: "{{ play_hosts }}"
+      when: "'active' not in swarm_status.stdout_lines"
+      run_once: true
+
+# IDEMPOTENT. we get the first [0] manager to bootstrap (if present) and initialize the swarm cluster. If not present (swarm already initialized), we do nothing
+- hosts: swarm_manager_bootstrap[0]
+  become: true
+  tasks:
+    - name: initialize swarm cluster
+      shell: >
+        docker swarm init
+        --advertise-addr={{ swarm_iface | default('eth0') }}:2377
+      when: "'swarm_manager_operational' not in groups"
+      register: bootstrap_first_node
+# Only when previous output changes, we add the manager node that started the swarm to the operational group. The swarm mode is now active.
+    - name: add initialized host to swarm_manager_operational group
+      add_host:
+        hostname: "{{ play_hosts[0] }}"
+        groups: swarm_manager_operational
+      changed_when: bootstrap_first_node
+
+# Retrieve JOIN token from the first operational node
+- hosts: swarm_manager_operational[0]
+  become: true
+  vars:
+    iface: "{{ swarm_iface | default('eth0') }}"
+  tasks:
+    - name: retrieve swarm manager token
+      shell: docker swarm join-token -q manager
+      register: swarm_manager_token
+
+    - name: retrieve swarm worker token
+      shell: docker swarm join-token -q worker
+      register: swarm_worker_token
+
+    - name: populate list of manager ips
+      add_host:
+        hostname: "{{ hostvars[item]['ansible_' + iface]['ipv4']['address'] }}"
+        groups: swarm_manager_ips
+      with_items: "{{ play_hosts }}"
+
+# Join manager to manager node's token swarm (we have 0)
+- hosts: swarm_manager_bootstrap:!swarm_manager_operational
+  become: true
+  vars:
+    token: "{{ hostvars[groups['swarm_manager_operational'][0]]['swarm_manager_token']['stdout'] }}"
+  tasks:
+    - name: join manager nodes to cluster
+      shell: >
+        docker swarm join
+        --advertise-addr={{ swarm_iface | default('eth0') }}:2377
+        --token={{ token }}
+        {{ groups['swarm_manager_ips'][0] }}:2377
+
+# Join worker node to the swarm (we have at least 2).
+- hosts: swarm_worker_bootstrap
+  become: true
+  vars:
+    token: "{{ hostvars[groups['swarm_manager_operational'][0]]['swarm_worker_token']['stdout'] }}"
+  tasks:
+    - name: join worker nodes to cluster
+      shell: >
+        docker swarm join
+        --advertise-addr={{ swarm_iface | default('eth0') }}:2377
+        --token={{ token }}
+        {{ groups['swarm_manager_ips'][0] }}:2377

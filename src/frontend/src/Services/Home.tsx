@@ -1,24 +1,17 @@
-import {Container, Button, Row, Col, Form, InputGroup, Image, ButtonGroup} from 'react-bootstrap';
+import {Button, ButtonGroup, Col, Container, Form, Image, Row} from 'react-bootstrap';
 import React from 'react'
 import '../App.css';
 import images from '../Images/images.js';
 import {useNavigate} from "react-router-dom";
 import Navbar from "../Navigation/Utils/Navbar";
 import {PageHeader} from "../Navigation/Utils/PageHeader";
-import {
-    MDBCard,
-    MDBCardBody
-} from 'mdb-react-ui-kit';
+import {MDBCard, MDBCardBody} from 'mdb-react-ui-kit';
 import {ExpirationInput, NameInput, ProductTypeSelect, QuantityInput, UnitSelect} from "../Widgets/FormWidgets";
 import {SimpleModalAlert} from "../Widgets/AlertWidgets";
 
 function getList(setItems, setVoidMessage) {
     fetch(API_GATEWAY_ADDRESS + '/getList')
-        .then(r => {
-            let x = r.json();
-            console.log(x);
-            return x;
-        })
+        .then(r => r.json())
         .then(itemsOrError => {
             if (itemsOrError.hasOwnProperty('products')) {
                 setItems(itemsOrError)
@@ -48,33 +41,32 @@ function Home() {
     // called on page load, loads the entire list from shopping_list microservice
     React.useEffect(() => {
         if (!loading) {
-            console.log("reloading list from server");
+            console.log("Reloading shopping list from server");
             setLoading(true);
             getList(setItems, setVoidMessage);
         }
-    }, [items]);
+    }, [items, loading]);
+
+    // at first items.products is empty
+    // after loading, useEffect will run and products will be populated
 
     // This removes only from the array state "items.products"
     const onItemRemoval = React.useCallback(
         item => {
             const i = items.products.findIndex(value => value.product_name === item.product_name)
-            console.log("index to remove = " + i);
-            // const index = items.findIndex(i => i.id === item.id);
             setItems({
                 ...items,
                 products: [...items.products.slice(0, i), ...items.products.slice(i + 1)]
             });
             setLoading(false);
         },
-        [items.products],
+        [items],
     );
-
-    console.log(items.products);
 
     const onItemUpdate = React.useCallback(
         item => {
             const index = items.products.findIndex(i => i.id === item.id);
-            console.log("The index to update is" + index);
+            // console.log("The index to update is" + index);
             setItems({
                 ...items,
                 products: [
@@ -93,17 +85,15 @@ function Home() {
             console.log("BuyAll")
             fetch(API_GATEWAY_ADDRESS + '/buyProductsInCart', {method: 'POST'})
                 .then(r => {
-                    let x = r.json();
-                    console.log(x);
-                    return x;
+                    return r.json();
                 })
                 .catch(e => console.log("Errore: " + e))
 
-            console.log("reloading list from server");
+            console.log("reloading shopping list from server");
             getList(setItems, setVoidMessage);
             // show alert
             setShowAlert(true);
-        }, [items])
+        }, [])
 
     // this only sets the new state. To show the new Item, a new ItemDisplay component must be added
     const onNewItem = React.useCallback(
@@ -125,7 +115,7 @@ function Home() {
                 setLoading(false);
             }
         },
-        [items.products],
+        [items, loading],
     );
 
     let [showAlert, setShowAlert] = React.useState(false);
@@ -170,10 +160,8 @@ function Home() {
     );
 }
 
-
-export const API_GATEWAY_ADDRESS = "http://localhost:8007"
-// TODO: Qua bisogna mettere un indirizzo diverso da localhost!!! Forse dobbiamo usare AWS.
-//  Puoi provare sul tuo cellulare (connesso alla stessa rete) se sostituisci localhost con l'ip assegnato dal router wifi (es. 192.168.1.9)
+// this will get always the correct IP typed in the address bar
+export const API_GATEWAY_ADDRESS = "http://" + window.location.hostname + ":8007"
 
 export enum Unit {
     Bottle,
@@ -360,10 +348,10 @@ function ShoppingList({items, voidMessage, handleUpdate, handleRemoval}) {
             {items.products.length === 0 && (
                 <p className="text-center">{voidMessage}</p>
             )}
-            {items.products.map(item => (
+            {items.products.map((item, index) => (
                 <ItemDisplay
                     item={item}
-                    key={items.products.indexOf(item)}
+                    key={index}
                     onItemUpdate={handleUpdate}
                     onItemRemoval={handleRemoval}
                 />
@@ -391,20 +379,21 @@ function AddItemForm({onNewItem}) {
         e.preventDefault();
         // when this function is called, we submit a new item, so we setSubmitting to true
         setSubmitting(true);
-        let request = API_GATEWAY_ADDRESS + '/addProduct/' + itemName.trim() + '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
+        let trimmedItemName = itemName.trim();
+        let request = API_GATEWAY_ADDRESS + '/addProduct/' + trimmedItemName+ '/' + quantity + '/' + Unit.toString(unit) + '/' + ProductType.toString(type) + '/' + expiration;
         console.log(request);
         fetch(request, {method: 'POST'})
             .then(r => r.json)
             .then(() => {
                 // we call the callback passed as a parameter (!) to this component. We give it the item name to add. For us, it will be an object
-                onNewItem(new Item(itemName, quantity, unit, type, Timestamp.from(expiration)));
-                console.log("added " + itemName.trim());
+                onNewItem(new Item(trimmedItemName, quantity, unit, type, Timestamp.from(expiration)));
+                console.log("added " + trimmedItemName);
                 // we are done submitting the item
                 setSubmitting(false);
                 // we update the state of "newItem" to an empty string, to clean the text field.
                 setItemName('');
-            })
-    }
+            });
+    };
     // We return a Form with an input group that is a Control (textfield) and a Button.
     return (
         <Form onSubmit={submitNewItem}>
@@ -493,7 +482,6 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
         });
     }
 
-    console.log("item is added to cart? " + item.added_to_cart);
     return (
         <MDBCard className="mb-3">
             <MDBCardBody className="card-body">
@@ -504,7 +492,7 @@ function ItemDisplay({item, onItemUpdate, onItemRemoval}) {
                             size="sm"
                             variant="danger"
                             onClick={removeItem}
-                            aria-label="Rimuovi il prodotto"
+                            aria-label="Remove the product"
                         >
                             Remove
                         </Button>

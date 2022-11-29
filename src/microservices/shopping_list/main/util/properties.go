@@ -13,24 +13,34 @@ import (
 const propertyFile = "config.properties"
 
 type Properties struct {
-	ShoppingListPort      int
-	ShoppingListAddress   string
-	ProductStoragePort    int
-	ProductStorageAddress string
-	RecipesPort           int
-	RecipesAddress        string
-	ConsumptionsPort      int
-	ConsumptionsAddress   string
-	NotificationsPort     int
-	NotificationsAddress  string
-	SummaryPort           int
-	SummaryAddress        string
-	ApiGatewayPort        int
-	ApiGatewayAddress     string
-	FrontendPort          int
-	FrontendAddress       string
-	MongoDBPort           int
-	MongoDBAddress        string
+	ShoppingListPort          int
+	ShoppingListAddress       string
+	ProductStoragePort        int
+	ProductStorageAddress     string
+	RecipesPort               int
+	RecipesAddress            string
+	ConsumptionsPort          int
+	ConsumptionsAddress       string
+	NotificationsPort         int
+	NotificationsAddress      string
+	SummaryPort               int
+	SummaryAddress            string
+	ApiGatewayPort            int
+	ApiGatewayAddress         string
+	FrontendPort              int
+	FrontendAddress           string
+	MongoDBPort               int
+	MongoDBAddress            string
+	RedisRecipesPort          int
+	RedisRecipesAddress       string
+	RedisNotificationsPort    int
+	RedisNotificationsAddress string
+	InfluxPort                int
+	InfluxAddress             string
+	CassandraPort             int
+	CassandraAddress          string
+	KafkaPort                 int
+	KafkaAddress              string
 }
 
 func GetProperties() (*Properties, error) {

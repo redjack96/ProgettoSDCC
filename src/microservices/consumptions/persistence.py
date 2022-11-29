@@ -6,6 +6,7 @@ from cassandra.cluster import Cluster
 import pandas as pd
 
 import consumptions_pb2
+import properties
 
 logging.basicConfig(level=logging.INFO)
 session = None
@@ -120,8 +121,6 @@ class Cassandra:
 
         print("creating tables")
         self.__create_tables()
-        print("creating index")
-        self.__create_index()
         # todo: RIMETTIMI
         print("populating tables")
         self.__populate_tables("consumi-storage.csv")
@@ -133,9 +132,10 @@ class Cassandra:
         :return: session, cluster
         """
         global session
-        cluster = Cluster(['cassandra'], port=9042)
+        p = properties.Props()
+        cluster = Cluster([p.CassandraAddress], port=p.CassandraPort, protocol_version=5)
         # TODO: provare session = cluster.connect(wait_for_all_pools=True)
-        session = cluster.connect()
+        session = cluster.connect(wait_for_all_pools=True)
         session.execute("""
             CREATE KEYSPACE IF NOT EXISTS sdcc
             WITH REPLICATION =
@@ -152,10 +152,6 @@ class Cassandra:
         self.session.execute(query)
         query = "CREATE TABLE IF NOT EXISTS predictions" \
                 "(week_num int, product_name text, prediction float, PRIMARY KEY(product_name));"
-        self.session.execute(query)
-
-    def __create_index(self):
-        query = "CREATE INDEX IF NOT EXISTS productIndex ON dataset (product_name);"
         self.session.execute(query)
 
     def __populate_tables(self, dataset_filename: str):
