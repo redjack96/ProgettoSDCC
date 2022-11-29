@@ -108,10 +108,3 @@ To run this playbook, use:
 ```
 ansible$ ansible-playbook playbook.yaml -i inventory.yaml
 ```
-
-The update notebook also automatically starts docker swarm in the three ec2 instances.
-You can use the same command, but you need to install docker python sdk:
-
-```
-python3 -m pip install docker
-```

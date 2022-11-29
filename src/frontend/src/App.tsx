@@ -4,7 +4,7 @@ import {Helmet} from 'react-helmet';
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import {Storage} from "./Services/Storage";
 import {Recipes} from "./Services/Recipes";
-import Home from "./Services/Home";
+import Home, {API_GATEWAY_ADDRESS} from "./Services/Home";
 import UpdateProductPage from "./Navigation/Shopping/UpdateProductPage";
 import {UpdatePantryPage} from "./Navigation/Storage/UpdatePantryPage";
 // import {AddPantryPage} from "./Navigation/Storage/AddPantryPage";
@@ -13,6 +13,7 @@ import {Statistics} from "./Navigation/Statistics/Statistics";
 
 
 export function App() {
+    console.log("api gateway address: ", API_GATEWAY_ADDRESS);
     return (
         <Container>
             {/*When the apps first start, you will be redirected to /, so the Home page will be rendered. If you add /updateProductPage to the URL, you will see the other page!*/}

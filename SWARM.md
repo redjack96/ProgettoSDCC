@@ -35,14 +35,7 @@
    
 6) Now start the services from the LEADER node with the docker-stack.yml file (copied at previous step). **Most of the following command can only be used in the leader node.**
 
-   [1) needed] To create an overlay network (TODO: I don't know if an external overlay network in the docker-stack.yml it is really necessary) (Leader-only):
-
-   ```
-   docker network create -d overlay overlay_net
-   ```
-
-   [2) needed] **To deploy the stack with the entire application (Leader-only)**
-   
+   [needed] **To deploy the stack with the entire application (Leader-only)**
    ```
    docker stack deploy -c docker-stack.yml sdcc-demo
    ```
