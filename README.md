@@ -24,22 +24,14 @@ The following pattern are implemented:
 The frontend is built in React-Bootstrap with Typescript.
 ## Release Run
 
-Use docker compose:
+Use Docker Compose:
 
 ```console
 $ docker compose up -d
 ```
+To use Docker Swarm on EC2, with Terraform and Ansible, refer to the file [FAST_EC2_DEPLOY.md](FAST_EC2_DEPLOY.md)
 
-## Build and Run a single compose service
-```console
-$ docker compose up <service> --build
-```
-for example:
-```console
-$ docker compose up shopping_list --build
-```
-
-## Deploy on AWS with terraform
+# Deploy on AWS with terraform
 To load credentials from [LAB](https://www.awsacademy.com/LMS_Login):
 1) Copy AWS CLI credentials from AWS Details and paste it in terraform/credentials
 2) Download PEM and save it in terraform/labsuser.pem
@@ -49,7 +41,7 @@ To load credentials from [LAB](https://www.awsacademy.com/LMS_Login):
 
 `terraform$ ssh -i labsuser.pem ec2-user@<public-ip-see-output>`
 
-## EC2 Configuration
+## Manual EC2 Configuration
 To copy files from local to EC2 VM (remember to change <public-ip> to the ip obtained from `terraform apply`):
 
 `ProgettoSDCC$ scp -i terraform/labsuser.pem docker-compose.yml ec2-user@<public-ip>:~/docker-compose.yml`
@@ -84,7 +76,7 @@ When finished:
 
 
 <a href="https://www.rust-lang.org/it">
-<img src="https://img.icons8.com/color/2x/rust-programming-language.png" width="150" height="150">
+<img src="https://www.rust-lang.org/static/images/rust-logo-blk.svg" width="150" height="150">
 </a>
 <a href="https://www.java.com/it/">
 <img src="https://img.icons8.com/color/2x/java-coffee-cup-logo.png" width="150" height="150">
@@ -99,10 +91,10 @@ When finished:
 <img src="https://img.icons8.com/color/2x/typescript.png" width="150" height="150">
 </a>
 <a href="https://www.sqlite.org/index.html">
-<img src="https://cdn.icon-icons.com/icons2/2699/PNG/96/sqlite_logo_icon_169724.png" width="150" height="150">
+<img src="https://www.sqlite.org/images/sqlite370_banner.gif" width="300" height="150">
 </a>
 <a href="https://www.mongodb.com/">
-<img src="https://cdn.icon-icons.com/icons2/2415/PNG/96/mongodb_original_wordmark_logo_icon_146425.png" width="150" height="150">
+<img src="https://webimages.mongodb.com/_com_assets/cms/kuyjf3vea2hg34taa-horizontal_default_slate_blue.svg?auto=format%252Ccompress" width="150" height="150">
 </a>
 <a href="https://www.influxdata.com/">
 <img src="https://img.icons8.com/flat-round/2x/influxdb.png" width="150" height="150">
@@ -117,7 +109,7 @@ When finished:
 <img src="https://static.cdnlogo.com/logos/r/31/redis.svg" width="150" height="150">
 </a>
 <a href="https://it.reactjs.org/">
-<img src="https://img.icons8.com/officel/2x/react.png" width="150" height="150">
+<img src="https://d33wubrfki0l68.cloudfront.net/554c3b0e09cf167f0281fda839a5433f2040b349/ecfc9/img/header_logo.svg" width="150" height="150">
 </a>
 
 
