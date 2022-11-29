@@ -50,30 +50,23 @@ class ConsumptionEstimator:
     def __init__(self, cassandra: persistence.Cassandra):
         self.cassandra_conn = cassandra
         self.total_dataset = None
-        # self.total_product_list = []
-        # todo: rimettimi
         self.total_product_list = ["Pane", "Mortadella", "Pasta"]
         self.last_added_products = []
-        # self.week_indexes = {}
-        # todo: rimettimi
         self.week_indexes = {"Pane": 20, "Mortadella": 20,
                              "Pasta": 20}  # dizionario degli indici di split per ogni prodotto
         # SGD si adatta maggiormente in base agli ultimi dati analizzati. Piu' preciso rispetto al regressore base.
         # Se ci sono variazioni elevate, non funziona bene. Invece il Regressore lineare si basa su tutti i dati.
-        # todo: rimettimi
         self.models = {
             "Pane": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
             "Mortadella": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
             "Pasta": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive')
         }
-        # self.models = {}
         self.product_datasets_dict = {}  # dizionario dei dataset per ogni prodotto
         self.product_X_train_dict = {}  # dizionario delle features di training per ogni prodotto
         self.product_X_test_dict = {}  # dizionario delle features di testing per ogni prodotto
         self.product_y_train_dict = {}  # dizionario dei valori target di training per ogni prodotto
         self.product_y_test_dict = {}  # dizionario dei valori target di testing per ogni prodotto
         self.product_last_y_pred = {}  # dizionario dei valori predetti per ogni prodotto
-        # todo: rimettimi
         print("Init ML pipeline")
         self.__init_train_dataset()
 

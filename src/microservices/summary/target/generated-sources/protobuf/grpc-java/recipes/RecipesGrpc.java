@@ -132,9 +132,6 @@ public final class RecipesGrpc {
   public static abstract class RecipesImplBase implements io.grpc.BindableService {
 
     /**
-     * <pre>
-     *TODO
-     * </pre>
      */
     public void getRecipesFromIngredients(recipes.RecipesOuterClass.IngredientsList request,
         io.grpc.stub.StreamObserver<recipes.RecipesOuterClass.RecipeList> responseObserver) {
@@ -189,9 +186,6 @@ public final class RecipesGrpc {
     }
 
     /**
-     * <pre>
-     *TODO
-     * </pre>
      */
     public void getRecipesFromIngredients(recipes.RecipesOuterClass.IngredientsList request,
         io.grpc.stub.StreamObserver<recipes.RecipesOuterClass.RecipeList> responseObserver) {
@@ -229,9 +223,6 @@ public final class RecipesGrpc {
     }
 
     /**
-     * <pre>
-     *TODO
-     * </pre>
      */
     public recipes.RecipesOuterClass.RecipeList getRecipesFromIngredients(recipes.RecipesOuterClass.IngredientsList request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
@@ -267,9 +258,6 @@ public final class RecipesGrpc {
     }
 
     /**
-     * <pre>
-     *TODO
-     * </pre>
      */
     public com.google.common.util.concurrent.ListenableFuture<recipes.RecipesOuterClass.RecipeList> getRecipesFromIngredients(
         recipes.RecipesOuterClass.IngredientsList request) {

@@ -7,12 +7,12 @@ package product_storage;
 option go_package = ".;proto_generated";
 // service which can be executed
 service ProductStorage {
-  rpc AddBoughtProductsToPantry(shopping_list.ProductList) returns (shopping_list.Response); // TODO: aggiungere nel messaggio di output il numero di prodotti aggiunti
+  rpc AddBoughtProductsToPantry(shopping_list.ProductList) returns (shopping_list.Response);
   rpc AddProductToPantry(Item) returns (shopping_list.Response); // manually added products
   rpc DropProductFromPantry(ItemName) returns (shopping_list.Response); // manually or because used by recipes
   rpc UpdateProductInPantry(Item) returns (shopping_list.Response);
   rpc UseProductInPantry(UsedItem) returns (shopping_list.Response);
-  rpc GetPantry(PantryMessage) returns (Pantry); // TODO: per ora restituisce l'intera dispensa. Forse e' un po' eccessivo!
+  rpc GetPantry(PantryMessage) returns (Pantry);
 }
 
 message ItemName {

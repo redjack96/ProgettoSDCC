@@ -10,9 +10,13 @@ echo "Copying proto files in summary"
 find "${SCRIPT_DIR}/src/proto" -name \*.proto -exec cp {} "${SCRIPT_DIR}/src/microservices/summary/src/main/proto" \;
 echo "Copying proto files in notifications"
 find "${SCRIPT_DIR}/src/proto" -name \*.proto -exec cp {} "${SCRIPT_DIR}/src/microservices/notifications/src/main/proto" \;
-cd "${SCRIPT_DIR}/src/microservices/shopping_list" || exit
 
-echo "Generating Go GRPC files"
+cd "${SCRIPT_DIR}/src/microservices/shopping_list" || exit
+echo "Generating Go GRPC files for shopping_list"
+protoc --proto_path ../../proto --go_out generated --go-grpc_out generated ../../proto/*.proto --experimental_allow_proto3_optional
+
+cd "${SCRIPT_DIR}/src/microservices/recipes" || exit
+echo "Generating Go GRPC files for recipes"
 protoc --proto_path ../../proto --go_out generated --go-grpc_out generated ../../proto/*.proto --experimental_allow_proto3_optional
 
 cd "${SCRIPT_DIR}/src/microservices/consumptions" || exit

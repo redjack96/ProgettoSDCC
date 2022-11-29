@@ -1,10 +1,5 @@
 version: '3.1'
-# TODO: per evitare che le porte siano hardcoded, possiamo usare il parametro env_file
-#  env_file:
-#    - my-env-file
-# poi possiamo inserire nel file una variabile d'ambiente PORT e possiamo accedere alla porta in questo modo:
-#  ports:
-#    - ${PORT}:${PORT}
+
 services:
   # --- FRONTEND ---
   frontend:

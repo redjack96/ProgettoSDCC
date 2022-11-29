@@ -65,11 +65,6 @@ message Timestamp {
   int32 nanos = 2;
 }
 
-//message ProductId {
-//  string productId = 1;
-//  string productName = 2;
-//}
-
 // argument
 message Product {
   string productName = 1;

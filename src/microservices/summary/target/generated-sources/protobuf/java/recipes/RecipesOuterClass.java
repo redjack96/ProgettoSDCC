@@ -2215,11 +2215,23 @@ public final class RecipesOuterClass {
         getUrlBytes();
 
     /**
+     * <code>string img = 4;</code>
+     * @return The img.
+     */
+    java.lang.String getImg();
+    /**
+     * <code>string img = 4;</code>
+     * @return The bytes for img.
+     */
+    com.google.protobuf.ByteString
+        getImgBytes();
+
+    /**
      * <pre>
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     java.util.List<recipes.RecipesOuterClass.Ingredient> 
         getUsedIngredientsList();
@@ -2228,7 +2240,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     recipes.RecipesOuterClass.Ingredient getUsedIngredients(int index);
     /**
@@ -2236,7 +2248,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     int getUsedIngredientsCount();
     /**
@@ -2244,7 +2256,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     java.util.List<? extends recipes.RecipesOuterClass.IngredientOrBuilder> 
         getUsedIngredientsOrBuilderList();
@@ -2253,7 +2265,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     recipes.RecipesOuterClass.IngredientOrBuilder getUsedIngredientsOrBuilder(
         int index);
@@ -2263,7 +2275,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     java.util.List<recipes.RecipesOuterClass.Ingredient> 
         getMissedIngredientsList();
@@ -2272,7 +2284,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     recipes.RecipesOuterClass.Ingredient getMissedIngredients(int index);
     /**
@@ -2280,7 +2292,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     int getMissedIngredientsCount();
     /**
@@ -2288,7 +2300,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     java.util.List<? extends recipes.RecipesOuterClass.IngredientOrBuilder> 
         getMissedIngredientsOrBuilderList();
@@ -2297,7 +2309,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     recipes.RecipesOuterClass.IngredientOrBuilder getMissedIngredientsOrBuilder(
         int index);
@@ -2318,6 +2330,7 @@ public final class RecipesOuterClass {
       id_ = "";
       title_ = "";
       url_ = "";
+      img_ = "";
       usedIngredients_ = java.util.Collections.emptyList();
       missedIngredients_ = java.util.Collections.emptyList();
     }
@@ -2372,6 +2385,12 @@ public final class RecipesOuterClass {
               break;
             }
             case 34: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              img_ = s;
+              break;
+            }
+            case 42: {
               if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 usedIngredients_ = new java.util.ArrayList<recipes.RecipesOuterClass.Ingredient>();
                 mutable_bitField0_ |= 0x00000001;
@@ -2380,7 +2399,7 @@ public final class RecipesOuterClass {
                   input.readMessage(recipes.RecipesOuterClass.Ingredient.parser(), extensionRegistry));
               break;
             }
-            case 42: {
+            case 50: {
               if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 missedIngredients_ = new java.util.ArrayList<recipes.RecipesOuterClass.Ingredient>();
                 mutable_bitField0_ |= 0x00000002;
@@ -2543,14 +2562,52 @@ public final class RecipesOuterClass {
       }
     }
 
-    public static final int USEDINGREDIENTS_FIELD_NUMBER = 4;
+    public static final int IMG_FIELD_NUMBER = 4;
+    private volatile java.lang.Object img_;
+    /**
+     * <code>string img = 4;</code>
+     * @return The img.
+     */
+    @java.lang.Override
+    public java.lang.String getImg() {
+      java.lang.Object ref = img_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        img_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string img = 4;</code>
+     * @return The bytes for img.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getImgBytes() {
+      java.lang.Object ref = img_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        img_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int USEDINGREDIENTS_FIELD_NUMBER = 5;
     private java.util.List<recipes.RecipesOuterClass.Ingredient> usedIngredients_;
     /**
      * <pre>
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     @java.lang.Override
     public java.util.List<recipes.RecipesOuterClass.Ingredient> getUsedIngredientsList() {
@@ -2561,7 +2618,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     @java.lang.Override
     public java.util.List<? extends recipes.RecipesOuterClass.IngredientOrBuilder> 
@@ -2573,7 +2630,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     @java.lang.Override
     public int getUsedIngredientsCount() {
@@ -2584,7 +2641,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     @java.lang.Override
     public recipes.RecipesOuterClass.Ingredient getUsedIngredients(int index) {
@@ -2595,7 +2652,7 @@ public final class RecipesOuterClass {
      * ingredients in pantry that can be used
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+     * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
      */
     @java.lang.Override
     public recipes.RecipesOuterClass.IngredientOrBuilder getUsedIngredientsOrBuilder(
@@ -2603,14 +2660,14 @@ public final class RecipesOuterClass {
       return usedIngredients_.get(index);
     }
 
-    public static final int MISSEDINGREDIENTS_FIELD_NUMBER = 5;
+    public static final int MISSEDINGREDIENTS_FIELD_NUMBER = 6;
     private java.util.List<recipes.RecipesOuterClass.Ingredient> missedIngredients_;
     /**
      * <pre>
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     @java.lang.Override
     public java.util.List<recipes.RecipesOuterClass.Ingredient> getMissedIngredientsList() {
@@ -2621,7 +2678,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     @java.lang.Override
     public java.util.List<? extends recipes.RecipesOuterClass.IngredientOrBuilder> 
@@ -2633,7 +2690,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     @java.lang.Override
     public int getMissedIngredientsCount() {
@@ -2644,7 +2701,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     @java.lang.Override
     public recipes.RecipesOuterClass.Ingredient getMissedIngredients(int index) {
@@ -2655,7 +2712,7 @@ public final class RecipesOuterClass {
      * ingredients missing to complete recipe
      * </pre>
      *
-     * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+     * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
      */
     @java.lang.Override
     public recipes.RecipesOuterClass.IngredientOrBuilder getMissedIngredientsOrBuilder(
@@ -2686,11 +2743,14 @@ public final class RecipesOuterClass {
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(url_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, url_);
       }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(img_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, img_);
+      }
       for (int i = 0; i < usedIngredients_.size(); i++) {
-        output.writeMessage(4, usedIngredients_.get(i));
+        output.writeMessage(5, usedIngredients_.get(i));
       }
       for (int i = 0; i < missedIngredients_.size(); i++) {
-        output.writeMessage(5, missedIngredients_.get(i));
+        output.writeMessage(6, missedIngredients_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -2710,13 +2770,16 @@ public final class RecipesOuterClass {
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(url_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, url_);
       }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(img_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, img_);
+      }
       for (int i = 0; i < usedIngredients_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, usedIngredients_.get(i));
+          .computeMessageSize(5, usedIngredients_.get(i));
       }
       for (int i = 0; i < missedIngredients_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, missedIngredients_.get(i));
+          .computeMessageSize(6, missedIngredients_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2739,6 +2802,8 @@ public final class RecipesOuterClass {
           .equals(other.getTitle())) return false;
       if (!getUrl()
           .equals(other.getUrl())) return false;
+      if (!getImg()
+          .equals(other.getImg())) return false;
       if (!getUsedIngredientsList()
           .equals(other.getUsedIngredientsList())) return false;
       if (!getMissedIngredientsList()
@@ -2760,6 +2825,8 @@ public final class RecipesOuterClass {
       hash = (53 * hash) + getTitle().hashCode();
       hash = (37 * hash) + URL_FIELD_NUMBER;
       hash = (53 * hash) + getUrl().hashCode();
+      hash = (37 * hash) + IMG_FIELD_NUMBER;
+      hash = (53 * hash) + getImg().hashCode();
       if (getUsedIngredientsCount() > 0) {
         hash = (37 * hash) + USEDINGREDIENTS_FIELD_NUMBER;
         hash = (53 * hash) + getUsedIngredientsList().hashCode();
@@ -2909,6 +2976,8 @@ public final class RecipesOuterClass {
 
         url_ = "";
 
+        img_ = "";
+
         if (usedIngredientsBuilder_ == null) {
           usedIngredients_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000001);
@@ -2951,6 +3020,7 @@ public final class RecipesOuterClass {
         result.id_ = id_;
         result.title_ = title_;
         result.url_ = url_;
+        result.img_ = img_;
         if (usedIngredientsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
             usedIngredients_ = java.util.Collections.unmodifiableList(usedIngredients_);
@@ -3027,6 +3097,10 @@ public final class RecipesOuterClass {
         }
         if (!other.getUrl().isEmpty()) {
           url_ = other.url_;
+          onChanged();
+        }
+        if (!other.getImg().isEmpty()) {
+          img_ = other.img_;
           onChanged();
         }
         if (usedIngredientsBuilder_ == null) {
@@ -3339,6 +3413,82 @@ public final class RecipesOuterClass {
         return this;
       }
 
+      private java.lang.Object img_ = "";
+      /**
+       * <code>string img = 4;</code>
+       * @return The img.
+       */
+      public java.lang.String getImg() {
+        java.lang.Object ref = img_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          img_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string img = 4;</code>
+       * @return The bytes for img.
+       */
+      public com.google.protobuf.ByteString
+          getImgBytes() {
+        java.lang.Object ref = img_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          img_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string img = 4;</code>
+       * @param value The img to set.
+       * @return This builder for chaining.
+       */
+      public Builder setImg(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        img_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string img = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearImg() {
+        
+        img_ = getDefaultInstance().getImg();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string img = 4;</code>
+       * @param value The bytes for img to set.
+       * @return This builder for chaining.
+       */
+      public Builder setImgBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        img_ = value;
+        onChanged();
+        return this;
+      }
+
       private java.util.List<recipes.RecipesOuterClass.Ingredient> usedIngredients_ =
         java.util.Collections.emptyList();
       private void ensureUsedIngredientsIsMutable() {
@@ -3356,7 +3506,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public java.util.List<recipes.RecipesOuterClass.Ingredient> getUsedIngredientsList() {
         if (usedIngredientsBuilder_ == null) {
@@ -3370,7 +3520,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public int getUsedIngredientsCount() {
         if (usedIngredientsBuilder_ == null) {
@@ -3384,7 +3534,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public recipes.RecipesOuterClass.Ingredient getUsedIngredients(int index) {
         if (usedIngredientsBuilder_ == null) {
@@ -3398,7 +3548,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder setUsedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient value) {
@@ -3419,7 +3569,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder setUsedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient.Builder builderForValue) {
@@ -3437,7 +3587,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder addUsedIngredients(recipes.RecipesOuterClass.Ingredient value) {
         if (usedIngredientsBuilder_ == null) {
@@ -3457,7 +3607,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder addUsedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient value) {
@@ -3478,7 +3628,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder addUsedIngredients(
           recipes.RecipesOuterClass.Ingredient.Builder builderForValue) {
@@ -3496,7 +3646,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder addUsedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient.Builder builderForValue) {
@@ -3514,7 +3664,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder addAllUsedIngredients(
           java.lang.Iterable<? extends recipes.RecipesOuterClass.Ingredient> values) {
@@ -3533,7 +3683,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder clearUsedIngredients() {
         if (usedIngredientsBuilder_ == null) {
@@ -3550,7 +3700,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public Builder removeUsedIngredients(int index) {
         if (usedIngredientsBuilder_ == null) {
@@ -3567,7 +3717,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public recipes.RecipesOuterClass.Ingredient.Builder getUsedIngredientsBuilder(
           int index) {
@@ -3578,7 +3728,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public recipes.RecipesOuterClass.IngredientOrBuilder getUsedIngredientsOrBuilder(
           int index) {
@@ -3592,7 +3742,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public java.util.List<? extends recipes.RecipesOuterClass.IngredientOrBuilder> 
            getUsedIngredientsOrBuilderList() {
@@ -3607,7 +3757,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public recipes.RecipesOuterClass.Ingredient.Builder addUsedIngredientsBuilder() {
         return getUsedIngredientsFieldBuilder().addBuilder(
@@ -3618,7 +3768,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public recipes.RecipesOuterClass.Ingredient.Builder addUsedIngredientsBuilder(
           int index) {
@@ -3630,7 +3780,7 @@ public final class RecipesOuterClass {
        * ingredients in pantry that can be used
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient usedIngredients = 4;</code>
+       * <code>repeated .recipes.Ingredient usedIngredients = 5;</code>
        */
       public java.util.List<recipes.RecipesOuterClass.Ingredient.Builder> 
            getUsedIngredientsBuilderList() {
@@ -3668,7 +3818,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public java.util.List<recipes.RecipesOuterClass.Ingredient> getMissedIngredientsList() {
         if (missedIngredientsBuilder_ == null) {
@@ -3682,7 +3832,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public int getMissedIngredientsCount() {
         if (missedIngredientsBuilder_ == null) {
@@ -3696,7 +3846,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public recipes.RecipesOuterClass.Ingredient getMissedIngredients(int index) {
         if (missedIngredientsBuilder_ == null) {
@@ -3710,7 +3860,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder setMissedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient value) {
@@ -3731,7 +3881,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder setMissedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient.Builder builderForValue) {
@@ -3749,7 +3899,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder addMissedIngredients(recipes.RecipesOuterClass.Ingredient value) {
         if (missedIngredientsBuilder_ == null) {
@@ -3769,7 +3919,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder addMissedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient value) {
@@ -3790,7 +3940,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder addMissedIngredients(
           recipes.RecipesOuterClass.Ingredient.Builder builderForValue) {
@@ -3808,7 +3958,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder addMissedIngredients(
           int index, recipes.RecipesOuterClass.Ingredient.Builder builderForValue) {
@@ -3826,7 +3976,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder addAllMissedIngredients(
           java.lang.Iterable<? extends recipes.RecipesOuterClass.Ingredient> values) {
@@ -3845,7 +3995,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder clearMissedIngredients() {
         if (missedIngredientsBuilder_ == null) {
@@ -3862,7 +4012,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public Builder removeMissedIngredients(int index) {
         if (missedIngredientsBuilder_ == null) {
@@ -3879,7 +4029,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public recipes.RecipesOuterClass.Ingredient.Builder getMissedIngredientsBuilder(
           int index) {
@@ -3890,7 +4040,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public recipes.RecipesOuterClass.IngredientOrBuilder getMissedIngredientsOrBuilder(
           int index) {
@@ -3904,7 +4054,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public java.util.List<? extends recipes.RecipesOuterClass.IngredientOrBuilder> 
            getMissedIngredientsOrBuilderList() {
@@ -3919,7 +4069,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public recipes.RecipesOuterClass.Ingredient.Builder addMissedIngredientsBuilder() {
         return getMissedIngredientsFieldBuilder().addBuilder(
@@ -3930,7 +4080,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public recipes.RecipesOuterClass.Ingredient.Builder addMissedIngredientsBuilder(
           int index) {
@@ -3942,7 +4092,7 @@ public final class RecipesOuterClass {
        * ingredients missing to complete recipe
        * </pre>
        *
-       * <code>repeated .recipes.Ingredient missedIngredients = 5;</code>
+       * <code>repeated .recipes.Ingredient missedIngredients = 6;</code>
        */
       public java.util.List<recipes.RecipesOuterClass.Ingredient.Builder> 
            getMissedIngredientsBuilderList() {
@@ -4473,15 +4623,16 @@ public final class RecipesOuterClass {
       "ist\022,\n\017ingredientsList\030\001 \003(\0132\023.recipes.I" +
       "ngredient\".\n\nRecipeList\022 \n\007recipes\030\001 \003(\013" +
       "2\017.recipes.Recipe\"\032\n\nIngredient\022\014\n\004name\030" +
-      "\001 \001(\t\"\216\001\n\006Recipe\022\n\n\002id\030\001 \001(\t\022\r\n\005title\030\002 " +
-      "\001(\t\022\013\n\003url\030\003 \001(\t\022,\n\017usedIngredients\030\004 \003(" +
-      "\0132\023.recipes.Ingredient\022.\n\021missedIngredie" +
-      "nts\030\005 \003(\0132\023.recipes.Ingredient\"\020\n\016Recipe" +
-      "sRequest2\233\001\n\007Recipes\022J\n\031GetRecipesFromIn" +
-      "gredients\022\030.recipes.IngredientsList\032\023.re" +
-      "cipes.RecipeList\022D\n\024GetRecipesFromPantry" +
-      "\022\027.recipes.RecipesRequest\032\023.recipes.Reci" +
-      "peListB\023Z\021.;proto_generatedb\006proto3"
+      "\001 \001(\t\"\233\001\n\006Recipe\022\n\n\002id\030\001 \001(\t\022\r\n\005title\030\002 " +
+      "\001(\t\022\013\n\003url\030\003 \001(\t\022\013\n\003img\030\004 \001(\t\022,\n\017usedIng" +
+      "redients\030\005 \003(\0132\023.recipes.Ingredient\022.\n\021m" +
+      "issedIngredients\030\006 \003(\0132\023.recipes.Ingredi" +
+      "ent\"\020\n\016RecipesRequest2\233\001\n\007Recipes\022J\n\031Get" +
+      "RecipesFromIngredients\022\030.recipes.Ingredi" +
+      "entsList\032\023.recipes.RecipeList\022D\n\024GetReci" +
+      "pesFromPantry\022\027.recipes.RecipesRequest\032\023" +
+      ".recipes.RecipeListB\023Z\021.;proto_generated" +
+      "b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -4510,7 +4661,7 @@ public final class RecipesOuterClass {
     internal_static_recipes_Recipe_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_recipes_Recipe_descriptor,
-        new java.lang.String[] { "Id", "Title", "Url", "UsedIngredients", "MissedIngredients", });
+        new java.lang.String[] { "Id", "Title", "Url", "Img", "UsedIngredients", "MissedIngredients", });
     internal_static_recipes_RecipesRequest_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_recipes_RecipesRequest_fieldAccessorTable = new

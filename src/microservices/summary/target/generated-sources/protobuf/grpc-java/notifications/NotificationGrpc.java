@@ -18,66 +18,35 @@ public final class NotificationGrpc {
   public static final String SERVICE_NAME = "notifications.Notification";
 
   // Static method descriptors that strictly reflect the proto.
-  private static volatile io.grpc.MethodDescriptor<shopping_list.ShoppingListOuterClass.Product,
-      shopping_list.ShoppingListOuterClass.Response> getNotifyDeadlineMethod;
+  private static volatile io.grpc.MethodDescriptor<notifications.Notifications.NotificationRequest,
+      notifications.Notifications.NotificationList> getGetNotificationsMethod;
 
   @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "NotifyDeadline",
-      requestType = shopping_list.ShoppingListOuterClass.Product.class,
-      responseType = shopping_list.ShoppingListOuterClass.Response.class,
+      fullMethodName = SERVICE_NAME + '/' + "GetNotifications",
+      requestType = notifications.Notifications.NotificationRequest.class,
+      responseType = notifications.Notifications.NotificationList.class,
       methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<shopping_list.ShoppingListOuterClass.Product,
-      shopping_list.ShoppingListOuterClass.Response> getNotifyDeadlineMethod() {
-    io.grpc.MethodDescriptor<shopping_list.ShoppingListOuterClass.Product, shopping_list.ShoppingListOuterClass.Response> getNotifyDeadlineMethod;
-    if ((getNotifyDeadlineMethod = NotificationGrpc.getNotifyDeadlineMethod) == null) {
+  public static io.grpc.MethodDescriptor<notifications.Notifications.NotificationRequest,
+      notifications.Notifications.NotificationList> getGetNotificationsMethod() {
+    io.grpc.MethodDescriptor<notifications.Notifications.NotificationRequest, notifications.Notifications.NotificationList> getGetNotificationsMethod;
+    if ((getGetNotificationsMethod = NotificationGrpc.getGetNotificationsMethod) == null) {
       synchronized (NotificationGrpc.class) {
-        if ((getNotifyDeadlineMethod = NotificationGrpc.getNotifyDeadlineMethod) == null) {
-          NotificationGrpc.getNotifyDeadlineMethod = getNotifyDeadlineMethod =
-              io.grpc.MethodDescriptor.<shopping_list.ShoppingListOuterClass.Product, shopping_list.ShoppingListOuterClass.Response>newBuilder()
+        if ((getGetNotificationsMethod = NotificationGrpc.getGetNotificationsMethod) == null) {
+          NotificationGrpc.getGetNotificationsMethod = getGetNotificationsMethod =
+              io.grpc.MethodDescriptor.<notifications.Notifications.NotificationRequest, notifications.Notifications.NotificationList>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "NotifyDeadline"))
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "GetNotifications"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  shopping_list.ShoppingListOuterClass.Product.getDefaultInstance()))
+                  notifications.Notifications.NotificationRequest.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  shopping_list.ShoppingListOuterClass.Response.getDefaultInstance()))
-              .setSchemaDescriptor(new NotificationMethodDescriptorSupplier("NotifyDeadline"))
+                  notifications.Notifications.NotificationList.getDefaultInstance()))
+              .setSchemaDescriptor(new NotificationMethodDescriptorSupplier("GetNotifications"))
               .build();
         }
       }
     }
-    return getNotifyDeadlineMethod;
-  }
-
-  private static volatile io.grpc.MethodDescriptor<shopping_list.ShoppingListOuterClass.Product,
-      shopping_list.ShoppingListOuterClass.Response> getNotifyRunOutMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "NotifyRunOut",
-      requestType = shopping_list.ShoppingListOuterClass.Product.class,
-      responseType = shopping_list.ShoppingListOuterClass.Response.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<shopping_list.ShoppingListOuterClass.Product,
-      shopping_list.ShoppingListOuterClass.Response> getNotifyRunOutMethod() {
-    io.grpc.MethodDescriptor<shopping_list.ShoppingListOuterClass.Product, shopping_list.ShoppingListOuterClass.Response> getNotifyRunOutMethod;
-    if ((getNotifyRunOutMethod = NotificationGrpc.getNotifyRunOutMethod) == null) {
-      synchronized (NotificationGrpc.class) {
-        if ((getNotifyRunOutMethod = NotificationGrpc.getNotifyRunOutMethod) == null) {
-          NotificationGrpc.getNotifyRunOutMethod = getNotifyRunOutMethod =
-              io.grpc.MethodDescriptor.<shopping_list.ShoppingListOuterClass.Product, shopping_list.ShoppingListOuterClass.Response>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "NotifyRunOut"))
-              .setSampledToLocalTracing(true)
-              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  shopping_list.ShoppingListOuterClass.Product.getDefaultInstance()))
-              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  shopping_list.ShoppingListOuterClass.Response.getDefaultInstance()))
-              .setSchemaDescriptor(new NotificationMethodDescriptorSupplier("NotifyRunOut"))
-              .build();
-        }
-      }
-    }
-    return getNotifyRunOutMethod;
+    return getGetNotificationsMethod;
   }
 
   /**
@@ -133,34 +102,20 @@ public final class NotificationGrpc {
 
     /**
      */
-    public void notifyDeadline(shopping_list.ShoppingListOuterClass.Product request,
-        io.grpc.stub.StreamObserver<shopping_list.ShoppingListOuterClass.Response> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getNotifyDeadlineMethod(), responseObserver);
-    }
-
-    /**
-     */
-    public void notifyRunOut(shopping_list.ShoppingListOuterClass.Product request,
-        io.grpc.stub.StreamObserver<shopping_list.ShoppingListOuterClass.Response> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getNotifyRunOutMethod(), responseObserver);
+    public void getNotifications(notifications.Notifications.NotificationRequest request,
+        io.grpc.stub.StreamObserver<notifications.Notifications.NotificationList> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getGetNotificationsMethod(), responseObserver);
     }
 
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
-            getNotifyDeadlineMethod(),
+            getGetNotificationsMethod(),
             io.grpc.stub.ServerCalls.asyncUnaryCall(
               new MethodHandlers<
-                shopping_list.ShoppingListOuterClass.Product,
-                shopping_list.ShoppingListOuterClass.Response>(
-                  this, METHODID_NOTIFY_DEADLINE)))
-          .addMethod(
-            getNotifyRunOutMethod(),
-            io.grpc.stub.ServerCalls.asyncUnaryCall(
-              new MethodHandlers<
-                shopping_list.ShoppingListOuterClass.Product,
-                shopping_list.ShoppingListOuterClass.Response>(
-                  this, METHODID_NOTIFY_RUN_OUT)))
+                notifications.Notifications.NotificationRequest,
+                notifications.Notifications.NotificationList>(
+                  this, METHODID_GET_NOTIFICATIONS)))
           .build();
     }
   }
@@ -184,18 +139,10 @@ public final class NotificationGrpc {
 
     /**
      */
-    public void notifyDeadline(shopping_list.ShoppingListOuterClass.Product request,
-        io.grpc.stub.StreamObserver<shopping_list.ShoppingListOuterClass.Response> responseObserver) {
+    public void getNotifications(notifications.Notifications.NotificationRequest request,
+        io.grpc.stub.StreamObserver<notifications.Notifications.NotificationList> responseObserver) {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getNotifyDeadlineMethod(), getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     */
-    public void notifyRunOut(shopping_list.ShoppingListOuterClass.Product request,
-        io.grpc.stub.StreamObserver<shopping_list.ShoppingListOuterClass.Response> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getNotifyRunOutMethod(), getCallOptions()), request, responseObserver);
+          getChannel().newCall(getGetNotificationsMethod(), getCallOptions()), request, responseObserver);
     }
   }
 
@@ -218,16 +165,9 @@ public final class NotificationGrpc {
 
     /**
      */
-    public shopping_list.ShoppingListOuterClass.Response notifyDeadline(shopping_list.ShoppingListOuterClass.Product request) {
+    public notifications.Notifications.NotificationList getNotifications(notifications.Notifications.NotificationRequest request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getNotifyDeadlineMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public shopping_list.ShoppingListOuterClass.Response notifyRunOut(shopping_list.ShoppingListOuterClass.Product request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getNotifyRunOutMethod(), getCallOptions(), request);
+          getChannel(), getGetNotificationsMethod(), getCallOptions(), request);
     }
   }
 
@@ -250,23 +190,14 @@ public final class NotificationGrpc {
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<shopping_list.ShoppingListOuterClass.Response> notifyDeadline(
-        shopping_list.ShoppingListOuterClass.Product request) {
+    public com.google.common.util.concurrent.ListenableFuture<notifications.Notifications.NotificationList> getNotifications(
+        notifications.Notifications.NotificationRequest request) {
       return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getNotifyDeadlineMethod(), getCallOptions()), request);
-    }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<shopping_list.ShoppingListOuterClass.Response> notifyRunOut(
-        shopping_list.ShoppingListOuterClass.Product request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getNotifyRunOutMethod(), getCallOptions()), request);
+          getChannel().newCall(getGetNotificationsMethod(), getCallOptions()), request);
     }
   }
 
-  private static final int METHODID_NOTIFY_DEADLINE = 0;
-  private static final int METHODID_NOTIFY_RUN_OUT = 1;
+  private static final int METHODID_GET_NOTIFICATIONS = 0;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -285,13 +216,9 @@ public final class NotificationGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
-        case METHODID_NOTIFY_DEADLINE:
-          serviceImpl.notifyDeadline((shopping_list.ShoppingListOuterClass.Product) request,
-              (io.grpc.stub.StreamObserver<shopping_list.ShoppingListOuterClass.Response>) responseObserver);
-          break;
-        case METHODID_NOTIFY_RUN_OUT:
-          serviceImpl.notifyRunOut((shopping_list.ShoppingListOuterClass.Product) request,
-              (io.grpc.stub.StreamObserver<shopping_list.ShoppingListOuterClass.Response>) responseObserver);
+        case METHODID_GET_NOTIFICATIONS:
+          serviceImpl.getNotifications((notifications.Notifications.NotificationRequest) request,
+              (io.grpc.stub.StreamObserver<notifications.Notifications.NotificationList>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -354,8 +281,7 @@ public final class NotificationGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new NotificationFileDescriptorSupplier())
-              .addMethod(getNotifyDeadlineMethod())
-              .addMethod(getNotifyRunOutMethod())
+              .addMethod(getGetNotificationsMethod())
               .build();
         }
       }

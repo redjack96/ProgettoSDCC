@@ -7,7 +7,7 @@ option go_package = ".;proto_generated";
 
 // Services that can be executed
 service Recipes {
-  rpc GetRecipesFromIngredients(IngredientsList) returns (RecipeList); //TODO
+  rpc GetRecipesFromIngredients(IngredientsList) returns (RecipeList);
   rpc GetRecipesFromPantry(RecipesRequest) returns (RecipeList); // need to redirect request to storage to get pantry
 }
 

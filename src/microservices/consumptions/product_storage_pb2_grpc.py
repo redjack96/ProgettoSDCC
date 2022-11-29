@@ -53,8 +53,7 @@ class ProductStorageServicer(object):
     """
 
     def AddBoughtProductsToPantry(self, request, context):
-        """TODO: aggiungere nel messaggio di output il numero di prodotti aggiunti
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -86,8 +85,7 @@ class ProductStorageServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetPantry(self, request, context):
-        """TODO: per ora restituisce l'intera dispensa. Forse e' un po' eccessivo!
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')

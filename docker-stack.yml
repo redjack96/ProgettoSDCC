@@ -187,5 +187,3 @@ volumes:
   influxdb-storage:
   cassandra_data:
     driver: local
-
-# TODO: add external volumes for cassandra and influx

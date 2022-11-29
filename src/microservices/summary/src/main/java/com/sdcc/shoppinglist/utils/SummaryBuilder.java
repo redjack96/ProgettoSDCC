@@ -33,7 +33,6 @@ public class SummaryBuilder {
     }
 
     public String calculateMostBoughtProduct(List<LogEntry> entries) {
-        // FIXME
         Map<String, Integer> add = entries.stream()
                 .filter(entry -> entry.transaction_type().contains("add"))
                 .map(entry -> new Tuple2<>(entry.product_name(), 1)) // trasforma tutto in tuple (nome, 1)
@@ -46,7 +45,6 @@ public class SummaryBuilder {
     }
 
     public String calculateMostUsedProduct(List<LogEntry> entries) {
-        //FIXME
         Map<String, Integer> add = entries.stream()
                 .filter(entry -> entry.transaction_type().contains("use"))
                 .map(entry -> new Tuple2<>(entry.product_name(), 1)) // trasforma tutto in tuple (nome, 1)

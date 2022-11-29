@@ -31,8 +31,7 @@ public class KafkaSummaryConsumer implements Runnable {
         Properties properties = OurProperties.getProperties();
         var kafkaAddr = properties.getProperty("KafkaAddress");
         var kafkaPort = properties.getProperty("KafkaPort");
-        // final var url = "kafka://"+kafkaAddr+":" + kafkaPort; // TODO: mi sa che va messo quello parametrico. Provare a pushare e vedere se funziona su ec2.
-        final var url = "kafka://kafka:9092"; // probably kafka:// is the protocol!
+        final var url = "kafka://%s:%s".formatted(kafkaAddr, kafkaPort);
         final Properties props = new Properties();
         props.put("bootstrap.servers", url);
         props.put("group.id", "consumer");

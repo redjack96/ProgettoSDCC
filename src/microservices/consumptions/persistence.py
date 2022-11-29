@@ -121,7 +121,6 @@ class Cassandra:
 
         print("creating tables")
         self.__create_tables()
-        # todo: RIMETTIMI
         print("populating tables")
         self.__populate_tables("consumi-storage.csv")
 
@@ -134,7 +133,6 @@ class Cassandra:
         global session
         p = properties.Props()
         cluster = Cluster([p.CassandraAddress], port=p.CassandraPort, protocol_version=5)
-        # TODO: provare session = cluster.connect(wait_for_all_pools=True)
         session = cluster.connect(wait_for_all_pools=True)
         session.execute("""
             CREATE KEYSPACE IF NOT EXISTS sdcc

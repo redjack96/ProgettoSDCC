@@ -2264,6 +2264,17 @@ public final class Consumptions {
      * @return The quantity.
      */
     int getQuantity();
+
+    /**
+     * <code>.shopping_list.Unit unit = 4;</code>
+     * @return The enum numeric value on the wire for unit.
+     */
+    int getUnitValue();
+    /**
+     * <code>.shopping_list.Unit unit = 4;</code>
+     * @return The unit.
+     */
+    shopping_list.ShoppingListOuterClass.Unit getUnit();
   }
   /**
    * Protobuf type {@code consumptions.Observation}
@@ -2280,6 +2291,7 @@ public final class Consumptions {
     private Observation() {
       requestType_ = 0;
       productName_ = "";
+      unit_ = 0;
     }
 
     @java.lang.Override
@@ -2327,6 +2339,12 @@ public final class Consumptions {
             case 24: {
 
               quantity_ = input.readInt32();
+              break;
+            }
+            case 32: {
+              int rawValue = input.readEnum();
+
+              unit_ = rawValue;
               break;
             }
             default: {
@@ -2431,6 +2449,25 @@ public final class Consumptions {
       return quantity_;
     }
 
+    public static final int UNIT_FIELD_NUMBER = 4;
+    private int unit_;
+    /**
+     * <code>.shopping_list.Unit unit = 4;</code>
+     * @return The enum numeric value on the wire for unit.
+     */
+    @java.lang.Override public int getUnitValue() {
+      return unit_;
+    }
+    /**
+     * <code>.shopping_list.Unit unit = 4;</code>
+     * @return The unit.
+     */
+    @java.lang.Override public shopping_list.ShoppingListOuterClass.Unit getUnit() {
+      @SuppressWarnings("deprecation")
+      shopping_list.ShoppingListOuterClass.Unit result = shopping_list.ShoppingListOuterClass.Unit.valueOf(unit_);
+      return result == null ? shopping_list.ShoppingListOuterClass.Unit.UNRECOGNIZED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2454,6 +2491,9 @@ public final class Consumptions {
       if (quantity_ != 0) {
         output.writeInt32(3, quantity_);
       }
+      if (unit_ != shopping_list.ShoppingListOuterClass.Unit.Bottle.getNumber()) {
+        output.writeEnum(4, unit_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2473,6 +2513,10 @@ public final class Consumptions {
       if (quantity_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, quantity_);
+      }
+      if (unit_ != shopping_list.ShoppingListOuterClass.Unit.Bottle.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(4, unit_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2494,6 +2538,7 @@ public final class Consumptions {
           .equals(other.getProductName())) return false;
       if (getQuantity()
           != other.getQuantity()) return false;
+      if (unit_ != other.unit_) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2511,6 +2556,8 @@ public final class Consumptions {
       hash = (53 * hash) + getProductName().hashCode();
       hash = (37 * hash) + QUANTITY_FIELD_NUMBER;
       hash = (53 * hash) + getQuantity();
+      hash = (37 * hash) + UNIT_FIELD_NUMBER;
+      hash = (53 * hash) + unit_;
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2650,6 +2697,8 @@ public final class Consumptions {
 
         quantity_ = 0;
 
+        unit_ = 0;
+
         return this;
       }
 
@@ -2679,6 +2728,7 @@ public final class Consumptions {
         result.requestType_ = requestType_;
         result.productName_ = productName_;
         result.quantity_ = quantity_;
+        result.unit_ = unit_;
         onBuilt();
         return result;
       }
@@ -2736,6 +2786,9 @@ public final class Consumptions {
         }
         if (other.getQuantity() != 0) {
           setQuantity(other.getQuantity());
+        }
+        if (other.unit_ != 0) {
+          setUnitValue(other.getUnitValue());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2923,6 +2976,60 @@ public final class Consumptions {
       public Builder clearQuantity() {
         
         quantity_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int unit_ = 0;
+      /**
+       * <code>.shopping_list.Unit unit = 4;</code>
+       * @return The enum numeric value on the wire for unit.
+       */
+      @java.lang.Override public int getUnitValue() {
+        return unit_;
+      }
+      /**
+       * <code>.shopping_list.Unit unit = 4;</code>
+       * @param value The enum numeric value on the wire for unit to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUnitValue(int value) {
+        
+        unit_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.shopping_list.Unit unit = 4;</code>
+       * @return The unit.
+       */
+      @java.lang.Override
+      public shopping_list.ShoppingListOuterClass.Unit getUnit() {
+        @SuppressWarnings("deprecation")
+        shopping_list.ShoppingListOuterClass.Unit result = shopping_list.ShoppingListOuterClass.Unit.valueOf(unit_);
+        return result == null ? shopping_list.ShoppingListOuterClass.Unit.UNRECOGNIZED : result;
+      }
+      /**
+       * <code>.shopping_list.Unit unit = 4;</code>
+       * @param value The unit to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUnit(shopping_list.ShoppingListOuterClass.Unit value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        unit_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.shopping_list.Unit unit = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUnit() {
+        
+        unit_ = 0;
         onChanged();
         return this;
       }
@@ -4380,28 +4487,29 @@ public final class Consumptions {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022consumptions.proto\022\014consumptions\032\025prod" +
-      "uct_storage.proto\"\020\n\016PredictRequest\"C\n\021P" +
-      "redictedDataList\022.\n\tpredicted\030\001 \003(\0132\033.co" +
-      "nsumptions.PredictedData\"T\n\014TrainRequest" +
-      "\022/\n\014observations\030\001 \003(\0132\031.consumptions.Ob" +
-      "servation\022\023\n\013currentDate\030\002 \001(\003\"h\n\013Observ" +
-      "ation\0222\n\013requestType\030\001 \001(\0162\035.consumption" +
-      "s.ObservationType\022\023\n\013productName\030\002 \001(\t\022\020" +
-      "\n\010quantity\030\003 \001(\005\"C\n\rPredictedData\022\014\n\004wee" +
-      "k\030\001 \001(\t\022\017\n\007product\030\002 \001(\t\022\023\n\013consumption\030" +
-      "\003 \001(\002\"\034\n\rTrainResponse\022\013\n\003msg\030\001 \001(\t*3\n\017O" +
-      "bservationType\022\t\n\005added\020\000\022\010\n\004used\020\001\022\013\n\007e" +
-      "xpired\020\0022\234\001\n\tEstimator\022H\n\007Predict\022\034.cons" +
-      "umptions.PredictRequest\032\037.consumptions.P" +
-      "redictedDataList\022E\n\nTrainModel\022\032.consump" +
-      "tions.TrainRequest\032\033.consumptions.TrainR" +
-      "esponseB\023Z\021.;proto_generatedb\006proto3"
+      "\n\022consumptions.proto\022\014consumptions\032\023shop" +
+      "ping_list.proto\"\020\n\016PredictRequest\"C\n\021Pre" +
+      "dictedDataList\022.\n\tpredicted\030\001 \003(\0132\033.cons" +
+      "umptions.PredictedData\"T\n\014TrainRequest\022/" +
+      "\n\014observations\030\001 \003(\0132\031.consumptions.Obse" +
+      "rvation\022\023\n\013currentDate\030\002 \001(\003\"\213\001\n\013Observa" +
+      "tion\0222\n\013requestType\030\001 \001(\0162\035.consumptions" +
+      ".ObservationType\022\023\n\013productName\030\002 \001(\t\022\020\n" +
+      "\010quantity\030\003 \001(\005\022!\n\004unit\030\004 \001(\0162\023.shopping" +
+      "_list.Unit\"C\n\rPredictedData\022\014\n\004week\030\001 \001(" +
+      "\t\022\017\n\007product\030\002 \001(\t\022\023\n\013consumption\030\003 \001(\002\"" +
+      "\034\n\rTrainResponse\022\013\n\003msg\030\001 \001(\t*3\n\017Observa" +
+      "tionType\022\t\n\005added\020\000\022\010\n\004used\020\001\022\013\n\007expired" +
+      "\020\0022\234\001\n\tEstimator\022H\n\007Predict\022\034.consumptio" +
+      "ns.PredictRequest\032\037.consumptions.Predict" +
+      "edDataList\022E\n\nTrainModel\022\032.consumptions." +
+      "TrainRequest\032\033.consumptions.TrainRespons" +
+      "eB\023Z\021.;proto_generatedb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          product_storage.ProductStorageOuterClass.getDescriptor(),
+          shopping_list.ShoppingListOuterClass.getDescriptor(),
         });
     internal_static_consumptions_PredictRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -4426,7 +4534,7 @@ public final class Consumptions {
     internal_static_consumptions_Observation_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_consumptions_Observation_descriptor,
-        new java.lang.String[] { "RequestType", "ProductName", "Quantity", });
+        new java.lang.String[] { "RequestType", "ProductName", "Quantity", "Unit", });
     internal_static_consumptions_PredictedData_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_consumptions_PredictedData_fieldAccessorTable = new
@@ -4439,7 +4547,7 @@ public final class Consumptions {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_consumptions_TrainResponse_descriptor,
         new java.lang.String[] { "Msg", });
-    product_storage.ProductStorageOuterClass.getDescriptor();
+    shopping_list.ShoppingListOuterClass.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

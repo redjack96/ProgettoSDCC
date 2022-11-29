@@ -320,7 +320,7 @@ fn add_single_product_to_db(elem: &Item) {
     };
     let db = Database::new();
 
-    // build a select query. TODO: watch out for SQL injection!
+    // build a select query. Watch out for SQL injection!
     let query = db.prepare_product_statement(Some(&item), QueryType::Select,
                                              Some(0), Some(0), Some(0),
     );
