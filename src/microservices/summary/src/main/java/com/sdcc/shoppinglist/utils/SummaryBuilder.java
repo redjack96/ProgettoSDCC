@@ -12,12 +12,22 @@ public class SummaryBuilder {
     public SummaryBuilder() {
     }
 
+    /**
+     * Calculates the times the user bought a product in the selected period
+     * @param entries log entries of the selected period
+     * @return times the user bought a product
+     */
     public int calculateTimesBought(List<LogEntry> entries) {
         return Math.toIntExact(entries.stream()
                 .filter(entry -> entry.transaction_type().contains("add"))
                 .count());
     }
 
+    /**
+     * Calculates the number of expired products in the selected period
+     * @param entries log entries of the selected period
+     * @return the number of expired products
+     */
     public int calculateNumberExpired(List<LogEntry> entries) {
         // Get today's timestamp
         return Math.toIntExact(entries.stream()
@@ -26,12 +36,22 @@ public class SummaryBuilder {
                 .count());
     }
 
+    /**
+     * Calculates the times the user used a product in the selected period
+     * @param entries log entries of the selected period
+     * @return times the user used a product
+     */
     public int calculateNumberUsed(List<LogEntry> entries) {
         return Math.toIntExact(entries.stream()
                 .filter(entry -> Objects.equals(entry.transaction_type(), "use_product_in_pantry"))
                 .count());
     }
 
+    /**
+     * Calculates the most bought product in the selected period
+     * @param entries log entries of the selected period
+     * @return the name of the most bought product
+     */
     public String calculateMostBoughtProduct(List<LogEntry> entries) {
         Map<String, Integer> add = entries.stream()
                 .filter(entry -> entry.transaction_type().contains("add"))
@@ -44,6 +64,11 @@ public class SummaryBuilder {
         return Collections.max(add.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
     }
 
+    /**
+     * Calculates the most used product in the selected period
+     * @param entries log entries of the selected period
+     * @return the name of the most used product
+     */
     public String calculateMostUsedProduct(List<LogEntry> entries) {
         Map<String, Integer> add = entries.stream()
                 .filter(entry -> entry.transaction_type().contains("use"))
@@ -56,6 +81,12 @@ public class SummaryBuilder {
         return Collections.max(add.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
     }
 
+    /**
+     * Converts a list of log entries to SummaryData that is to be returned to client on demand
+     * @param entries log entries
+     * @param timeWindow time period selected (Weekly, Monthly, Total)
+     * @return a SummaryData instance
+     */
     public SummaryData mapToSummary(List<LogEntry> entries, Period timeWindow) {
         int timesBought = calculateTimesBought(entries); // totale elementi acquistati
         int numUsed = calculateNumberUsed(entries); // totale elementi usati

@@ -5,6 +5,10 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class OurProperties {
+    /**
+     * Read properties file
+     * @return the loaded properties
+     */
     public static Properties getProperties(){
         Properties prop = new Properties();
         try {
