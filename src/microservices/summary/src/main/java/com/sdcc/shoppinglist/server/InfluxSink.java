@@ -42,6 +42,14 @@ public class InfluxSink {
         return client;
     }
 
+    /**
+     * Singleton for InfluxSink
+     * @param url the influx url
+     * @param username the influx username
+     * @param password the influx password
+     * @param token the token string
+     * @return an instance of this class
+     */
     public static InfluxSink getInstance(String url, String username, String password, String token) {
         if (instance == null) {
             instance = new InfluxSink();

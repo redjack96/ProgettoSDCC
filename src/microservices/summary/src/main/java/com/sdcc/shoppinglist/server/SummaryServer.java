@@ -32,6 +32,9 @@ public class SummaryServer {
     private static InfluxSink influx;
     private Server server;
 
+    /**
+     * Constructor. Reads the properties file to set port and address.
+     */
     public SummaryServer() {
         LOGGER.setLevel(Level.INFO);
         Properties prop = new Properties();
@@ -46,7 +49,7 @@ public class SummaryServer {
     }
 
     /**
-     * Starts the hRPC server and sets the shutdown hook.
+     * Starts the gRPC server and sets the shutdown hook, when it closes.
      *
      * @throws IOException
      */
@@ -62,7 +65,7 @@ public class SummaryServer {
             try {
                 SummaryServer.this.stop();
             } catch (InterruptedException i) {
-                i.printStackTrace(System.err); // SO that it prints on the System console
+                i.printStackTrace(System.err); // In this way, it prints on the System.err
             }
             System.err.println("*** server shut down");
         }));
@@ -87,7 +90,7 @@ public class SummaryServer {
     }
 
     /**
-     * Runs the chronjob thread for consumption and the kafka thread.
+     * Runs the chron-job thread for consumption and the kafka thread.
      *
      * @param args
      * @throws IOException
@@ -117,8 +120,13 @@ public class SummaryServer {
         server.blockUntilShutdown();
     }
 
-    // this class implements the grpc abstract class
+    // this class implements the grpc abstract class for Summary
     static final class SummaryImpl extends SummaryGrpc.SummaryImplBase {
+        /**
+         * This method will compute the weekly summary statistics
+         * @param request a summary request, it is a simple empty object.
+         * @param responseObserver used to send the result to the client.
+         */
         @Override
         public void weekSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
@@ -134,6 +142,11 @@ public class SummaryServer {
             responseObserver.onCompleted(); // calls the onCompleted
         }
 
+        /**
+         * This method will compute the monthly summary statistics
+         * @param request a summary request, it is a simple empty object.
+         * @param responseObserver used to send the result to the client.
+         */
         @Override
         public void monthSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));
@@ -149,6 +162,11 @@ public class SummaryServer {
             responseObserver.onCompleted(); // calls the onCompleted
         }
 
+        /**
+         * This method will compute the total summary statistics
+         * @param request a summary request, it is a simple empty object.
+         * @param responseObserver used to send the result to the client.
+         */
         @Override
         public void totalSummary(SummaryRequest request, StreamObserver<SummaryData> responseObserver) {
             LOGGER.info("Java Received: %s products".formatted(request));

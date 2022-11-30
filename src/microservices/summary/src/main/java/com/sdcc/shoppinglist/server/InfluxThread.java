@@ -3,7 +3,7 @@ package com.sdcc.shoppinglist.server;
 import com.influxdb.client.InfluxDBClient;
 import com.sdcc.shoppinglist.utils.LogEntry;
 
-// This thread simply adds a new log entry to influx.
+// This thread simply writes a new log entry to influx.
 public class InfluxThread implements Runnable {
     private final LogEntry payload;
     private final InfluxSink influx;
