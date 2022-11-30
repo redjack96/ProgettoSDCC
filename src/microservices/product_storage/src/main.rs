@@ -157,7 +157,13 @@ pub struct ProductStorageImpl {}
 // this implements the methods of trait ProductStorage (defined in the proto files) for the ProductStorageImpl struct
 #[tonic::async_trait] // necessary because Rust does not support async trait methods yet.
 impl ProductStorage for ProductStorageImpl {
-    // Adds all bought products to pantry
+    ///
+    /// Adds all bought products to pantry
+    /// # Arguments
+    ///
+    /// * `request`: the request containing the list of products to add
+    ///
+    /// returns: the response and the status of the operation
     async fn add_bought_products_to_pantry(&self, request: Request<ProductList>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let msg = format!("Items Added to pantry: {}", request.get_ref().products.len());
         let product_list = request.into_inner();
@@ -190,7 +196,13 @@ impl ProductStorage for ProductStorageImpl {
         // You can also use return and ';', but this is more concise
     }
 
-    // adds a product to pantry
+    ///
+    /// Adds a product to pantry
+    /// # Arguments
+    ///
+    /// * `request`: the request containing the item to add
+    ///
+    /// returns: the response and the status of the operation
     async fn add_product_to_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let msg = format!("Item Added to pantry: {}, quantity: {}", request.get_ref().item_name, request.get_ref().quantity);
         let item = request.into_inner();
@@ -214,7 +226,13 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
-    // deletes forever a product from pantry
+    ///
+    /// Deletes forever a product from pantry
+    /// # Arguments
+    ///
+    /// * `request`: the request containing the item to delete (only name)
+    ///
+    /// returns: the response and the status of the operation
     async fn drop_product_from_pantry(&self, request: Request<ItemName>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let msg = format!("Item manually deleted from pantry: {}", request.get_ref().name);
         let item = request.into_inner();
@@ -223,7 +241,13 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
-    // updates a product in pantry
+    ///
+    /// Updates a product in pantry
+    /// # Arguments
+    ///
+    /// * `request`: the request containing the item to update
+    ///
+    /// returns: the response and the status of the operation
     async fn update_product_in_pantry(&self, request: Request<Item>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
         let msg = format!("Item manually updated in pantry: {}, quantity: {} {} ({}), expiration: {}",
@@ -234,7 +258,13 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
-    // uses the product in pantry, if you have enough
+    ///
+    /// Uses the product in pantry, if you have enough
+    /// # Arguments
+    ///
+    /// * `request`: the request containing the item to use
+    ///
+    /// returns: the response and the status of the operation
     async fn use_product_in_pantry(&self, request: Request<UsedItem>) -> Result<Response<product_storage::shopping_list::Response>, Status> {
         let prod = request.into_inner();
         let msg = format!("Used {} {} of product {} in pantry!", prod.quantity, unit_to_str(prod.unit), prod.name);
@@ -258,7 +288,13 @@ impl ProductStorage for ProductStorageImpl {
         Ok(Response::new(product_storage::shopping_list::Response { msg }))
     }
 
-    // returns the entire pantry
+    ///
+    /// Returns the entire pantry
+    /// # Arguments
+    ///
+    /// * `request`: the request (it's an empty request)
+    ///
+    /// returns: the response and the status of the operation
     async fn get_pantry(&self, _: Request<PantryMessage>) -> Result<Response<Pantry>, Status> {
         println!("Getting pantry!");
         let products = select_pantry();
@@ -268,7 +304,14 @@ impl ProductStorage for ProductStorageImpl {
     }
 }
 
-// used by add_bought_products_to_pantry
+/* DATABASE FUNCTIONS: the following functions are needed to interact with SQLite database */
+///
+/// Adds a list of specified products to the database. It's used by add_bought_products_to_pantry
+/// # Arguments
+///
+/// * `product_list`: the list of items to add to the database
+///
+/// returns: () Nothing
 fn add_products_to_db(product_list: &ProductList) {
     println!("ListId: {:?}, ListName: {}, Number of products: {}",
              product_list.clone().id.map_or(0, |i| i.list_id),
@@ -302,7 +345,13 @@ fn add_products_to_db(product_list: &ProductList) {
     }
 }
 
-// used by add_product_to_pantry
+///
+/// Adds a single product to the database. It's used by add_product_to_pantry
+/// # Arguments
+///
+/// * `elem`: the item to add
+///
+/// returns: () Nothing
 fn add_single_product_to_db(elem: &Item) {
     let item = elem.clone();
     println!("add single product: {}, quantity {} {}, type {}", elem.item_name, elem.quantity, unit_to_str(elem.unit), prod_type_to_str(elem.r#type));
@@ -345,6 +394,9 @@ fn add_single_product_to_db(elem: &Item) {
     db.execute_insert_update_or_delete(query.as_str());
 }
 
+///
+/// Selects all the data that is in the database
+/// returns: Vec<Item> vector of items in pantry
 fn select_pantry() -> Vec<Item> {
     let db = Database::new();
     println!("Selecting all items in pantry.");
@@ -353,7 +405,13 @@ fn select_pantry() -> Vec<Item> {
     prod_item.iter().map(|pi| pi.to_item()).collect()
 }
 
-
+///
+/// Deletes an item from the database
+/// # Arguments
+///
+/// * `elem`: the item to delete
+///
+/// returns: () Nothing
 fn delete_product_from_db(elem: ItemName) {
     let db = Database::new();
     let query = format!("DELETE FROM Products WHERE name='{}';", elem.name);
@@ -361,6 +419,13 @@ fn delete_product_from_db(elem: ItemName) {
     db.execute_insert_update_or_delete(query.as_str());
 }
 
+///
+/// Updates an item in the database
+/// # Arguments
+///
+/// * `elem`: the item to update
+///
+/// returns: () Nothing
 fn update_product_in_db(elem: Item) {
     let db = Database::new();
     let query = format!("UPDATE OR IGNORE Products SET quantity='{}',expiration='{:?}' WHERE name='{}' AND item_type='{}' AND unit='{}';",
@@ -369,6 +434,13 @@ fn update_product_in_db(elem: Item) {
     db.execute_insert_update_or_delete(&query);
 }
 
+///
+/// Updates the quantity of an item in the database
+/// # Arguments
+///
+/// * `elem`: the item to update
+///
+/// returns: String operation result message
 fn use_product_in_db(elem: &UsedItem) -> String {
     let db = Database::new();
     // first we need to get current number of product
@@ -418,7 +490,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-// this async function implements the kafka producer
+
+///
+/// This async function implements the kafka producer
+/// returns: () Nothing
 async fn async_kafka_producer() {
     println!("Establishing connection to Kafka broker...");
     // setup client
@@ -476,6 +551,9 @@ async fn async_kafka_producer() {
     }
 }
 
+///
+/// Checks for expired items in pantry
+/// returns: () Nothing
 async fn check_for_expired() -> Vec<ProductItem> {
     let db = Database::new();
     let query = db.prepare_product_statement(None, SelectExpired,
@@ -483,6 +561,9 @@ async fn check_for_expired() -> Vec<ProductItem> {
     db.execute_select_query(&query)
 }
 
+///
+/// Checks for consumed elements in pantry
+/// returns: () Nothing
 async fn check_for_consumed() -> Vec<ProductItem> {
     let db = Database::new();
     let query = db.prepare_product_statement(None, SelectConsumed,
@@ -490,6 +571,15 @@ async fn check_for_consumed() -> Vec<ProductItem> {
     db.execute_select_query(&query)
 }
 
+///
+/// Implements Notification Microservice kafka decoupled communication
+/// # Arguments
+///
+/// * `partition_client`: kafka client
+/// * `notify`: type of notification
+/// * `products` list of ProductItem
+///
+/// returns: () Nothing
 async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, products: Vec<ProductItem>) {
     // convert ProductItems to json strings
     for product in products {
@@ -514,8 +604,8 @@ async fn produce_to_kafka(partition_client: &PartitionClient, notify: Notify, pr
 /// Implements Summary Microservice kafka decoupled communication
 /// # Arguments
 ///
-/// * `partition_client`:
-/// * `log_entry_vec`:
+/// * `partition_client`: kafka client
+/// * `log_entry_vec`: vector of log entries
 ///
 /// returns: () Nothing
 async fn produce_logs_to_kafka(partition_client: &PartitionClient, log_entry_vec: Vec<LogEntry>) {

@@ -267,7 +267,7 @@ func (s *serverShoppingList) BuyAllProductsInCart(ctx context.Context, _ *pb.Buy
 	return &pb.Response{Msg: "ok - all product bought and sent to pantry"}, nil
 }
 
-/* Function to query the MongoDB database, implements all CRUD MongoDB operations */
+// queryDB is a function to query the MongoDB database, implements all CRUD MongoDB operations
 func queryDB(operation DBOperation) (interface{}, error) {
 	// connect mongo database
 	configs, _ := props.GetProperties()

@@ -24,6 +24,8 @@ impl Database {
         }
     }
 
+    /// Creates the required tables in the database.
+    /// returns: () Nothing
     pub fn create_table_products(&self) {
         println!("in create table products");
         self.conn
@@ -116,6 +118,12 @@ impl Database {
         }
     }
 
+    /// Executes an sql select query.
+    /// # Arguments
+    ///
+    /// * `query`: the query to execute
+    ///
+    /// returns: Vec<ProductItem> vector of selected elements in database
     pub fn execute_select_query(&self, query: &str) -> Vec<ProductItem> {
         let mut cursor = self.conn
             .prepare(query)
@@ -167,6 +175,12 @@ impl Database {
         return v;
     }
 
+    /// Executes an sql insert, update or delete query.
+    /// # Arguments
+    ///
+    /// * `query`: the query to execute
+    ///
+    /// returns: () Nothing
     pub fn execute_insert_update_or_delete(&self, query: &str) {
         self.conn.execute(query).expect("query cannot be executed");
     }

@@ -47,6 +47,8 @@ fn get_addr_or_default(map: &HashMap<String, String>, key: &str) -> String {
     map.get(key).unwrap_or(&DEFAULT_ADDR.to_string()).to_string()
 }
 
+/// Reads the properties file to get ports and addresses of microservices
+/// returns: Properties read
 pub fn get_properties() -> Properties {
     let f = File::open(Path::new("config.properties"));
     let x: Result<HashMap<String, String>, PropertiesError> = java_properties::read(BufReader::new(f.unwrap()));
