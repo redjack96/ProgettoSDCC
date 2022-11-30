@@ -15,8 +15,14 @@ import persistence
 # label set prende tutte le righe e le colonne (di queste tutte tranne l'ultima)
 
 def time_series_train_test_split(dataset: ndarray, train_rows: int):
-    # Train rows cambiano a ogni iterazione, rappresentano la settimana.
-    # -> train rows = settimana 1, testing settimane 2-20
+    """
+    Splits the dataset according to Walk forward validation model
+    (only last time period is taken out to form the testing set)
+    :param dataset: the dataset considered
+    :param train_rows: the number of time periods (weeks) to consider as training set
+    :return: the X and Y both for training and testing
+    """
+    # Train rows change at each iteration and represent the week number
     data_train = dataset[:train_rows]
     data_test = dataset[train_rows:train_rows + 1]  # dalla seconda in poi
     print("data_train: ", data_train)
@@ -32,6 +38,12 @@ def time_series_train_test_split(dataset: ndarray, train_rows: int):
 
 
 def get_product_dataset(data, product_name):
+    """
+    Select all the observation for the specified product name
+    :param data: all the observations available for all products
+    :param product_name: the product to select
+    :return: observations regarding the product name selected
+    """
     return data[data[:, 1] == product_name]
 
 
@@ -53,20 +65,21 @@ class ConsumptionEstimator:
         self.total_product_list = ["Pane", "Mortadella", "Pasta"]
         self.last_added_products = []
         self.week_indexes = {"Pane": 20, "Mortadella": 20,
-                             "Pasta": 20}  # dizionario degli indici di split per ogni prodotto
-        # SGD si adatta maggiormente in base agli ultimi dati analizzati. Piu' preciso rispetto al regressore base.
-        # Se ci sono variazioni elevate, non funziona bene. Invece il Regressore lineare si basa su tutti i dati.
+                             "Pasta": 20}  # dictionary of the split indexes for each product
+        # SGD is adapting to the latest data analysed. It's more precise than the default regressor.
+        # If there are significant variations, the SGD regressor is more sensitive, when the default one considers
+        # all the data available.
         self.models = {
             "Pane": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
             "Mortadella": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive'),
             "Pasta": SGDRegressor(fit_intercept=True, shuffle=False, warm_start=True, learning_rate='adaptive')
         }
-        self.product_datasets_dict = {}  # dizionario dei dataset per ogni prodotto
-        self.product_X_train_dict = {}  # dizionario delle features di training per ogni prodotto
-        self.product_X_test_dict = {}  # dizionario delle features di testing per ogni prodotto
-        self.product_y_train_dict = {}  # dizionario dei valori target di training per ogni prodotto
-        self.product_y_test_dict = {}  # dizionario dei valori target di testing per ogni prodotto
-        self.product_last_y_pred = {}  # dizionario dei valori predetti per ogni prodotto
+        self.product_datasets_dict = {}  # dictionary of the datasets for each product
+        self.product_X_train_dict = {}  # dictionary of the training features for each product
+        self.product_X_test_dict = {}  # dictionary of the testing features for each product
+        self.product_y_train_dict = {}  # dictionary of the training target values for each product
+        self.product_y_test_dict = {}  # dictionary of the testing target values for each product
+        self.product_last_y_pred = {}  # dictionary of the predicted values for each product
         print("Init ML pipeline")
         self.__init_train_dataset()
 
@@ -74,6 +87,9 @@ class ConsumptionEstimator:
         self.last_added_products = []
 
     def initial_pipeline_training(self):
+        """
+        This function specifies the pipeline to be executed when no data is available
+        """
         for prod_name in self.total_product_list:
             print("Initial pipeline training for ", prod_name)
             self.__init_per_product_datasets(prod_name)
@@ -95,6 +111,11 @@ class ConsumptionEstimator:
                 self.cassandra_conn.insert_new_prediction([current_week, prod_name, self.product_last_y_pred[prod_name]])
 
     def online_pipeline_training(self):
+        """
+        This function specifies the pipeline to be executed when new data is received from summary service. The models
+        of the products that are requested (in last_added_products) are updated accordingly and the values predicted are
+        added to Cassandra.
+        """
         # Update the total dataset
         self.total_dataset = self.__update_dataset()
         print("week indexes: ", self.week_indexes)
@@ -155,6 +176,11 @@ class ConsumptionEstimator:
         print("products list: ", self.total_product_list)
 
     def increment_week(self, product_name: str, week_num: int):
+        """
+        Increments the week index for the product specified
+        :param product_name: the product to increment week index
+        :param week_num: the actual week number
+        """
         old_idx = self.week_indexes[product_name]
         if week_num > old_idx:
             self.week_indexes[product_name] = old_idx + 1
@@ -163,12 +189,20 @@ class ConsumptionEstimator:
         print("Week considered: ", self.week_indexes[product_name])
 
     def get_last_week_index(self, product_name: str):
+        """
+        Get the last week index for the product specified
+        :param product_name: the product name
+        :return: the week index, else 1 if product not existing
+        """
         print(self.week_indexes.keys())
         if self.week_indexes.keys().__contains__(product_name):
             return self.week_indexes[product_name]
         return 1
 
     def __init_train_dataset(self):
+        """
+        Train models with initial dataset given
+        """
         dataset = pd.read_csv('consumi-storage.csv', skipinitialspace=True)
         dataset.head()
         self.total_dataset = np.array(dataset.iloc[:, :].values)
@@ -177,10 +211,18 @@ class ConsumptionEstimator:
         self.initial_pipeline_training()
 
     def __init_per_product_datasets(self, prod_name):
+        """
+        Initiates the product dataset
+        :param prod_name: the product specified
+        """
         prod_data = get_product_dataset(self.total_dataset, prod_name)
         self.product_datasets_dict[prod_name] = prod_data
 
     def __update_dataset(self):
+        """
+        Updates and orders the dataset by week
+        :return: the dataset ordered by week
+        """
         dataset = self.cassandra_conn.select_all_entries()
         array = np.array(dataset.iloc[:, :].values)
         return order_by_week(array)
@@ -190,7 +232,7 @@ class ConsumptionEstimator:
         Apply One-Hot encoding on the product name column of the dataset
         :param prod_name: the product name
         """
-        # One-hot-encoding sulla colonna del nome del prodotto
+        # One-hot-encoding on the column of the product name
         # transform column in array Encoder: (0...010...0). [1] second column.
         ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [1])], remainder='passthrough')
         self.product_datasets_dict[prod_name] = np.array(ct.fit_transform(self.product_datasets_dict.get(prod_name)))
@@ -232,7 +274,8 @@ class ConsumptionEstimator:
         if self.week_indexes[prod_name] >= 20:
             self.models[prod_name].partial_fit(X_train, y_train)  # executes a partial training like walk forward
         else:
-            self.models[prod_name].fit(X_train, y_train)  # executes a complete training when there are too little instances
+            self.models[prod_name].fit(X_train, y_train)  # executes a complete training when there are too little
+            # instances
         # (training 1, testing 2 .. training 1-2, testing 3 ..)
         y_pred = self.models[prod_name].predict(X_test)
         if y_pred[0] < 0:

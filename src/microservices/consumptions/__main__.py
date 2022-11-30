@@ -18,6 +18,9 @@ cass: persistence.Cassandra
 
 
 def connect_to_database():
+    """
+    Used to connect to Cassandra datastore
+    """
     global cass
     cass = persistence.Cassandra()
     cass.init_database()
