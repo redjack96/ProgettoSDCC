@@ -41,6 +41,11 @@ public class ConsumptionsChronJob implements Runnable {
     public static final String TRANSACTION_USE = "use_product_in_pantry";
     private final CircuitBreaker circuitBreaker;
 
+    /**
+     * Constructor
+     * @param influx the influxSink instance
+     * @param startNow true if you want to schedule the chron job starting from now. If false, it will run the next week.
+     */
     public ConsumptionsChronJob(InfluxSink influx, boolean startNow) {
         this.influx = influx;
         var now = ZonedDateTime.now(ZoneId.of("America/Los_Angeles"));
@@ -61,6 +66,9 @@ public class ConsumptionsChronJob implements Runnable {
         this.circuitBreaker = CircuitBreakerRegistry.of(circuitBreakerConfig).circuitBreaker("predict request from summary");
     }
 
+    /**
+     * Schedules the chron job every week, to ask consumptions to predict product usage of the next week.
+     */
     public void scheduleWeekly() {
         var scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(this,
@@ -69,6 +77,11 @@ public class ConsumptionsChronJob implements Runnable {
                 TimeUnit.SECONDS);
     }
 
+    /**
+     * This method will be executed weekly by the chron job and it is blocking.
+     * It uses influx to get LogEntries sent from Product Storage with terminated or expired products.
+     * Then uses Resilience4j to  communicate with consumptions, to send to it the new product information and train the model.
+     */
     public void blockingExecution() {
         LOGGER.info("Chron-job: Sending consumption week data!");
         // Get the data
@@ -119,6 +132,11 @@ public class ConsumptionsChronJob implements Runnable {
         blockingExecution();
     }
 
+    /**
+     * Utility function to convert LogEntry into Consumption.Observation object.
+     * @param logEntries a list of LogEntry, retrieved by Influx
+     * @return a list of object to send to consumptions
+     */
     private List<Consumptions.Observation> convertLogsToObservations(List<LogEntry> logEntries) {
         Consumptions.Observation.Builder observationBuilder = Consumptions.Observation.newBuilder();
         List<Consumptions.Observation> list = new ArrayList<>();
@@ -132,6 +150,11 @@ public class ConsumptionsChronJob implements Runnable {
         return list;
     }
 
+    /**
+     * Gets the transaction type from the logEntry and converts it to Observation type, to correctly update the consumptions' dataset.
+     * @param logEntry a single LogEntry, with a transaction type
+     * @return the observation type. If the log entry is expired, the observation type will be expired, otherwise added. If the product is used so will be the observation type.
+     */
     private Consumptions.ObservationType toObservationType(LogEntry logEntry) {
         System.out.println("transaction type: "+logEntry.transaction_type());
         return switch (logEntry.transaction_type()) {

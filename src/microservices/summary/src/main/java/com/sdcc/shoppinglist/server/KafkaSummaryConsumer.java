@@ -26,6 +26,11 @@ public class KafkaSummaryConsumer implements Runnable {
         this.influx = influx;
     }
 
+    /**
+     * A long-running method that will periodically check if Kafka has new message for the topic "logs".
+     * If that is true, it will get the logs, build a LogEntry and write it to Influx.
+     * The writing is done inside another thread, to avoid block this one.
+     */
     @Override
     public void run() {
         Properties properties = OurProperties.getProperties();
