@@ -19,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * This represents the gRPC server for the notification service (to receive api gateway requests)
+ */
 public class NotificationServer implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(NotificationServer.class.getSimpleName());

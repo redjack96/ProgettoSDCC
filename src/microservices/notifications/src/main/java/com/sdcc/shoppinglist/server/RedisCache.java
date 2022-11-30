@@ -39,13 +39,16 @@ public class RedisCache {
         return product.name() + "-" + product.unit() + "-" + product.item_type();
     }
 
+    /**
+     * If the expired/finished product doesn't exist both as NEW and OLD, adds it to the keys with value NEW
+     * - Key example: Expired-Pane  Value example: NEW // More Expired-Pane is not added. More Finished-Pane will replace expired pane as NEW.
+     * An expired or finished new item will be added as a new key value pair
+     * - Key example: Finished-Pesce Value example: OLD // more Finished Pesce will not be added. More Expired Pesce will be added as NEW and this one will be deleted
+     * otherwise it does nothing
+     * @param topic the topic of interest
+     * @param product the product which the notification is referring to
+     */
     public void setNotificationIfNotExist(String topic, Product product) {
-        // if the expired/finished product doesn't exists both as NEW and OLD, adds it to the keys with value NEW
-        // Key example: Expired-Pane  Value example: NEW // More Expired-Pane is not added. More Finished-Pane will replace expired pane as NEW.
-        // An expired or finished new item will be added as a new key value pair
-        // Key example: Finished-Pesce Value example: OLD // more Finished Pesce will not be added. More Expired Pesce will be added as NEW and this one will be deleted
-        // otherwise it does nothing
-
         // if the key doesn't exist, nothing will be done
         var key = createKeyForSet(topic, true);
         var otherKey = createKeyForSet(topic, false);
@@ -56,6 +59,10 @@ public class RedisCache {
         }
     }
 
+    /**
+     * Consumes a new "product-expired" notification
+     * @return the notification message
+     */
     public String consumeNewExpiredNotifications() {
         var productsJoined = consumeNotifications(EXPIRED);
         if (productsJoined.isEmpty()) {
@@ -66,6 +73,10 @@ public class RedisCache {
         return str;
     }
 
+    /**
+     * Consumes a new "product-finished" notification
+     * @return the notification message
+     */
     public String consumeNewFinishedNotifications() {
         var productsJoined = consumeNotifications(FINISHED);
         if (productsJoined.isEmpty()) {
@@ -76,8 +87,12 @@ public class RedisCache {
         return str;
     }
 
+    /**
+     * Finds all the NEW notification that are about <topic>
+     * @param topic the topic of interest
+     * @return the notification in cache
+     */
     private String consumeNotifications(String topic) {
-        // finds all the NEW notification that are about <topic>
         var setKey = createKeyForSet(topic, true);
         LOGGER.info(">>>>>>><<setKey>>>>>>>>>>>>> " + setKey);
         String[] newNotifications = jedis.smembers(setKey).toArray(String[]::new);

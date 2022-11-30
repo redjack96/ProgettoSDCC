@@ -23,6 +23,9 @@ public class NotificationConsumer implements Runnable {
     public static final String FINISHED = "consumed";
 
 
+    /**
+     * Runs the Kafka consumer
+     */
     @Override
     public void run() {
         final Logger log = Logger.getLogger(NotificationConsumer.class.getSimpleName());
@@ -31,7 +34,6 @@ public class NotificationConsumer implements Runnable {
         String kafkaAddr = properties.getProperty("KafkaAddress");
         int kafkaPort = Integer.parseInt(properties.getProperty("KafkaPort"));
         final var url = "kafka://%s:%d".formatted(kafkaAddr, kafkaPort);
-        // final var url = "kafka://kafka:9092";
 
         final Properties props = new Properties();
         props.put("bootstrap.servers", url);
