@@ -13,12 +13,22 @@ session = None
 
 
 def read_csv(filename: str):
+    """
+    Reads the CSV file specified
+    :param filename: the name of the file
+    :return: the dataset read from the file
+    """
     dataset = pd.read_csv(filename, skipinitialspace=True, skiprows=0)
     dataset = dataset.reset_index()  # mi assicuro che l'indice parta da 0
     return dataset
 
 
 def prepare_select_query(product: str):
+    """
+    Prepares a query for the selection of existing observations for a specified product
+    :param product: the product name
+    :return: query prepared
+    """
     query_first = "SELECT * FROM dataset WHERE product_name="
     prod = f"'{product}'"
     query_last = ";"  # cannot use prepared statement
@@ -26,12 +36,17 @@ def prepare_select_query(product: str):
 
 
 def prepare_select_week_query(product: str, week_num: int):
+    """
+    Prepares a query for the selection of existing observations for a specified product and week index
+    :param product: product name
+    :param week_num: week index
+    :return: the prepared query
+    """
     query_first = "SELECT * FROM dataset WHERE week_num="
     week = str(week_num)
     query_mid = " AND product_name="
     prod = f"'{product}'"
     query_last = ";"  # cannot use prepared statement
-    print(query_first + week + query_mid + prod + query_last)
     return query_first + week + query_mid + prod + query_last
 
 
@@ -39,13 +54,13 @@ def prepare_update_entry_query(week_num: int, product_name: str, n_bought: int, 
                                consumption: float):
     """
     Prepares a query for the complete update of an existing observation
-    :param week_num:
-    :param product_name:
-    :param n_bought:
-    :param n_expired:
-    :param n_used:
-    :param n_rem:
-    :param consumption:
+    :param week_num: the week index
+    :param product_name: the name of the product
+    :param n_bought: the new value for n_bought
+    :param n_expired: the new value for n_expired
+    :param n_used: the new value for n_used
+    :param n_rem: the new value for n_rem
+    :param consumption: the new value for consumption
     :return: the prepared query (str)
     """
     prod = f"'{product_name}'"
@@ -57,7 +72,15 @@ def prepare_update_entry_query(week_num: int, product_name: str, n_bought: int, 
 
 def prepare_update_quantity_query(type_update: consumptions_pb2.ObservationType, old_quantity: int,
                                   week_num: int, product_name: str, new_quantity: int):
-    # select previous value of observation in database
+    """
+    Prepares a query for the update of the quantity of an existing observation
+    :param type_update: the type of the update (added, expired or used)
+    :param old_quantity: the old value of quantity
+    :param week_num: the week index
+    :param product_name: the value of the product name
+    :param new_quantity: the new value of the quantity
+    :return: the prepared query
+    """
     week_str = str(week_num)
     total_str = str(old_quantity + new_quantity)
     prod = f"'{product_name}'"
@@ -77,6 +100,11 @@ def prepare_update_quantity_query(type_update: consumptions_pb2.ObservationType,
 
 
 def convert_predictions_to_dataframe(rows):
+    """
+    Converts the predictions read from Cassandra to a pandas DataFrame
+    :param rows: the Cassandra table rows
+    :return: a pandas DataFrame with columns week_num, product_name and prediction
+    """
     data = []
     for row in rows:
         week = row.week_num
@@ -87,6 +115,11 @@ def convert_predictions_to_dataframe(rows):
 
 
 def convert_rows_to_dataframe(rows):
+    """
+    Converts observation rows read from Cassandra to a pandas DataFrame
+    :param rows: the Cassandra table rows
+    :return: a pandas DataFrame with columns week_num, product_name and prediction
+    """
     data = []
     for row in rows:
         week = row.week_num
@@ -97,9 +130,7 @@ def convert_rows_to_dataframe(rows):
         rem = row.n_rem
         consumption = row.consumption
         data.append([week, prod, bought, expired, used, rem, consumption])
-        # convert data list to DataFrame
-    print(pd.DataFrame(data,
-                       columns=['week_num', 'product_name', 'n_bought', 'n_expired', 'n_used', 'n_rem', 'consumption']))
+    # convert data list to DataFrame
     return pd.DataFrame(data,
                         columns=['week_num', 'product_name', 'n_bought', 'n_expired', 'n_used', 'n_rem', 'consumption'])
 
@@ -109,6 +140,9 @@ class Cassandra:
         self.session, self.cluster = None, None
 
     def init_database(self):
+        """
+        Initiates the database
+        """
         ok = False
         while not ok:
             try:
@@ -143,6 +177,9 @@ class Cassandra:
         return session, cluster
 
     def __create_tables(self):
+        """
+        Creates the needed tables on Cassandra
+        """
         query = "CREATE TABLE IF NOT EXISTS dataset " \
                 "(week_num int, product_name text, n_bought int, n_expired int, n_used int, n_rem int, " \
                 "consumption float," \
@@ -153,6 +190,10 @@ class Cassandra:
         self.session.execute(query)
 
     def __populate_tables(self, dataset_filename: str):
+        """
+        Inserts initial values into the tables created before
+        :param dataset_filename: the file that contains initial data and to be read
+        """
         dataset = read_csv(dataset_filename)
         for index, row in dataset.iterrows():
             week = row["settimana"]
@@ -167,6 +208,13 @@ class Cassandra:
 
     def update_quantity(self, week_num: int, product_name: str, new_quantity: int,
                         type_update: consumptions_pb2.ObservationType):
+        """
+        Update the quantity value based on the observation type (added, used, expired)
+        :param week_num: the week index
+        :param product_name: the name of the product
+        :param new_quantity: the new value for the quantity
+        :param type_update: the type of the update (added, used, expired)
+        """
         # select existing observation in database
         entry = self.select_entries_for_week_product(week_num, product_name)
         if entry.size == 0:  # if no previous observation for week and product are found, insert it
@@ -222,18 +270,22 @@ class Cassandra:
                      consumption: float):
         """
         Updates an observation into the dataset
-        :param week_num:
-        :param product_name:
-        :param n_bought:
-        :param n_expired:
-        :param n_used:
-        :param n_rem:
-        :param consumption:
+        :param week_num: the week index to update
+        :param product_name: the name of the product to update
+        :param n_bought: the new value for n_bought
+        :param n_expired: the new value for n_expired
+        :param n_used: the new value for n_used
+        :param n_rem: the new value for n_rem
+        :param consumption: the new value for consumption
         """
         query = prepare_update_entry_query(week_num, product_name, n_bought, n_expired, n_used, n_rem, consumption)
         self.session.execute(query)
 
     def insert_entry(self, zipped_args: list):
+        """
+        Inserts a new entry into the dataset (with args zipped into a list)
+        :param zipped_args: the list of the arguments for the prepared statement
+        """
         print("zipped args: ", zipped_args)
         query_insert = "INSERT INTO dataset (week_num, product_name, n_bought, n_expired, n_used, n_rem, consumption) " \
                        "VALUES (?,?,?,?,?,?,?);"
@@ -244,7 +296,7 @@ class Cassandra:
     def select_entries_for_product(self, product: str):
         """
         Selects some observation given a product name
-        :param product:
+        :param product: the product selected
         :return: A DataFrame of the observations selected
         """
         query_select = prepare_select_query(product)
@@ -254,8 +306,8 @@ class Cassandra:
     def select_entries_for_week_product(self, week_num: int, product: str):
         """
         Selects some observation given a product name and a week number
-        :param week_num:
-        :param product:
+        :param week_num: the week index
+        :param product: the product to select
         :return: A DataFrame of the observations selected
         """
         query_select = prepare_select_week_query(product, week_num)
@@ -272,6 +324,12 @@ class Cassandra:
         return convert_rows_to_dataframe(rows)
 
     def fill_missing_entries(self, last_week_registered: int, week_num: int, product_name: str):
+        """
+        Add some repeated entries when a week index observation is not present for a specified product
+        :param last_week_registered: last week index present
+        :param week_num: the current week index
+        :param product_name: the name of the product specified
+        """
         # Select the entry for the product name corresponding to the previous week to calculate remainder
         print("last week registered:", last_week_registered)
 

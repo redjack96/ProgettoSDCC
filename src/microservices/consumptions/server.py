@@ -16,6 +16,12 @@ week_num: int = 0
 
 
 def uniform_quantity_by_unit(unit, quantity):
+    """
+    Uniform all the units to the same unit (Grams)
+    :param unit: the original unit
+    :param quantity: the quantity value
+    :return: the uniformed quantity
+    """
     # uniforms quantity converting everything to Grams
     if unit == shopping_list_pb2.Kg:
         # 1 Kg = 1000 Grams
@@ -36,6 +42,12 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
 
     # this is called by the frontend when asking the consumptions for all product in pantry
     def Predict(self, request: consumptions_pb2.PredictRequest, context):
+        """
+        Get the prediction values on request
+        :param request: the prediction request
+        :param context: the context
+        :return: the list of the predictions
+        """
         print("Received predict request")
         predicted = estimator.predict_consumptions()
         response = []
@@ -49,6 +61,12 @@ class Estimator(consumptions_pb2_grpc.EstimatorServicer):
 
     # this is called periodically by summary
     def TrainModel(self, item: consumptions_pb2.TrainRequest, context):
+        """
+        Training on-line of the models based on the observations collected during the last week
+        :param item: the TrainRequest containing the observations collected
+        :param context: the context
+        :return: operation message
+        """
         print("Received request with param: %s" % item.observations)
         global week_num
         # Save new observation data into persistence
