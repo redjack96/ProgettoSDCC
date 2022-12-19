@@ -48,7 +48,7 @@ type serverRecipes struct {
 func getRecipesFromSpoonacular(products string) []*pb.Recipe {
 	// Query Spoonacular API using the str
 	recipeGeneral := getFromAPI("https://api.spoonacular.com/recipes/findByIngredients" +
-		"?apiKey=053dc1707c6d4a9aa63b246bb543cc1d" +
+		"?apiKey=d0b015a492354912ac1677184c1c3aac" +
 		"&ingredients=" + products + "") // minimize missing ingredients
 	generalList := unmarshalToListGeneralInfo(recipeGeneral)
 	urlList := unmarshalToUrlInfo(generalList)
@@ -183,7 +183,7 @@ func unmarshalToUrlInfo(recipeList []GeneralInfo) []UrlInfo {
 		var response UrlInfo
 		id := recipeList[i].Id
 		responseData := getFromAPI("https://api.spoonacular.com/recipes/" + strconv.Itoa(id) + "/information" +
-			"?apiKey=053dc1707c6d4a9aa63b246bb543cc1d")
+			"?apiKey=d0b015a492354912ac1677184c1c3aac")
 		err := json.Unmarshal(responseData, &response)
 		if err != nil {
 			log.Fatal(err)

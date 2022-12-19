@@ -18,7 +18,7 @@ public class RedisCache {
     private static final Logger LOGGER = Logger.getLogger(RedisCache.class.getSimpleName());
     private final Jedis jedis;
 
-    public static final int THREE_MINUTES_TEST = 3 * 60;
+    public static final int THREE_MINUTES_TEST = 60;
     private final int expiration;
 
     public RedisCache() {
